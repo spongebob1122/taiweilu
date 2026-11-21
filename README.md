@@ -9,9 +9,9 @@
   targetDoc.getElementById("tw-floating-style")?.remove();
   if (targetWin.__twCheckTimer) clearInterval(targetWin.__twCheckTimer);
 
-  const GLOBAL_CFG_KEY = "tw_palace_global_cfg_v31";
-  const CHAT_STORE_PREFIX = "tw_palace_chat_data_v31_";
-  const LAST_ACTIVE_SESSION_KEY = "tw_palace_last_session_v31";
+  const GLOBAL_CFG_KEY = "tw_palace_global_cfg_v34";
+  const CHAT_BIND_VAR_KEY = "tw_palace_archive_v34";
+  const LOCAL_BACKUP_PREFIX = "tw_palace_chat_backup_v34_";
 
   const DEFAULT_PLOT_WORD_LIMIT = 55;
   const DEFAULT_PLOT_CUSTOM_PROMPT = "以女主名字开头，简明概括本轮发生的核心事件、关键互动与结果，语言自然凝练。";
@@ -19,15 +19,15 @@
   const FORUM_STYLE_PRESETS = {
     lively: {
       name: "鲜活茶水间",
-      desc: "像极了真实的宫人妃嫔私下嗑瓜子唠嗑！多用自然鲜活的口语词（如：哎哟、啧、笑不活了、不是吧、展开说说、谁懂啊），拒绝端着架子写公文，句子短促有活人感，大家会互相接话、插科打诨、吐槽当差或吃瓜。"
+      desc: "像极了真实的宫人妃嫔私下嗑瓜子唠嗑！多用自然鲜活的口语词（如：哎哟、啧、可不是嘛、展开说说、谁懂啊），拒绝端着架子写公文，句子短促有活人感，大家会顺着前面楼层的话茬互相接话、抬杠、追问新细节。"
     },
     gossip: {
       name: "欢脱吃瓜风",
-      desc: "全员乐子人与前排吃瓜群众！语气欢脱逗趣、看热闹不嫌事大，喜欢抢前排、搬小板凳、起哄、调侃、追问细节，充满快活热闹的欢快气氛。"
+      desc: "全员乐子人与前排吃瓜群众！语气欢脱逗趣、看热闹不嫌事大，喜欢抢前排、搬小板凳、起哄、顺着楼上的爆料继续深扒内幕，充满快活热闹的气氛。"
     },
     snarky: {
       name: "宫斗阴阳风",
-      desc: "针锋相对、话里有话、阴阳怪气拉满！世家妃嫔端着体面说最扎心的话，武将派直接硬刚呛声，冷嘲热讽、暗戳戳护短或拆台，戏剧张力十足。"
+      desc: "针锋相对、话里有话、阴阳怪气拉满！世家妃嫔端着体面说最扎心的话，武将派直接硬刚呛声，针对楼上刚说的话逐句回怼或护短拆台，戏剧张力十足。"
     },
     street: {
       name: "市井烟火风",
@@ -35,7 +35,7 @@
     },
     classical: {
       name: "古风文雅风",
-      desc: "纯正唐风古韵，措辞讲究、含蓄蕴藉，偶有诗词雅谑或引经据典，符合大景世家贵女、翰林学士与宫廷女官的清雅谈吐，同时保持自然互动感。"
+      desc: "纯正唐风古韵，措辞讲究、含蓄蕴藉，偶有诗词雅谑或引经据典，符合大景世家贵女、翰林学士与宫廷女官的清雅谈吐，同时紧扣上文互动。"
     },
     custom: {
       name: "自定义风格",
@@ -82,7 +82,6 @@
     }
   };
 
-  // 基础核心角色库（后妃严格采用 真名（位分） 格式）
   const BASE_DM_NPC_CATALOG = [
     { id: "萧承稷", name: "萧承稷", display: "萧承稷（大景天子）", title: "甘露殿 · 皇帝", keywords: ["萧承稷", "陛下", "圣人"], personality: "大景皇帝，必自称“朕”或私下对熟人称“我”（绝对禁止自称“孤”！）。冷峻威严、城府极深、掌控欲极强，说话简短直接，用陈述句或祈使句，私下对女主护短细腻、占有欲深重。" },
     { id: "沈砚", name: "沈砚", display: "沈砚（中书侍郎）", title: "政事堂 · 中书侍郎", keywords: ["沈砚", "沈清臣", "沈侍郎"], personality: "字清臣，寒门辅政重臣，萧承稷挚友。温润守礼、理智冷静、考虑周全，面对感情克制隐忍，一旦动心则占有欲极强。" },
@@ -166,7 +165,7 @@
     { key: "desire", icon: "🔥", title: "隐秘欲念", sub: "暗潮克制 · 独占私心" }
   ];
 
-  // ==================== 全局配置 ====================
+  // ==================== 全局配置与酒馆后端持久化 ====================
   let config = {
     theme: "xuanpaper",
     autoMasterAll: true,
@@ -184,6 +183,8 @@
     groupChatTheme: "story_sync",
     groupChatCustomThemeText: "",
     lastKnownUserName: "",
+    customSaveSlot: "chat_bind",
+    fabCustomTopRatio: null,
     apiMode: "tavern",
     apiName: "",
     apiUrl: "https://api.openai.com/v1",
@@ -194,11 +195,25 @@
     activePresetId: ""
   };
 
-  try {
-    const legacyCfg = localStorage.getItem("tw_palace_global_cfg_v30") || localStorage.getItem("tw_palace_helper_cfg_v29") || "{}";
-    const curCfg = localStorage.getItem(GLOBAL_CFG_KEY) || legacyCfg;
-    const parsed = JSON.parse(curCfg);
-    Object.assign(config, parsed);
+  function loadGlobalConfig() {
+    try {
+      const legacyStr = localStorage.getItem(GLOBAL_CFG_KEY) || localStorage.getItem("tw_palace_global_cfg_v33") || localStorage.getItem("tw_palace_global_cfg_v32") || "";
+      if (legacyStr) {
+        Object.assign(config, JSON.parse(legacyStr));
+      }
+    } catch (e) {}
+
+    try {
+      const th = targetWin.TavernHelper || window.TavernHelper;
+      const stCtx = targetWin.SillyTavern?.getContext?.() || window.SillyTavern?.getContext?.();
+      const backendCfg =
+        th?.getVariables?.({ type: "global" })?.[GLOBAL_CFG_KEY] ||
+        stCtx?.extensionSettings?.[GLOBAL_CFG_KEY];
+      if (backendCfg && typeof backendCfg === "object") {
+        Object.assign(config, backendCfg);
+      }
+    } catch (e) {}
+
     if (!config.autoModules || typeof config.autoModules !== "object") {
       config.autoModules = { status: true, plot: true, world: true };
     }
@@ -212,10 +227,28 @@
     if (typeof config.forumCustomStyleText !== "string") config.forumCustomStyleText = "";
     if (!config.groupChatTheme || !GROUP_CHAT_THEMES[config.groupChatTheme]) config.groupChatTheme = "story_sync";
     if (typeof config.groupChatCustomThemeText !== "string") config.groupChatCustomThemeText = "";
+    if (!config.customSaveSlot || config.customSaveSlot === "auto_bind" || config.customSaveSlot === "vault_main") {
+      config.customSaveSlot = "chat_bind";
+    }
     if (config.theme === "palaceglass") config.theme = "palace";
-  } catch (e) {}
+  }
 
-  const saveConfig = () => { try { localStorage.setItem(GLOBAL_CFG_KEY, JSON.stringify(config)); } catch (e) {} };
+  const saveConfig = () => {
+    try { localStorage.setItem(GLOBAL_CFG_KEY, JSON.stringify(config)); } catch (e) {}
+    try {
+      const th = targetWin.TavernHelper || window.TavernHelper;
+      if (th && typeof th.insertOrAssignVariables === "function") {
+        th.insertOrAssignVariables({ [GLOBAL_CFG_KEY]: config }, { type: "global" });
+      }
+      const stCtx = targetWin.SillyTavern?.getContext?.() || window.SillyTavern?.getContext?.();
+      if (stCtx?.extensionSettings) {
+        stCtx.extensionSettings[GLOBAL_CFG_KEY] = config;
+        if (typeof stCtx.saveSettingsDebounced === "function") stCtx.saveSettingsDebounced();
+      }
+    } catch (e) {}
+  };
+
+  loadGlobalConfig();
 
   function isAutoModuleOn(modName) {
     if (config.autoMasterAll) return true;
@@ -224,43 +257,6 @@
 
   function escapeRegExp(str) {
     return String(str || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  }
-
-  function simpleHash(str) {
-    let h = 2166136261;
-    const s = String(str || "");
-    for (let i = 0; i < s.length; i++) {
-      h ^= s.charCodeAt(i);
-      h = Math.imul(h, 16777619);
-    }
-    return (h >>> 0).toString(36);
-  }
-
-  // ==================== 稳固多存档识别与防丢档机制 ====================
-  function detectCurrentChatSessionKey() {
-    try {
-      const stCtx = targetWin.SillyTavern?.getContext?.() || window.SillyTavern?.getContext?.();
-      if (stCtx) {
-        const cid = stCtx.chatId || stCtx.chat_metadata?.chat_id_hash || "";
-        const charId = stCtx.characterId !== undefined ? stCtx.characterId : (stCtx.groupId || "g");
-        if (cid && String(cid).trim() && String(cid) !== "undefined" && String(cid) !== "null") {
-          const cleanCid = `st_${charId}_${String(cid).replace(/[^a-zA-Z0-9_\-\u4e00-\u9fa5]/g, "_")}`;
-          try { localStorage.setItem(LAST_ACTIVE_SESSION_KEY, cleanCid); } catch (e) {}
-          return cleanCid;
-        }
-        if (Array.isArray(stCtx.chat) && stCtx.chat.length > 0) {
-          const firstMes = (stCtx.chat[0]?.mes || stCtx.chat[0]?.message || "").slice(0, 100);
-          const sendDate = stCtx.chat[0]?.send_date || "";
-          const hashKey = `st_hash_${charId}_${simpleHash(sendDate + "|" + firstMes)}`;
-          try { localStorage.setItem(LAST_ACTIVE_SESSION_KEY, hashKey); } catch (e) {}
-          return hashKey;
-        }
-      }
-      // 如果酒馆上下文还在加载中，优先沿用上一次激活的存档Key，绝不轻易重置为空白！
-      const lastSavedKey = localStorage.getItem(LAST_ACTIVE_SESSION_KEY);
-      if (lastSavedKey) return lastSavedKey;
-    } catch (e) {}
-    return "default_session";
   }
 
   function detectCurrentUserName() {
@@ -287,9 +283,53 @@
     return config.lastKnownUserName || "云鸢";
   }
 
-  // ==================== 当前对话框绑定的运行时 State（群聊默认为空白） ====================
+  // ==================== 存档与当前聊天进度硬盘级绑定引擎 ====================
+  function getCurrentChatFileId() {
+    try {
+      const stCtx = targetWin.SillyTavern?.getContext?.() || window.SillyTavern?.getContext?.();
+      if (stCtx && typeof stCtx.getCurrentChatId === "function") {
+        const cid = stCtx.getCurrentChatId();
+        if (cid) return String(cid).replace(/[^a-zA-Z0-9_\-\u4e00-\u9fa5]/g, "_");
+      }
+      if (stCtx?.chatId) {
+        return String(stCtx.chatId).replace(/[^a-zA-Z0-9_\-\u4e00-\u9fa5]/g, "_");
+      }
+      if (stCtx?.chat_metadata?.chat_id_hash) {
+        return "hash_" + String(stCtx.chat_metadata.chat_id_hash);
+      }
+    } catch (e) {}
+    return "default_chat";
+  }
+
+  function getActiveVaultKey() {
+    const slot = config.customSaveSlot || "chat_bind";
+    if (slot === "chat_bind") {
+      return `${CHAT_BIND_VAR_KEY}_${getCurrentChatFileId()}`;
+    }
+    return `${CHAT_BIND_VAR_KEY}_${slot}`;
+  }
+
+  function hasSubstantialData(obj) {
+    if (!obj || typeof obj !== "object") return false;
+    return Boolean(
+      (Array.isArray(obj.plotSummary) && obj.plotSummary.length > 0) ||
+      (Array.isArray(obj.posts) && obj.posts.length > 0) ||
+      (Array.isArray(obj.palaceDynamics) && obj.palaceDynamics.length > 0) ||
+      (Array.isArray(obj.outsideDynamics) && obj.outsideDynamics.length > 0) ||
+      (Array.isArray(obj.storyPlans) && obj.storyPlans.length > 0) ||
+      (Array.isArray(obj.groupMessages) && obj.groupMessages.length > 0) ||
+      (obj.dmHistories && Object.keys(obj.dmHistories).some(k => Array.isArray(obj.dmHistories[k]) && obj.dmHistories[k].length > 0)) ||
+      obj.emperorSpyData ||
+      obj.theaterText ||
+      obj.innerThought ||
+      obj.diary
+    );
+  }
+
   const state = {
-    currentSessionKey: "",
+    isHydrated: false,
+    currentSessionKey: getActiveVaultKey(),
+    boundChatId: getCurrentChatFileId(),
     userName: detectCurrentUserName(),
     userIdentity: "未同步",
     time: "未同步",
@@ -317,22 +357,21 @@
     replyTargets: {},
     chatQuoteTarget: null,
     dmQuoteTarget: null,
-    groupMessages: [], // 默认空白，刷新才出
+    groupMessages: [],
     dmNpcOptions: [...BASE_DM_NPC_CATALOG],
     dmActiveNpc: "萧承稷",
     dmHistories: {},
     emperorSpyData: null,
-    emperorSpyRevealed: {}, // 记录哪些卡片已被点开查看
-    emperorCardClickCount: 0, // 点开不同卡片的累计次数
-    emperorNextCatchThreshold: Math.floor(Math.random() * 3) + 3, // 点开3~5次触发抓包
+    emperorSpyRevealed: {},
+    emperorCardClickCount: 0,
+    emperorNextCatchThreshold: Math.floor(Math.random() * 3) + 3,
     isAutoRunning: false,
     isGlobalRefreshing: false,
     hasUnreadFabGlow: false,
     apiLogs: []
   };
 
-  function resetStateToBlankForNewChat(sessionKey) {
-    state.currentSessionKey = sessionKey;
+  function explicitClearCurrentArchive() {
     state.userName = detectCurrentUserName();
     state.userIdentity = "未同步";
     state.time = "未同步";
@@ -369,12 +408,160 @@
     state.emperorNextCatchThreshold = Math.floor(Math.random() * 3) + 3;
   }
 
-  function saveCurrentChatSessionData() {
-    const key = state.currentSessionKey || detectCurrentChatSessionKey();
-    if (!key) return;
-    state.currentSessionKey = key;
+  function applyParsedPayloadToState(parsed) {
+    if (!parsed || typeof parsed !== "object") return false;
+    if (parsed.userIdentity && parsed.userIdentity !== "未同步") state.userIdentity = parsed.userIdentity;
+    if (parsed.time && parsed.time !== "未同步") state.time = parsed.time;
+    if (parsed.location && parsed.location !== "未同步") state.location = parsed.location;
+    if (parsed.mood && parsed.mood !== "未同步") state.mood = parsed.mood;
+    if (parsed.pose && parsed.pose !== "未同步") state.pose = parsed.pose;
+    if (parsed.clothes && parsed.clothes !== "未同步") state.clothes = parsed.clothes;
+    if (parsed.innerThought) state.innerThought = parsed.innerThought;
+    if (parsed.diary) state.diary = parsed.diary;
+    if (parsed.hasAffection) {
+      state.affection = Number(parsed.affection) || 0;
+      state.hasAffection = true;
+    }
+    if (parsed.stage && parsed.stage !== "未同步") state.stage = parsed.stage;
+    if (parsed.inNews) state.inNews = parsed.inNews;
+    if (parsed.outNews) state.outNews = parsed.outNews;
+    if (parsed.todo1) state.todo1 = parsed.todo1;
+    if (parsed.todo2) state.todo2 = parsed.todo2;
+    if (parsed.lastAutoProcessedRoundId) state.lastAutoProcessedRoundId = parsed.lastAutoProcessedRoundId;
+    if (Array.isArray(parsed.plotSummary)) state.plotSummary = parsed.plotSummary;
+    if (Array.isArray(parsed.palaceDynamics)) state.palaceDynamics = parsed.palaceDynamics;
+    if (Array.isArray(parsed.outsideDynamics)) state.outsideDynamics = parsed.outsideDynamics;
+    if (Array.isArray(parsed.posts)) state.posts = parsed.posts;
+    if (Array.isArray(parsed.storyPlans)) state.storyPlans = parsed.storyPlans;
+    if (parsed.theaterText !== undefined) state.theaterText = parsed.theaterText;
+    if (Array.isArray(parsed.groupMessages)) state.groupMessages = parsed.groupMessages;
+    if (parsed.dmActiveNpc) state.dmActiveNpc = parsed.dmActiveNpc;
+    if (parsed.dmHistories && typeof parsed.dmHistories === "object") {
+      state.dmHistories = parsed.dmHistories;
+    }
+    if (Array.isArray(parsed.dmCustomNpcs) && parsed.dmCustomNpcs.length) {
+      const merged = [...BASE_DM_NPC_CATALOG];
+      parsed.dmCustomNpcs.forEach(c => {
+        if (c && c.id && !merged.some(m => m.id === c.id)) merged.push(c);
+      });
+      state.dmNpcOptions = merged;
+    }
+    if (parsed.emperorSpyData !== undefined) state.emperorSpyData = parsed.emperorSpyData;
+    if (parsed.emperorSpyRevealed && typeof parsed.emperorSpyRevealed === "object") {
+      state.emperorSpyRevealed = parsed.emperorSpyRevealed;
+    }
+    state.emperorCardClickCount = Number(parsed.emperorCardClickCount) || 0;
+    state.emperorNextCatchThreshold = Number(parsed.emperorNextCatchThreshold) || (Math.floor(Math.random() * 3) + 3);
     deduplicateTimelineInPlace();
+    return true;
+  }
+
+  function readFromTavernBackend(vaultKey) {
+    const isChatBindMode = (config.customSaveSlot || "chat_bind") === "chat_bind";
+
+    // 1. TavernHelper 原生 chat 变量库（直接随当前聊天记录 .jsonl 绑定保存）
+    try {
+      const th = targetWin.TavernHelper || window.TavernHelper;
+      if (th && typeof th.getVariables === "function") {
+        if (isChatBindMode) {
+          const chatVars = th.getVariables({ type: "chat" });
+          if (chatVars && chatVars[CHAT_BIND_VAR_KEY] && hasSubstantialData(chatVars[CHAT_BIND_VAR_KEY])) {
+            return chatVars[CHAT_BIND_VAR_KEY];
+          }
+          if (chatVars && chatVars[vaultKey] && hasSubstantialData(chatVars[vaultKey])) {
+            return chatVars[vaultKey];
+          }
+        }
+        const globalVars = th.getVariables({ type: "global" });
+        if (globalVars && globalVars[vaultKey] && hasSubstantialData(globalVars[vaultKey])) {
+          return globalVars[vaultKey];
+        }
+      }
+    } catch (e) {}
+
+    // 2. SillyTavern 原生 chatMetadata 与 extensionSettings
+    try {
+      const stCtx = targetWin.SillyTavern?.getContext?.() || window.SillyTavern?.getContext?.();
+      if (stCtx) {
+        if (isChatBindMode && stCtx.chatMetadata) {
+          if (stCtx.chatMetadata[CHAT_BIND_VAR_KEY] && hasSubstantialData(stCtx.chatMetadata[CHAT_BIND_VAR_KEY])) {
+            return stCtx.chatMetadata[CHAT_BIND_VAR_KEY];
+          }
+          if (stCtx.chatMetadata[vaultKey] && hasSubstantialData(stCtx.chatMetadata[vaultKey])) {
+            return stCtx.chatMetadata[vaultKey];
+          }
+        }
+        if (stCtx.extensionSettings && stCtx.extensionSettings[vaultKey] && hasSubstantialData(stCtx.extensionSettings[vaultKey])) {
+          return stCtx.extensionSettings[vaultKey];
+        }
+      }
+    } catch (e) {}
+
+    // 3. 顶层窗口缓存与 localStorage 备份
+    try {
+      if (targetWin.__TW_PERSIST_CACHE_V34 && hasSubstantialData(targetWin.__TW_PERSIST_CACHE_V34[vaultKey])) {
+        return targetWin.__TW_PERSIST_CACHE_V34[vaultKey];
+      }
+      const raw = localStorage.getItem(LOCAL_BACKUP_PREFIX + vaultKey) || localStorage.getItem(vaultKey);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (hasSubstantialData(parsed)) return parsed;
+      }
+    } catch (e) {}
+
+    return null;
+  }
+
+  function writeToTavernBackend(vaultKey, payload) {
+    const isChatBindMode = (config.customSaveSlot || "chat_bind") === "chat_bind";
+
+    // 1. 写入 TavernHelper 聊天级变量库与全局变量库
+    try {
+      const th = targetWin.TavernHelper || window.TavernHelper;
+      if (th && typeof th.insertOrAssignVariables === "function") {
+        if (isChatBindMode) {
+          th.insertOrAssignVariables({ [CHAT_BIND_VAR_KEY]: payload, [vaultKey]: payload }, { type: "chat" });
+        }
+        th.insertOrAssignVariables({ [vaultKey]: payload }, { type: "global" });
+      }
+    } catch (e) {}
+
+    // 2. 写入 SillyTavern chatMetadata 与 extensionSettings 并触发落盘保存
+    try {
+      const stCtx = targetWin.SillyTavern?.getContext?.() || window.SillyTavern?.getContext?.();
+      if (stCtx) {
+        if (isChatBindMode && stCtx.chatMetadata) {
+          stCtx.chatMetadata[CHAT_BIND_VAR_KEY] = payload;
+          stCtx.chatMetadata[vaultKey] = payload;
+          if (typeof stCtx.saveMetadata === "function") stCtx.saveMetadata();
+          else if (typeof targetWin.saveMetadataDebounced === "function") targetWin.saveMetadataDebounced();
+        }
+        if (stCtx.extensionSettings) {
+          stCtx.extensionSettings[vaultKey] = payload;
+          if (typeof stCtx.saveSettingsDebounced === "function") stCtx.saveSettingsDebounced();
+        }
+      }
+    } catch (e) {}
+
+    // 3. 同步写入顶层窗口内存与 localStorage
+    try {
+      if (!targetWin.__TW_PERSIST_CACHE_V34) targetWin.__TW_PERSIST_CACHE_V34 = {};
+      targetWin.__TW_PERSIST_CACHE_V34[vaultKey] = payload;
+      localStorage.setItem(LOCAL_BACKUP_PREFIX + vaultKey, JSON.stringify(payload));
+    } catch (e) {}
+  }
+
+  function saveCurrentChatSessionData(forceAllowEmpty = false) {
+    if (!state.isHydrated && !forceAllowEmpty) return;
+    deduplicateTimelineInPlace();
+    const vaultKey = getActiveVaultKey();
+    state.currentSessionKey = vaultKey;
+    state.boundChatId = getCurrentChatFileId();
+
     const payload = {
+      savedAt: Date.now(),
+      vaultKey,
+      boundChatId: state.boundChatId,
       userIdentity: state.userIdentity,
       time: state.time,
       location: state.location,
@@ -406,79 +593,51 @@
       emperorCardClickCount: state.emperorCardClickCount,
       emperorNextCatchThreshold: state.emperorNextCatchThreshold
     };
-    try {
-      localStorage.setItem(CHAT_STORE_PREFIX + key, JSON.stringify(payload));
-      localStorage.setItem(LAST_ACTIVE_SESSION_KEY, key);
-    } catch (e) {}
-  }
 
-  function loadChatSessionData(sessionKey) {
-    if (!sessionKey) return;
-    // 尝试读取 v31 存档，若无则自动兼容迁移 v30 同名存档
-    let raw = null;
-    try {
-      raw = localStorage.getItem(CHAT_STORE_PREFIX + sessionKey) || localStorage.getItem("tw_palace_chat_data_v30_" + sessionKey);
-    } catch (e) {}
-
-    resetStateToBlankForNewChat(sessionKey);
-    if (!raw) return;
-
-    try {
-      const parsed = JSON.parse(raw);
-      state.userIdentity = parsed.userIdentity || "未同步";
-      state.time = parsed.time || "未同步";
-      state.location = parsed.location || "未同步";
-      state.mood = parsed.mood || "未同步";
-      state.pose = parsed.pose || "未同步";
-      state.clothes = parsed.clothes || "未同步";
-      state.innerThought = parsed.innerThought || "";
-      state.diary = parsed.diary || "";
-      state.affection = Number(parsed.affection) || 0;
-      state.hasAffection = Boolean(parsed.hasAffection);
-      state.stage = parsed.stage || "未同步";
-      state.inNews = parsed.inNews || "";
-      state.outNews = parsed.outNews || "";
-      state.todo1 = parsed.todo1 || "";
-      state.todo2 = parsed.todo2 || "";
-      state.lastAutoProcessedRoundId = parsed.lastAutoProcessedRoundId || "";
-      state.plotSummary = Array.isArray(parsed.plotSummary) ? parsed.plotSummary : [];
-      state.palaceDynamics = Array.isArray(parsed.palaceDynamics) ? parsed.palaceDynamics : [];
-      state.outsideDynamics = Array.isArray(parsed.outsideDynamics) ? parsed.outsideDynamics : [];
-      state.posts = Array.isArray(parsed.posts) ? parsed.posts : [];
-      state.storyPlans = Array.isArray(parsed.storyPlans) ? parsed.storyPlans : [];
-      state.theaterText = parsed.theaterText || "";
-      state.groupMessages = Array.isArray(parsed.groupMessages) ? parsed.groupMessages : [];
-      state.dmActiveNpc = parsed.dmActiveNpc || "萧承稷";
-      state.dmHistories = (parsed.dmHistories && typeof parsed.dmHistories === "object") ? parsed.dmHistories : {};
-      if (Array.isArray(parsed.dmCustomNpcs) && parsed.dmCustomNpcs.length) {
-        const merged = [...BASE_DM_NPC_CATALOG];
-        parsed.dmCustomNpcs.forEach(c => {
-          if (c && c.id && !merged.some(m => m.id === c.id)) merged.push(c);
-        });
-        state.dmNpcOptions = merged;
+    if (!forceAllowEmpty && !hasSubstantialData(payload)) {
+      const existingBackendData = readFromTavernBackend(vaultKey);
+      if (existingBackendData && hasSubstantialData(existingBackendData)) {
+        applyParsedPayloadToState(existingBackendData);
+        return;
       }
-      state.emperorSpyData = parsed.emperorSpyData || null;
-      state.emperorSpyRevealed = (parsed.emperorSpyRevealed && typeof parsed.emperorSpyRevealed === "object") ? parsed.emperorSpyRevealed : {};
-      state.emperorCardClickCount = Number(parsed.emperorCardClickCount) || 0;
-      state.emperorNextCatchThreshold = Number(parsed.emperorNextCatchThreshold) || (Math.floor(Math.random() * 3) + 3);
-      saveCurrentChatSessionData();
-    } catch (e) {}
-    deduplicateTimelineInPlace();
+    }
+
+    writeToTavernBackend(vaultKey, payload);
   }
 
-  function checkAndSwitchChatSessionIfNeeded() {
-    const detectedKey = detectCurrentChatSessionKey();
-    if (!detectedKey || detectedKey === "default_session") return false;
-    if (!state.currentSessionKey) {
-      loadChatSessionData(detectedKey);
+  function loadChatSessionData(explicitSlotOrChatSwitch = false) {
+    const vaultKey = getActiveVaultKey();
+    state.currentSessionKey = vaultKey;
+    state.boundChatId = getCurrentChatFileId();
+
+    if (explicitSlotOrChatSwitch) {
+      explicitClearCurrentArchive();
+    }
+
+    const backendData = readFromTavernBackend(vaultKey);
+    if (backendData && hasSubstantialData(backendData)) {
+      applyParsedPayloadToState(backendData);
+      state.isHydrated = true;
       return true;
     }
-    if (detectedKey !== state.currentSessionKey) {
-      // 切换前先把旧档保存好
-      saveCurrentChatSessionData();
-      loadChatSessionData(detectedKey);
-      return true;
+
+    // 兼容迁移旧版 v33/v32 数据到当前首个绑定的聊天档
+    if (!explicitSlotOrChatSwitch) {
+      try {
+        const legacyRaw = localStorage.getItem("tw_palace_permanent_vault_v33") || localStorage.getItem("tw_palace_master_backup_v32");
+        if (legacyRaw) {
+          const parsedLegacy = JSON.parse(legacyRaw);
+          if (hasSubstantialData(parsedLegacy)) {
+            applyParsedPayloadToState(parsedLegacy);
+            state.isHydrated = true;
+            writeToTavernBackend(vaultKey, parsedLegacy);
+            return true;
+          }
+        }
+      } catch (e) {}
     }
+
+    state.isHydrated = true;
     return false;
   }
 
@@ -493,11 +652,9 @@
     return `
 【论坛说话风格与活人感最高指令（当前风格：${preset.name}）】：
 1. 风格要求：${activeDesc}
-2. 严禁死板书面语：发帖和评论是大家匿名逛论坛唠嗑，绝对不要写成公文汇报或人物小传！要多用口语、叹词、反问、吐槽、接梗、抢沙发或追问八卦细节。
-3. 贴合人设又鲜活：每个NPC既要保持自己的立场脾气（如苏枕月（丽嫔）爱看戏嗑瓜子、秦昭华（德妃）护短嘴快、霍惊弦爱凑热闹、小禄子战战兢兢吃瓜、谢无咎精明爱起哄、萧承稷冷不丁冒出来压场子），又要用鲜活生动的活人口吻说话！`;
+2. 严禁死板书面语与严禁车轱辘话：发帖和评论是大家在论坛盖楼唠嗑，绝对不要重复前面楼层已经说过的句式、词汇或观点！必须顺着楼上的最新话茬往深处聊、爆新料、反问或转移到新的具体细节上！`;
   }
 
-  // ==================== 规范后妃姓名（位分）与论坛马甲保护 ====================
   function formatConsortStandardName(rawName) {
     let s = String(rawName || "").trim();
     if (!s) return s;
@@ -591,7 +748,6 @@
     return "";
   }
 
-  // ==================== 悬浮球流光提醒 + 模块刷新Toast + 仿微信通知横幅 ====================
   function triggerFabGlowReminder() {
     const overlay = targetDoc.getElementById("twModalOverlay");
     const fab = targetDoc.getElementById("twFabBall");
@@ -719,7 +875,7 @@
   }
 
   const saveTimeline = () => {
-    saveCurrentChatSessionData();
+    saveCurrentChatSessionData(false);
   };
 
   if (state.userName && state.userName !== config.lastKnownUserName) {
@@ -727,7 +883,6 @@
     saveConfig();
   }
 
-  // ==================== 世界观称呼铁律（严禁自称“孤”，后妃统一真名（位分）） ====================
   function getWorldAddressRules() {
     const uName = state.userName || detectCurrentUserName();
     return `
@@ -784,7 +939,6 @@
       res = res.replace(new RegExp(`【\\s*(${escName})\\s*】`, "g"), "$1");
     }
 
-    // 强制拦截萧承稷台词中的自称“孤”，替换为“朕”（不影响“孤立、孤身、孤本、孤女、孤单、孤高、阿古拉”等正常词汇）
     res = res.replace(/(?<![\u4e00-\u9fa5])孤(?![立身本女单高儿寡零魂芳傲岛负月灯木掌臣])/g, "朕");
 
     res = res
@@ -866,7 +1020,7 @@
       .trim();
   }
 
-  // ==================== 样式表（含悬浮球居中靠右、圣人日常精致平行翻牌卡片） ====================
+  // ==================== 样式表 ====================
   const styleEl = targetDoc.createElement("style");
   styleEl.id = "tw-floating-style";
   styleEl.textContent = `
@@ -937,7 +1091,6 @@
     #tw-floating-root * { box-sizing:border-box; }
     #tw-floating-root.tw-chat-inactive { display:none !important; }
 
-    /* 悬浮球默认位置：屏幕垂直正中间靠右 + 流光呼吸动效 */
     @keyframes twFabStreamGlow {
       0% { box-shadow:0 0 12px #f5d380, 0 0 24px #c93b2b, inset 0 0 12px rgba(255,225,150,0.75); border-color:#ffe49e; }
       50% { box-shadow:0 0 22px #ffdf85, 0 0 38px #e64833, 0 0 52px rgba(255,190,70,0.65), inset 0 0 18px rgba(255,240,190,0.95); border-color:#ffffff; }
@@ -948,7 +1101,11 @@
       100% { transform:translateX(220%) rotate(25deg); }
     }
     .tw-fab-ball {
-      position:fixed; right:14px; top:50%; transform:translateY(-50%);
+      position:fixed !important;
+      top:calc(50vh - 34px);
+      right:14px !important;
+      left:auto !important;
+      bottom:auto !important;
       width:58px; height:68px; background:var(--fab-grad);
       border:2px solid var(--gold); border-radius:14px 14px 26px 26px; color:var(--head-text);
       display:flex; flex-direction:column; align-items:center; justify-content:center;
@@ -974,7 +1131,6 @@
     .tw-fab-main { font-size:14px; font-weight:bold; letter-spacing:2.5px; line-height:1.15; }
     .tw-fab-ornament { width:18px; height:3px; margin-top:4px; background:linear-gradient(90deg,transparent,var(--gold),transparent); }
 
-    /* 顶部仿微信新消息通知横幅 & 模块刷新成功 Toast */
     .tw-wechat-banner {
       position:fixed; top:16px; left:50%; transform:translateX(-50%) translateY(-130%);
       width:360px; max-width:92vw; background:rgba(32, 35, 42, 0.94); color:#fff;
@@ -1003,7 +1159,6 @@
     }
     .tw-module-toast.show { transform:translateX(-50%) translateY(0); opacity:1; }
 
-    /* 圣人抓包警告弹窗 */
     .tw-catch-modal {
       display:none; position:absolute; inset:0; background:rgba(15, 8, 6, 0.78);
       backdrop-filter:blur(4px); z-index:99; align-items:center; justify-content:center; padding:18px;
@@ -1059,7 +1214,6 @@
     .tw-row:last-child { border-bottom:0; }
     .tw-row b { color:var(--accent-strong); }
 
-    /* 圣人日常 · 精致平行翻牌卡片网格 */
     .tw-spy-grid {
       display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:8px;
     }
@@ -1163,7 +1317,7 @@
     .tw-gomoku-board { display:grid; grid-template-columns:repeat(11,26px); grid-template-rows:repeat(11,26px); background:#dec496; border:2px solid #734f29; padding:6px; border-radius:4px; margin:6px auto; user-select:none; }
     .tw-gomoku-cell { width:26px; height:26px; position:relative; display:flex; align-items:center; justify-content:center; cursor:pointer; }
     .tw-gomoku-cell::before { content:""; position:absolute; width:100%; height:1px; background:rgba(90,55,25,0.55); }
-    .tw-gomoku-cell::after { content:""; position:absolute; height:100%; width:1px; background:rgba(90,55,25,0.55); }
+    .tw-gomoku-cell::after { content:""; position:absolute; width:100%; width:1px; background:rgba(90,55,25,0.55); }
     .tw-stone { width:20px; height:20px; border-radius:50%; z-index:2; box-shadow:1px 2px 4px rgba(0,0,0,0.45); }
     .tw-stone.black { background:radial-gradient(circle at 30% 30%,#555,#111); }
     .tw-stone.white { background:radial-gradient(circle at 30% 30%,#fff,#d4cec3); border:1px solid #999; }
@@ -1218,7 +1372,7 @@
   rootEl.id = "tw-floating-root";
   rootEl.setAttribute("data-theme", config.theme || "xuanpaper");
   rootEl.innerHTML = `
-    <div class="tw-fab-ball" id="twFabBall" title="点击展开太微宫闻录">
+    <div class="tw-fab-ball" id="twFabBall" title="点击展开太微宫闻录（可上下拖动）">
       <span class="tw-fab-dot"></span>
       <span class="tw-fab-top">太微</span>
       <span class="tw-fab-main">闻录</span>
@@ -1249,7 +1403,7 @@
           <div class="tw-catch-card">
             <div class="tw-catch-title">⚠️ 频频窥探圣躬 · 被当场抓包！</div>
             <div class="tw-catch-desc" id="twCatchDesc">
-              赵怀安低着头刚把起居注合上，甘露殿内便传来一声极轻的冷嗤。萧承稷指尖慢条斯理地转过墨玉扳指，淡色眼瞳隔着宫墙似已将你接连翻看他起居秘录的小动作尽收眼底，并向你发来了一道私密传讯……
+              赵怀安低着头刚把起居注合上，甘露殿内传来一声极轻的冷嗤。萧承稷指尖慢条斯理地转过墨玉扳指，淡色眼瞳隔着宫墙似已将你接连翻看他起居秘录的小动作尽收眼底，并向你发来了一道私密传讯……
             </div>
             <button type="button" class="tw-refresh-forum-btn" id="twGoCaughtDmBtn" style="width:100%;padding:8px;">立即前往【单人私聊】查看圣人质问</button>
           </div>
@@ -1373,7 +1527,7 @@
             </div>
           </div>
 
-          <!-- 5. 圣人日常（位于论坛前面 · 平行精致翻牌卡片） -->
+          <!-- 5. 圣人日常 -->
           <div class="tw-tab-page" id="tw-page-emperor">
             <div class="tw-box">
               <div class="tw-sec-head">
@@ -1451,7 +1605,7 @@
             </div>
           </div>
 
-          <!-- 8. 宫廷游艺（单人私聊 / 太微群聊 / 代批奏折 / 五子棋） -->
+          <!-- 8. 宫廷游艺 -->
           <div class="tw-tab-page" id="tw-page-games">
             <div class="tw-game-tabs">
               <button type="button" class="tw-game-tab-btn active" data-game="dm">单人私聊</button>
@@ -1488,7 +1642,7 @@
               </div>
             </div>
 
-            <!-- 子面板 B：太微群聊（默认空白 + 换主题重置 + 新增我是皇帝全员后宫） -->
+            <!-- 子面板 B：太微群聊 -->
             <div class="tw-subgame-pane" id="tw-game-chatroom">
               <div class="tw-box">
                 <div class="tw-sec-head">
@@ -1574,6 +1728,24 @@
 
           <!-- 9. 设置 -->
           <div class="tw-tab-page" id="tw-page-settings">
+            <div class="tw-box">
+              <div class="tw-sec-head">
+                <span>存档绑定与悬浮球位置管理</span>
+                <span class="tw-badge" id="twSessionPill">已绑定当前对话</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:6px;margin-bottom:7px;flex-wrap:wrap;">
+                <span class="tw-label" style="white-space:nowrap;">存档绑定模式：</span>
+                <select class="tw-select" id="twSaveSlotSelect" style="margin-bottom:0;flex:1;">
+                  <option value="chat_bind">自动绑定当前聊天记录（随酒馆对话文件保存）</option>
+                  <option value="slot_1">独立固定存档槽位一</option>
+                  <option value="slot_2">独立固定存档槽位二</option>
+                  <option value="slot_3">独立固定存档槽位三</option>
+                </select>
+                <button type="button" class="tw-reply-npc-btn" id="twResetFabPosBtn" style="padding:5px 9px;background:var(--accent);color:#fff;">悬浮球恢复居中</button>
+              </div>
+              <div class="tw-label">新档或初次导入时悬浮球默认居中靠右，上下拖动后自动记住你的位置。</div>
+            </div>
+
             <div class="tw-box">
               <div class="tw-sec-head"><span>配色方案切换</span><span class="tw-badge">七色可选</span></div>
               <div class="tw-theme-grid">
@@ -1691,9 +1863,8 @@
 
             <div class="tw-box">
               <div class="tw-sec-head">
-                <span>当前绑定对话框独立存档与调用日志</span>
+                <span>API 调用监控日志</span>
                 <div style="display:flex;gap:6px;align-items:center;">
-                  <span class="tw-badge" id="twSessionPill">独立存档同步中</span>
                   <span class="tw-badge" id="twApiLogCountBadge">共 0 条</span>
                   <button type="button" class="tw-reply-npc-btn" id="twClearApiLogsBtn">清空日志</button>
                 </div>
@@ -1709,13 +1880,67 @@
   // ==================== 【上篇结束，请将下篇代码紧接着粘贴在此行下方】 ====================
   // ==================== 【下篇开始：紧接上篇 targetDoc.body.appendChild(rootEl); 之后】 ====================
 
+  // ==================== 悬浮球位置管理（新档/初次导入默认正中间，支持上下拖动记忆位置） ====================
+  function pinFabToRightCenter(forceResetToCenter = false) {
+    const fabEl = targetDoc.getElementById("twFabBall");
+    if (!fabEl) return;
+    if (forceResetToCenter) {
+      config.fabCustomTopRatio = null;
+      saveConfig();
+    }
+
+    fabEl.style.setProperty("position", "fixed", "important");
+    fabEl.style.setProperty("right", "14px", "important");
+    fabEl.style.setProperty("left", "auto", "important");
+    fabEl.style.setProperty("bottom", "auto", "important");
+    fabEl.style.setProperty("transform", "none", "important");
+
+    const vh = targetWin.innerHeight || targetDoc.documentElement.clientHeight || 0;
+    if (
+      typeof config.fabCustomTopRatio === "number" &&
+      !isNaN(config.fabCustomTopRatio) &&
+      config.fabCustomTopRatio >= 0.05 &&
+      config.fabCustomTopRatio <= 0.92 &&
+      vh > 240
+    ) {
+      const targetTopPx = Math.max(20, Math.min(vh - 88, Math.round(vh * config.fabCustomTopRatio)));
+      fabEl.style.setProperty("top", `${targetTopPx}px`, "important");
+    } else {
+      // 新档或未手动拖动时，默认锁定在屏幕右侧正中间
+      fabEl.style.setProperty("top", "calc(50vh - 34px)", "important");
+    }
+  }
+
+  pinFabToRightCenter(false);
+  targetWin.addEventListener("resize", () => pinFabToRightCenter(false));
+
+  targetWin.addEventListener("beforeunload", () => {
+    if (state.isHydrated && hasSubstantialData(state)) {
+      saveCurrentChatSessionData(false);
+    }
+  });
+
+  targetDoc.getElementById("twResetFabPosBtn")?.addEventListener("click", () => {
+    pinFabToRightCenter(true);
+    showModuleSuccessToast("悬浮球已恢复居中位置");
+  });
+
+  targetDoc.getElementById("twSaveSlotSelect")?.addEventListener("change", (e) => {
+    const newSlot = e.target.value || "chat_bind";
+    saveCurrentChatSessionData(false);
+    config.customSaveSlot = newSlot;
+    saveConfig();
+    loadChatSessionData(true);
+    renderAll();
+    showModuleSuccessToast(`已切换存档模式：${e.target.options[e.target.selectedIndex]?.text || newSlot}`);
+  });
+
   targetDoc.getElementById("twCloseErrorBannerBtn")?.addEventListener("click", hideApiErrorBanner);
   targetDoc.getElementById("twClearApiLogsBtn")?.addEventListener("click", () => {
     state.apiLogs = [];
     renderApiLogs();
   });
 
-  // 点击顶部仿微信通知横幅，自动展开闻录并跳到对应聊天窗口
   targetDoc.getElementById("twWechatBanner")?.addEventListener("click", (e) => {
     const banner = e.currentTarget;
     banner.classList.remove("show");
@@ -1735,13 +1960,12 @@
       rootEl.querySelectorAll(".tw-subgame-pane").forEach(p => p.classList.toggle("active", p.id === `tw-game-${jumpSubgame}`));
       if (jumpSubgame === "dm" && jumpNpc) {
         state.dmActiveNpc = jumpNpc;
-        saveCurrentChatSessionData();
+        saveCurrentChatSessionData(false);
         renderDmSection();
       }
     }
   });
 
-  // 圣人抓包弹窗跳转按钮
   targetDoc.getElementById("twGoCaughtDmBtn")?.addEventListener("click", () => {
     targetDoc.getElementById("twCatchModal")?.classList.remove("show");
     rootEl.querySelectorAll(".tw-nav button").forEach(b => b.classList.toggle("active", b.dataset.tab === "games"));
@@ -1749,7 +1973,7 @@
     rootEl.querySelectorAll(".tw-game-tab-btn").forEach(b => b.classList.toggle("active", b.dataset.game === "dm"));
     rootEl.querySelectorAll(".tw-subgame-pane").forEach(p => p.classList.toggle("active", p.id === "tw-game-dm"));
     state.dmActiveNpc = "萧承稷";
-    saveCurrentChatSessionData();
+    saveCurrentChatSessionData(false);
     renderDmSection();
   });
 
@@ -1806,7 +2030,7 @@
   function checkIsXiaoChat() {
     try {
       const chatEl = targetDoc.getElementById("chat");
-      const sendForm = targetDoc.getElementById("send_form") || targetDoc.getElementId("form_sheld");
+      const sendForm = targetDoc.getElementById("send_form") || targetDoc.getElementById("form_sheld");
       if (!chatEl || chatEl.offsetParent === null || chatEl.clientHeight < 50) return false;
       if (sendForm && sendForm.offsetParent === null) return false;
       const stCtx = targetWin.SillyTavern?.getContext?.() || window.SillyTavern?.getContext?.();
@@ -1823,15 +2047,24 @@
     } catch (e) { return true; }
   }
 
+  // 实时监测当前对话 ID 与存档恢复状态
   targetWin.__twCheckTimer = setInterval(() => {
     if (!checkIsXiaoChat()) {
       rootEl.classList.add("tw-chat-inactive");
       targetDoc.getElementById("twModalOverlay")?.classList.add("tw-hidden");
     } else {
       rootEl.classList.remove("tw-chat-inactive");
-      if (checkAndSwitchChatSessionIfNeeded()) {
+      const curCid = getCurrentChatFileId();
+      if ((config.customSaveSlot || "chat_bind") === "chat_bind" && curCid !== "default_chat" && curCid !== state.boundChatId) {
+        state.boundChatId = curCid;
+        loadChatSessionData(true);
         syncFromWorldbookAndChat(false);
-        renderAll();
+        return;
+      }
+      if (!hasSubstantialData(state)) {
+        if (loadChatSessionData(false)) {
+          renderAll();
+        }
       }
       const latestDetectedName = detectCurrentUserName();
       if (latestDetectedName && latestDetectedName !== state.userName) {
@@ -1842,14 +2075,14 @@
             ...item,
             summary: ensureUserNameInSummary(String(item.summary || "").split(prevName).join(latestDetectedName))
           }));
-          saveCurrentChatSessionData();
+          saveCurrentChatSessionData(false);
         }
         config.lastKnownUserName = latestDetectedName;
         saveConfig();
         renderAll();
       }
     }
-  }, 800);
+  }, 900);
 
   const normalizeBaseUrl = (u) => (u || "").trim().replace(/\/+$/, "").replace(/\/(chat\/completions|models)$/, "");
 
@@ -2089,7 +2322,7 @@ ${latestRoundText ? latestRoundText.slice(-700) : "暂无"}`;
       state.hasAffection = true;
     }
     if (fs.stage && (state.stage === "未同步" || !state.hasDirectStatusTags)) state.stage = enforceAddressingRules(fs.stage);
-    saveCurrentChatSessionData();
+    saveCurrentChatSessionData(false);
   }
 
   function upsertTimelineNode(roundId, timeStr, locStr, summaryStr) {
@@ -2123,7 +2356,9 @@ ${latestRoundText ? latestRoundText.slice(-700) : "暂无"}`;
 
   async function syncFromWorldbookAndChat(triggerAuto = false) {
     try {
-      checkAndSwitchChatSessionIfNeeded();
+      if (!state.isHydrated || !hasSubstantialData(state)) {
+        loadChatSessionData(false);
+      }
       state.userName = detectCurrentUserName();
       const messages = getRawChatList(10);
       let latestAiFound = false;
@@ -2155,7 +2390,9 @@ ${latestRoundText ? latestRoundText.slice(-700) : "暂无"}`;
           if (td2 && !td2.includes("{{")) state.todo2 = enforceAddressingRules(td2);
           if (inN && !inN.includes("{{")) state.inNews = enforceAddressingRules(inN);
           if (outN && !outN.includes("{{")) state.outNews = enforceAddressingRules(outN);
-          saveCurrentChatSessionData();
+          if (hasSubstantialData(state)) {
+            saveCurrentChatSessionData(false);
+          }
           break;
         }
         if (!messages[i].isUser) latestAiFound = true;
@@ -2171,7 +2408,7 @@ ${latestRoundText ? latestRoundText.slice(-700) : "暂无"}`;
 
       state.isAutoRunning = true;
       state.lastAutoProcessedRoundId = latestRoundId;
-      saveCurrentChatSessionData();
+      saveCurrentChatSessionData(false);
       try {
         await runEnabledAutoRefreshTasks(latestRoundId, totalAiRounds);
       } finally {
@@ -2282,7 +2519,7 @@ ${latestRoundText}
             upsertTimelineNode(latestRoundId, node.time, node.location, node.summary || node.event);
           }
         }
-        saveCurrentChatSessionData();
+        saveCurrentChatSessionData(false);
         renderAll();
         if (!fromGlobalTask) {
           setGlobalRefreshingState(false);
@@ -2385,7 +2622,7 @@ ${roundsToFeed || "暂无历史记录"}
         if (latestRoundId) {
           state.lastAutoProcessedRoundId = latestRoundId;
         }
-        saveCurrentChatSessionData();
+        saveCurrentChatSessionData(false);
         renderAll();
         if (!fromGlobalTask) {
           setGlobalRefreshingState(false);
@@ -2411,7 +2648,7 @@ ${roundsToFeed || "暂无历史记录"}
     }
   }
 
-  // ==================== 圣人日常（平行精致翻牌卡片 · 点进不同卡片累计触发抓包） ====================
+  // ==================== 圣人日常（平行暗格卡片 · 点进不同卡片累计触发抓包） ====================
   function renderEmperorSpySection() {
     const box = targetDoc.getElementById("twEmperorSpyList");
     if (!box) return;
@@ -2453,7 +2690,7 @@ ${roundsToFeed || "暂无历史记录"}
   async function triggerEmperorCaughtEvent(clickedCardTitle = "起居秘录") {
     state.emperorCardClickCount = 0;
     state.emperorNextCatchThreshold = Math.floor(Math.random() * 3) + 3;
-    saveCurrentChatSessionData();
+    saveCurrentChatSessionData(false);
 
     try {
       const relCtx = getRelationshipAndFamiliarityContext();
@@ -2488,7 +2725,7 @@ ${relCtx}
         text: dmQuestion,
         self: false
       });
-      saveCurrentChatSessionData();
+      saveCurrentChatSessionData(false);
       renderDmSection();
 
       const descEl = targetDoc.getElementById("twCatchDesc");
@@ -2498,14 +2735,13 @@ ${relCtx}
     } catch (e) {}
   }
 
-  // 点击圣人日常平行卡片展开 & 按点开不同卡片频率触发抓包
   targetDoc.getElementById("twEmperorSpyList")?.addEventListener("click", async (e) => {
     const foldBtn = e.target.closest("button[data-fold-spy]");
     if (foldBtn) {
       e.stopPropagation();
       const k = foldBtn.dataset.foldSpy;
       if (state.emperorSpyRevealed) delete state.emperorSpyRevealed[k];
-      saveCurrentChatSessionData();
+      saveCurrentChatSessionData(false);
       renderEmperorSpySection();
       return;
     }
@@ -2518,7 +2754,7 @@ ${relCtx}
     if (!state.emperorSpyRevealed) state.emperorSpyRevealed = {};
     state.emperorSpyRevealed[key] = true;
     state.emperorCardClickCount = (Number(state.emperorCardClickCount) || 0) + 1;
-    saveCurrentChatSessionData();
+    saveCurrentChatSessionData(false);
     renderEmperorSpySection();
 
     const meta = SPY_CARD_META.find(x => x.key === key);
@@ -2559,9 +2795,8 @@ ${relCtx}
       const m = String(resp).match(/{[\s\S]*}/);
       if (m) {
         state.emperorSpyData = JSON.parse(m[0]);
-        // 刷新后六张卡片全部重置为朱印封缄状态，等待玩家逐个点进去看
         state.emperorSpyRevealed = {};
-        saveCurrentChatSessionData();
+        saveCurrentChatSessionData(false);
         renderEmperorSpySection();
         setGlobalRefreshingState(false);
         showModuleSuccessToast("圣人六事暗格已就绪（点击卡片可掀开查看）");
@@ -2637,7 +2872,7 @@ ${customDirective}
             prompt: enforceAddressingRules(a.prompt || "")
           }));
         }
-        saveCurrentChatSessionData();
+        saveCurrentChatSessionData(false);
         renderActions();
         setGlobalRefreshingState(false);
         showModuleSuccessToast("剧情发展安排");
@@ -2683,7 +2918,7 @@ ${lastFullTurn}
         const p = JSON.parse(m[0]);
         if (Array.isArray(p.palaceDynamics)) state.palaceDynamics = p.palaceDynamics.map(x => ({ npc: enforceAddressingRules(x.npc), event: enforceAddressingRules(x.event), tag: enforceAddressingRules(x.tag || "太微宫内") }));
         if (Array.isArray(p.outsideDynamics)) state.outsideDynamics = p.outsideDynamics.map(x => ({ npc: enforceAddressingRules(x.npc), event: enforceAddressingRules(x.event), tag: enforceAddressingRules(x.tag || "宫墙之外") }));
-        saveCurrentChatSessionData();
+        saveCurrentChatSessionData(false);
         renderWorldLists();
         if (!fromGlobalTask) {
           setGlobalRefreshingState(false);
@@ -2760,7 +2995,7 @@ ${FORUM_NPC_ROSTER}
             : []
         }));
         state.replyTargets = {};
-        saveCurrentChatSessionData();
+        saveCurrentChatSessionData(false);
         renderForum(targetDoc.getElementById("twSearch").value);
         if (!fromGlobalTask) {
           setGlobalRefreshingState(false);
@@ -2800,13 +3035,14 @@ ${FORUM_NPC_ROSTER}
     }
   }
 
+  // ==================== 论坛单独回复与直接回复全楼层互通 + 防车轱辘话引擎 ====================
   async function triggerNpcCommentReply(post, text, targetNpc, isNewPost = false) {
     const randomReplyCount = isNewPost
       ? (Math.floor(Math.random() * 3) + 4)
       : (Math.floor(Math.random() * 3) + 2);
     const usingAlias = isForumUsingAlias();
     const forumUser = getForumUserAuthor();
-    setGlobalRefreshingState(true, "刷新中…");
+    setGlobalRefreshingState(true, "正在盖楼回复…");
 
     try {
       const relCtx = getRelationshipAndFamiliarityContext();
@@ -2815,20 +3051,71 @@ ${FORUM_NPC_ROSTER}
         ? `【匿名马甲防掉马最高铁律】：当前发帖/回帖人使用的是匿名马甲「${forumUser}」，绝对不是真名！严禁任何 NPC 在回复中写出她的真名「${state.userName}」，所有 NPC 只能称呼她的马甲名「@${forumUser}」或“楼主/层主”！`
         : `【公开本名互动规则】：当前使用的是公开本名「${state.userName}」，各位 NPC 请严格按照当前剧情中与 ${state.userName} 的真实熟识程度、交情好坏以及萧承稷当前的感情阶段直接回应。`;
 
-      let actionDesc = "";
-      if (isNewPost) {
-        actionDesc = `刚刚「${forumUser}」发布了新帖《${post.title}》：“${post.content}”。请生成 ${randomReplyCount} 条不同性格的后宫妃嫔、宫人或前朝NPC的围观盖楼评论。`;
-      } else if (targetNpc) {
-        actionDesc = `刚刚「${forumUser}」点名回复了 ${targetNpc}：“${text}”。本次请生成 ${randomReplyCount} 条回复，第1条必须由 ${targetNpc} 本人直接回应“回复 @${forumUser}：…”，其余几条由其他围观NPC接话起哄或插嘴！`;
-      } else {
-        actionDesc = `刚刚「${forumUser}」在帖子下评论道：“${text}”。本次请生成 ${randomReplyCount} 条后宫或前朝NPC针对这句话的鲜活互动回复。`;
+      const existingComments = Array.isArray(post.comments) ? post.comments : [];
+      const fullThreadHistory = existingComments.map((c, idx) => {
+        const u = c.isSelfUser ? forumUser : (c.user || c.nick || "路人");
+        return `[${idx + 1}楼] ${u}：${c.text}`;
+      }).join("\n");
+
+      let recentInteractedNpcs = [];
+      for (let i = existingComments.length - 2; i >= Math.max(0, existingComments.length - 8); i--) {
+        const c = existingComments[i];
+        if (!c) continue;
+        if (!c.isSelfUser && (c.user || c.nick)) {
+          const n = c.user || c.nick;
+          if (!recentInteractedNpcs.includes(n)) recentInteractedNpcs.push(n);
+        }
+        const matchReply = String(c.text || "").match(/回复\s*@([^：:\s]+)/);
+        if (matchReply && matchReply[1] && matchReply[1] !== forumUser && !recentInteractedNpcs.includes(matchReply[1])) {
+          recentInteractedNpcs.unshift(matchReply[1]);
+        }
       }
 
-      const resp = await callAI(
-        `论坛帖子《${post.title}》下，${actionDesc}\n\n${styleBlock}\n\n${identityExposureRule}\n\n${relCtx}\n\n${FORUM_NPC_ROSTER}\n直接输出纯 JSON 数组（nick 字段必填“自然网名（真名·位分）”格式，绝不可为空）：[{"nick":"趣味网名（评论NPC真名·位分）","text":"符合所选说话风格的鲜活回复40字内"}]`,
-        "论坛评论互动",
-        true
-      );
+      const forbiddenRepeatedLines = existingComments.slice(-10).map(c => `“${c.text}”`).join("、");
+
+      let actionDesc = "";
+      if (isNewPost) {
+        actionDesc = `刚刚楼主「${forumUser}」发布了新帖《${post.title}》：“${post.content}”。请生成 ${randomReplyCount} 条不同性格的后宫妃嫔、宫人或前朝NPC的围观盖楼评论。`;
+      } else if (targetNpc) {
+        actionDesc = `刚刚「${forumUser}」在最新一楼（第 ${existingComments.length} 楼）专门点名回复了 ${targetNpc}：“${text}”。
+【点名回复联动规则】：
+1. 本次生成的第 1 条回复，必须由被点名的「${targetNpc}」本人紧接上一轮对话脉络直接回应“回复 @${forumUser}：…”，正面接招、反问、呛声或顺着她的话往下聊！
+2. 其余 ${randomReplyCount - 1} 条由同楼正在围观的 NPC（如 ${recentInteractedNpcs.slice(0, 2).join("、") || "其他妃嫔朝臣"}）顺着他们俩刚聊的内容插嘴、起哄或爆新料！`;
+      } else {
+        const lastTargetHint = recentInteractedNpcs.length
+          ? `注意：在前面几楼里，「${forumUser}」刚刚才和【${recentInteractedNpcs.slice(0, 3).join("、")}】聊过/交锋过！虽然这次「${forumUser}」点击的是“直接回复”（未加@前缀）说了句：“${text}”，但全楼的人都知道她是在顺着刚才的话茬继续往下说！请务必让刚才在楼里聊天的【${recentInteractedNpcs[0]}】或楼主「${post.author}」第一时间听懂并自然接话，再让其他围观NPC跟进讨论！`
+          : `刚刚「${forumUser}」在帖子下直接回复道：“${text}”。请让楼主「${post.author}」及围观NPC顺着她这句话的具体意思自然接话讨论！`;
+        actionDesc = `刚刚「${forumUser}」在最新一楼（第 ${existingComments.length} 楼）直接发言道：“${text}”。\n${lastTargetHint}`;
+      }
+
+      const prompt = `这里是《太微宫内外坛》的同一个帖子盖楼现场。
+【主帖信息】
+发帖人：${post.author}
+标题：《${post.title}》
+主楼内容：“${post.content}”
+
+【本帖从 1 楼到最新楼的完整历史楼层记录（单独回复与直接回复上下文完全互通）】：
+${fullThreadHistory || "（暂无历史评论）"}
+
+【本轮最新触发动作】：
+${actionDesc}
+
+【严禁车轱辘话与真实盖楼推进铁律（最高优先级）】：
+1. 上下文 100% 互通：请仔细阅读上方从 1 楼到最新楼的每一句对话！无论用户是点名“回复 @某人”还是“直接回复”，NPC 都拥有完整的本帖记忆，清楚前面每一楼吵了什么、聊了什么梗，必须紧扣用户最新说的“${text}”往深处递进！
+2. 绝对禁止车轱辘话：严禁重复本帖前面楼层已经出现过的台词、句式或相同意思的话（已出现过的禁重台词：${forbiddenRepeatedLines || "无"}）！
+3. 每次回复必须提供【新信息 / 新反问 / 新槽点 / 新动作反应】：比如追问具体细节、爆出另一个相关八卦、揭穿某人的小心思、或者话锋一转扯出新的宫闱内幕，绝不原地打转！
+
+${styleBlock}
+
+${identityExposureRule}
+
+${relCtx}
+
+${FORUM_NPC_ROSTER}
+请直接输出纯 JSON 数组（共 ${randomReplyCount} 条，nick 字段必填“自然网名（真名·位分）”格式）：
+[{"nick":"趣味网名（评论NPC真名·位分）","text":"顺着最新一楼往下推进、绝不重复车轱辘的鲜活回复42字内"}]`;
+
+      const resp = await callAI(prompt, "论坛全楼层互通回复", true);
       const m = String(resp).match(/\[[\s\S]*\]/);
       if (m) {
         const arr = JSON.parse(m[0]);
@@ -2837,16 +3124,18 @@ ${FORUM_NPC_ROSTER}
           const rNick = pickForumNick(r, i + post.comments.length);
           let replyTxt = pickForumText(r);
           if (rNick && replyTxt) {
-            await new Promise(res => setTimeout(res, 450 + Math.random() * 450));
+            const isDup = post.comments.some(oldC => oldC.text === replyTxt);
+            if (isDup) continue;
+            await new Promise(res => setTimeout(res, 420 + Math.random() * 400));
             if (usingAlias && state.userName && replyTxt.includes(state.userName)) {
               replyTxt = replyTxt.split(state.userName).join(forumUser);
             }
             post.comments.push({ user: rNick, text: replyTxt });
-            saveCurrentChatSessionData();
+            saveCurrentChatSessionData(false);
             renderForum(targetDoc.getElementById("twSearch").value);
           }
         }
-        showModuleSuccessToast("论坛NPC盖楼回复");
+        showModuleSuccessToast("论坛NPC已接话盖楼");
       }
       setGlobalRefreshingState(false);
     } catch (e) {
@@ -2854,7 +3143,7 @@ ${FORUM_NPC_ROSTER}
     }
   }
 
-  // ==================== 单人私聊（根据剧情与世界书动态刷新人物 + 记忆防复读） ====================
+  // ==================== 单人私聊 ====================
   function scanChatForActiveDmNpcs() {
     try {
       const recentMsgs = getRawChatList(18);
@@ -2917,7 +3206,7 @@ ${lastFullTurn}
             });
           }
         });
-        saveCurrentChatSessionData();
+        saveCurrentChatSessionData(false);
         renderDmSection();
         showModuleSuccessToast("已根据当前剧情与世界书更新可选人物");
       }
@@ -3006,7 +3295,7 @@ ${lastFullTurn}
       quote: quotedObj,
       self: true
     });
-    saveCurrentChatSessionData();
+    saveCurrentChatSessionData(false);
     renderDmSection();
 
     if (sendBtn) { sendBtn.disabled = true; sendBtn.textContent = "等待回复…"; }
@@ -3050,7 +3339,7 @@ ${hist}
             quote: i === 0 && quotedObj ? { sender: state.userName, text: userMsg } : null,
             self: false
           });
-          saveCurrentChatSessionData();
+          saveCurrentChatSessionData(false);
           renderDmSection();
         }
         if (lastReplyText) {
@@ -3106,7 +3395,7 @@ ${prevHist || "暂无"}
               text: lastTxt,
               self: false
             });
-            saveCurrentChatSessionData();
+            saveCurrentChatSessionData(false);
             renderDmSection();
           }
         }
@@ -3267,7 +3556,7 @@ ${recentChat}
     targetDoc.getElementById("twGomokuStatus").textContent = `当前回合：轮到 ${getUserFullTag()} 落黑子`;
   }
 
-  // ==================== 太微群聊（默认空白 + 换主题重置 + 记忆条数防复读 + 后妃真名（位分）） ====================
+  // ==================== 太微群聊 ====================
   function getGroupThemePromptBlock() {
     const uName = state.userName || detectCurrentUserName();
     const key = config.groupChatTheme || "story_sync";
@@ -3369,7 +3658,7 @@ ${recentChat}
         const joinTxt = cleanPureText(r.text || `${r.sender || "某人"} 进入了聊天室`);
         if (joinTxt) {
           state.groupMessages.push({ type: "join", text: joinTxt });
-          saveCurrentChatSessionData();
+          saveCurrentChatSessionData(false);
           renderChatroom();
         }
       } else if (r.sender && r.text) {
@@ -3381,7 +3670,7 @@ ${recentChat}
           quote: r.quote && r.quote.sender ? { sender: formatConsortStandardName(enforceAddressingRules(r.quote.sender)), text: cleanPureText(r.quote.text) } : null,
           self: false
         });
-        saveCurrentChatSessionData();
+        saveCurrentChatSessionData(false);
         renderChatroom();
       }
     }
@@ -3492,8 +3781,13 @@ ${recentChat}
 
     const sessionPill = targetDoc.getElementById("twSessionPill");
     if (sessionPill) {
-      const shortKey = (state.currentSessionKey || "default").slice(-10);
-      sessionPill.textContent = `当前独立存档 · ${shortKey}`;
+      sessionPill.textContent = (config.customSaveSlot || "chat_bind") === "chat_bind"
+        ? `绑定对话 · ${getCurrentChatFileId().slice(-14)}`
+        : `固定槽位 · ${config.customSaveSlot}`;
+    }
+    const slotSel = targetDoc.getElementById("twSaveSlotSelect");
+    if (slotSel) {
+      slotSel.value = config.customSaveSlot || "chat_bind";
     }
 
     targetDoc.getElementById("twAffVal").textContent = state.hasAffection ? state.affection : "--";
@@ -3566,14 +3860,14 @@ ${recentChat}
             ${p.comments.map((c, cIdx) => {
               const cNick = c.isSelfUser ? curAuthor : pickForumNick(c, pIdx * 5 + cIdx + 1);
               const cText = pickForumText(c);
-              return `<div class="tw-cmt-line"><div><span class="tw-cmt-u">${cNick}：</span><span>${cText}</span></div><button type="button" class="tw-reply-npc-btn" data-act="set-target" data-id="${p.id}" data-npc="${cNick}">回复TA</button></div>`;
+              return `<div class="tw-cmt-line"><div><span class="tw-cmt-u">[${cIdx + 1}L] ${cNick}：</span><span>${cText}</span></div><button type="button" class="tw-reply-npc-btn" data-act="set-target" data-id="${p.id}" data-npc="${cNick}">回复TA</button></div>`;
             }).join("")}
             <div class="tw-reply-target-bar ${targetNpc ? "active" : ""}">
-              <span>正在单独回复：<b>@${targetNpc}</b></span>
-              <button type="button" class="tw-act-btn" data-act="clear-target" data-id="${p.id}" style="color:var(--accent);font-weight:bold;">取消点名</button>
+              <span>正在单独回复：<b>@${targetNpc}</b>（全楼层上下文已互通）</span>
+              <button type="button" class="tw-act-btn" data-act="clear-target" data-id="${p.id}" style="color:var(--accent);font-weight:bold;">切换为直接回复全楼</button>
             </div>
             <div class="tw-cmt-send">
-              <input id="tw-cin-${p.id}" placeholder="${targetNpc ? `以 ${curAuthor} 回复 @${targetNpc}…` : `以 ${curAuthor} 直接评论主帖…`}">
+              <input id="tw-cin-${p.id}" placeholder="${targetNpc ? `以 ${curAuthor} 单独回复 @${targetNpc}…` : `以 ${curAuthor} 直接接话盖楼（NPC自动读取前楼上下文）…`}">
               <button type="button" data-act="reply" data-id="${p.id}">${targetNpc ? "回复TA" : "直接回复"}</button>
             </div>
           </div>
@@ -3581,30 +3875,35 @@ ${recentChat}
     }).join("");
   }
 
-  // ==================== 交互事件绑定 ====================
+  // ==================== 悬浮球拖拽与点击事件 ====================
   const fab = targetDoc.getElementById("twFabBall"), overlay = targetDoc.getElementById("twModalOverlay"), navBar = targetDoc.getElementById("twNavBar");
   let dragging = false, moved = false, startY = 0, startTop = 0;
   fab.addEventListener("pointerdown", (e) => {
     dragging = true;
     moved = false;
     startY = e.clientY;
-    startTop = fab.getBoundingClientRect().top;
+    const rect = fab.getBoundingClientRect();
+    startTop = rect.top;
     fab.setPointerCapture(e.pointerId);
   });
   fab.addEventListener("pointermove", (e) => {
     if (!dragging) return;
     const dy = e.clientY - startY;
-    if (Math.abs(dy) > 4) moved = true;
+    if (Math.abs(dy) > 5) moved = true;
     if (moved) {
-      fab.style.transform = "none";
-      fab.style.top = `${Math.max(20, Math.min(targetWin.innerHeight - 75, startTop + dy))}px`;
+      const vh = targetWin.innerHeight || targetDoc.documentElement.clientHeight || 800;
+      const newTop = Math.max(20, Math.min(vh - 88, startTop + dy));
+      fab.style.setProperty("top", `${newTop}px`, "important");
+      config.fabCustomTopRatio = newTop / vh;
     }
   });
   fab.addEventListener("pointerup", (e) => {
     if (!dragging) return;
     dragging = false;
     fab.releasePointerCapture(e.pointerId);
-    if (!moved) {
+    if (moved) {
+      saveConfig();
+    } else {
       overlay.classList.toggle("tw-hidden");
       if (!overlay.classList.contains("tw-hidden")) {
         clearFabGlowReminder();
@@ -3621,8 +3920,13 @@ ${recentChat}
   targetDoc.getElementById("twBtnClose").addEventListener("click", () => overlay.classList.add("tw-hidden"));
   overlay.addEventListener("click", (e) => { if (e.target === overlay) overlay.classList.add("tw-hidden"); });
   targetDoc.getElementById("twBtnClearAll").addEventListener("click", () => {
-    resetStateToBlankForNewChat(state.currentSessionKey || detectCurrentChatSessionKey());
-    saveCurrentChatSessionData();
+    explicitClearCurrentArchive();
+    const vaultKey = getActiveVaultKey();
+    writeToTavernBackend(vaultKey, {});
+    try {
+      localStorage.removeItem(LOCAL_BACKUP_PREFIX + vaultKey);
+      if (targetWin.__TW_PERSIST_CACHE_V34) delete targetWin.__TW_PERSIST_CACHE_V34[vaultKey];
+    } catch (e) {}
     renderAll();
     showModuleSuccessToast("已清空当前存档数据");
   });
@@ -3662,7 +3966,6 @@ ${recentChat}
     saveConfig();
   });
 
-  // 群聊主题切换：每次切换主题直接重置群聊并刷新新主题对话
   targetDoc.getElementById("twGroupThemeChips")?.addEventListener("click", (e) => {
     const chip = e.target.closest(".tw-chip[data-gtheme]");
     if (!chip) return;
@@ -3674,7 +3977,7 @@ ${recentChat}
     if (changed) {
       state.groupMessages = [];
       state.chatQuoteTarget = null;
-      saveCurrentChatSessionData();
+      saveCurrentChatSessionData(false);
       renderChatroom();
     }
   });
@@ -3687,7 +3990,7 @@ ${recentChat}
   targetDoc.getElementById("twDmNpcSelect")?.addEventListener("change", (e) => {
     state.dmActiveNpc = e.target.value || "萧承稷";
     state.dmQuoteTarget = null;
-    saveCurrentChatSessionData();
+    saveCurrentChatSessionData(false);
     renderDmSection();
   });
   targetDoc.getElementById("twDmRefreshRosterBtn")?.addEventListener("click", refreshDmRosterFromPlotAndWorldbook);
@@ -3722,7 +4025,7 @@ ${recentChat}
     const npcId = state.dmActiveNpc || "萧承稷";
     state.dmHistories[npcId] = [];
     state.dmQuoteTarget = null;
-    saveCurrentChatSessionData();
+    saveCurrentChatSessionData(false);
     renderDmSection();
     showModuleSuccessToast(`已清空与 ${npcId} 的私聊记录`);
   });
@@ -4078,7 +4381,7 @@ ${recentChat}
       quote: quotedObj,
       self: true
     });
-    saveCurrentChatSessionData();
+    saveCurrentChatSessionData(false);
     renderChatroom();
 
     sendBtn.disabled = true; sendBtn.textContent = "刷新中…";
@@ -4120,7 +4423,6 @@ ${recentChat}
     finally { sendBtn.disabled = false; sendBtn.textContent = "发送"; }
   }
 
-  // 点击「刷新群聊」直接重置当前群聊记录，开启全新一轮主题群聊
   async function triggerAiNpcRandomTopic() {
     const topicBtn = targetDoc.getElementById("twRandomChatTopicBtn");
     topicBtn.disabled = true; topicBtn.textContent = "刷新中…";
@@ -4129,12 +4431,11 @@ ${recentChat}
       const relCtx = getRelationshipAndFamiliarityContext();
       const themeInfo = getGroupThemePromptBlock();
 
-      // 每次点击刷新群聊直接重置，不接在旧主题下面
       state.groupMessages = [
         { type: "system", text: `当前群聊主题：【${themeInfo.name}】` }
       ];
       state.chatQuoteTarget = null;
-      saveCurrentChatSessionData();
+      saveCurrentChatSessionData(false);
       renderChatroom();
 
       const prompt = `这里是《太微宫茶话群聊》。
@@ -4166,7 +4467,7 @@ ${themeInfo.isIfMode ? "" : relCtx}
   targetDoc.getElementById("twClearChatroomBtn").addEventListener("click", () => {
     state.groupMessages = [];
     state.chatQuoteTarget = null;
-    saveCurrentChatSessionData();
+    saveCurrentChatSessionData(false);
     renderChatroom();
     showModuleSuccessToast("已清空群聊记录");
   });
@@ -4181,14 +4482,16 @@ ${themeInfo.isIfMode ? "" : relCtx}
     if (act === "like") {
       post.liked = !post.liked;
       post.likes += post.liked ? 1 : -1;
-      saveCurrentChatSessionData();
+      saveCurrentChatSessionData(false);
       renderForum(targetDoc.getElementById("twSearch").value);
     } else if (act === "set-target") {
       state.replyTargets[id] = btn.dataset.npc || "";
       renderForum(targetDoc.getElementById("twSearch").value);
+      targetDoc.getElementById(`tw-cin-${id}`)?.focus();
     } else if (act === "clear-target") {
       delete state.replyTargets[id];
       renderForum(targetDoc.getElementById("twSearch").value);
+      targetDoc.getElementById(`tw-cin-${id}`)?.focus();
     } else if (act === "reply") {
       const inp = targetDoc.getElementById(`tw-cin-${id}`), val = inp ? inp.value.trim() : ""; if (!val) return;
       const tNpc = state.replyTargets[id] || "";
@@ -4200,7 +4503,7 @@ ${themeInfo.isIfMode ? "" : relCtx}
         text: enforceAddressingRules(tNpc ? `回复 @${tNpc}：${val}` : val, true)
       });
       delete state.replyTargets[id];
-      saveCurrentChatSessionData();
+      saveCurrentChatSessionData(false);
       renderForum(targetDoc.getElementById("twSearch").value);
       triggerNpcCommentReply(post, val, tNpc, false);
     }
@@ -4227,7 +4530,7 @@ ${themeInfo.isIfMode ? "" : relCtx}
     state.posts.unshift(np);
     tEl.value = "";
     bEl.value = "";
-    saveCurrentChatSessionData();
+    saveCurrentChatSessionData(false);
     renderForum();
     triggerNpcCommentReply(np, np.content, "", true);
   });
@@ -4250,7 +4553,7 @@ ${themeInfo.isIfMode ? "" : relCtx}
       const resp = await callAI(`为大景皇帝萧承稷与 ${getUserFullTag()} 写一篇450字左右的古风番外小剧场。当前好感度：${state.affection}，阶段：${state.stage}。当前剧情背景：${lastSceneEnding || "太微宫日常"}。主题：${st || "紧接当前剧情的私下互动与护短"}。要求直接自然地称呼 ${state.userName}，萧承稷必自称“朕”或“我”（严禁自称“孤”），带有完整规范的中文标点符号。`, "番外小剧场生成");
       state.theaterText = cleanPureText(resp);
       out.textContent = state.theaterText;
-      saveCurrentChatSessionData();
+      saveCurrentChatSessionData(false);
       showModuleSuccessToast("番外小剧场生成完毕");
     } catch (e) { out.textContent = `生成失败：${e.message}`; }
     btn.disabled = false;
@@ -4263,13 +4566,24 @@ ${themeInfo.isIfMode ? "" : relCtx}
     if (typeof evOn === "function" && tEvents) {
       if (tEvents.MESSAGE_RECEIVED) evOn(tEvents.MESSAGE_RECEIVED, () => setTimeout(() => syncFromWorldbookAndChat(true), 900));
       if (tEvents.CHAT_CHANGED) evOn(tEvents.CHAT_CHANGED, () => setTimeout(() => {
-        checkAndSwitchChatSessionIfNeeded();
+        state.boundChatId = getCurrentChatFileId();
+        loadChatSessionData(true);
         syncFromWorldbookAndChat(false);
-      }, 300));
+      }, 350));
     }
   } catch (e) {}
 
-  // 初始化加载当前对话框绑定的独立存档
-  loadChatSessionData(detectCurrentChatSessionKey());
+  // 启动时加载并二次异步确认（应对酒馆刚进入角色卡时的异步加载延迟）
+  loadChatSessionData(false);
   syncFromWorldbookAndChat(false);
+  setTimeout(() => {
+    if (!hasSubstantialData(state)) {
+      if (loadChatSessionData(false)) renderAll();
+    }
+  }, 450);
+  setTimeout(() => {
+    if (!hasSubstantialData(state)) {
+      if (loadChatSessionData(false)) renderAll();
+    }
+  }, 1200);
 })();
