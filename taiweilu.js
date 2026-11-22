@@ -264,7 +264,7 @@
     affection: 0, hasAffection: false, stage: "未同步", inNews: "", outNews: "", todo1: "", todo2: "",
     hasDirectStatusTags: false, lastAutoProcessedRoundId: "", plotSummary: [], palaceDynamics: [],
     outsideDynamics: [], posts: [], storyPlans: [], theaterText: "", replyTargets: {},
-    chatQuoteTarget: null, dmQuoteTarget: null, showAtPicker: false,
+    chatQuoteTarget: null, dmQuoteTarget: null, showAtPicker: false, atFilterKeyword: "",
     groupMessages: [], dmNpcOptions: [...BASE_DM_NPC_CATALOG],
     dmActiveNpc: "萧承稷", dmHistories: {}, dmTyping: false, chatroomTyping: false,
     emperorSpyData: null, emperorSpyRevealed: {},
@@ -285,7 +285,7 @@
     state.hasDirectStatusTags = false; state.lastAutoProcessedRoundId = "";
     state.plotSummary = []; state.palaceDynamics = []; state.outsideDynamics = [];
     state.posts = []; state.storyPlans = []; state.theaterText = ""; state.replyTargets = {};
-    state.chatQuoteTarget = null; state.dmQuoteTarget = null; state.showAtPicker = false;
+    state.chatQuoteTarget = null; state.dmQuoteTarget = null; state.showAtPicker = false; state.atFilterKeyword = "";
     state.groupMessages = []; state.dmActiveNpc = "萧承稷"; state.dmHistories = {};
     state.dmTyping = false; state.chatroomTyping = false;
     state.emperorSpyData = null; state.emperorSpyRevealed = {}; state.emperorActiveDetailKey = null;
@@ -788,7 +788,7 @@
     .tw-typing-row { align-self:flex-start; font-size:11px; color:var(--accent-strong); background:var(--bg-card); border:1px dashed var(--border-outer); padding:4px 11px; border-radius:12px; margin:2px 0; animation:twPulseTyping 1.2s infinite ease-in-out; }
     .tw-at-highlight { color:var(--accent); font-weight:bold; background:rgba(133, 41, 34, 0.08); padding:0 3px; border-radius:3px; }
     .tw-chat-msg.self .tw-at-highlight { color:#ffe8a3; background:rgba(255, 255, 255, 0.16); }
-    .tw-at-picker-bar { display:none; padding:5px 7px; background:var(--bg-card); border:1px dashed var(--border-outer); border-radius:5px; margin-bottom:5px; }
+    .tw-at-picker-bar { display:none; padding:5px 8px; background:var(--bg-card); border:1.5px solid var(--border-outer); border-radius:5px; margin-bottom:5px; box-shadow:0 4px 12px rgba(0,0,0,0.12); }
     .tw-at-picker-bar.active { display:block; }
     .tw-cmt-box { margin-top:7px; padding:7px 9px; background:var(--bg-sub); border-left:2.5px solid var(--border-outer); border-radius:3px; }
     .tw-cmt-line { font-size:11.5px; line-height:1.55; padding:4px 0; border-bottom:1px dashed var(--border-soft); display:flex; justify-content:space-between; align-items:flex-start; gap:6px; }
@@ -838,7 +838,7 @@
     .tw-stone { width:20px; height:20px; border-radius:50%; z-index:2; box-shadow:1px 2px 4px rgba(0,0,0,0.45); }
     .tw-stone.black { background:radial-gradient(circle at 30% 30%,#555,#111); }
     .tw-stone.white { background:radial-gradient(circle at 30% 30%,#fff,#d4cec3); border:1px solid #999; }
-    .tw-chatroom-messages { height:400px; overflow-y:auto; background:var(--bg-sub); border:1px solid var(--border-soft); border-radius:6px; padding:9px 11px; margin-bottom:5px; display:flex; flex-direction:column; gap:7px; }
+    .tw-chatroom-messages { height:425px; overflow-y:auto; background:var(--bg-sub); border:1px solid var(--border-soft); border-radius:6px; padding:9px 11px; margin-bottom:6px; display:flex; flex-direction:column; gap:7px; }
     @keyframes twBubblePop { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:translateY(0); } }
     .tw-chat-sys-tip { align-self:center; font-size:10.5px; color:var(--text-sub); background:rgba(140, 98, 57, 0.12); border:1px dashed var(--border-soft); padding:3px 11px; border-radius:12px; margin:3px 0; text-align:center; letter-spacing:0.5px; animation:twBubblePop .22s ease-out; display:flex; flex-direction:column; align-items:center; gap:3px; }
     .tw-chat-sys-line { display:flex; align-items:center; gap:6px; flex-wrap:wrap; justify-content:center; }
@@ -854,7 +854,6 @@
     .tw-chat-msg.self .tw-chat-quoted-block { border-left-color:rgba(255,248,235,0.75); background:rgba(255,255,255,0.14); color:#fff8eb; }
     .tw-chat-quote-bar { display:none; justify-content:space-between; align-items:center; font-size:11px; color:var(--accent-strong); background:rgba(142,53,46,0.1); border:1px dashed var(--border-soft); padding:4px 8px; border-radius:4px; margin-bottom:5px; }
     .tw-chat-quote-bar.active { display:flex; }
-    .tw-chat-btn-hint { font-size:10.5px; color:var(--text-sub); margin-bottom:4px; display:flex; justify-content:space-between; align-items:center; gap:6px; flex-wrap:wrap; }
     .tw-theme-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:7px; margin-bottom:6px; }
     .tw-theme-btn { padding:8px; border:1.5px solid var(--border-soft); border-radius:4px; background:var(--bg-card); color:var(--text-main); font-size:12px; font-weight:bold; cursor:pointer; font-family:inherit; }
     .tw-theme-btn.active { border-color:var(--accent); color:var(--accent-strong); box-shadow:inset 0 0 0 1px var(--accent); }
@@ -901,6 +900,16 @@
             <div class="tw-catch-title">⚠️ 窥探圣躬过久 · 被当场抓包！</div>
             <div class="tw-catch-desc" id="twCatchDesc">赵怀安低着头刚把起居注合上，甘露殿内传来一声极轻的冷嗤。萧承稷指尖慢条斯理地转过墨玉扳指，淡色眼瞳隔着宫墙似已将你接连翻看他起居秘录的小动作尽收眼底，并向你发来了一道私密传讯……</div>
             <button type="button" class="tw-refresh-forum-btn" id="twGoCaughtDmBtn" style="width:100%;padding:8px;">立即前往【单人私聊】查看圣人质问</button>
+          </div>
+        </div>
+        <div class="tw-catch-modal" id="twClearConfirmModal">
+          <div class="tw-catch-card">
+            <div class="tw-catch-title">⚠️ 确定要清空当前存档吗？</div>
+            <div class="tw-catch-desc">此操作将彻底清除本档已生成的【故事时间轴、世界动态、圣人日常、宫内外坛热帖、单人私聊与太微群聊记录】，清空后不可恢复。是否继续？</div>
+            <div style="display:flex;gap:8px;justify-content:center;">
+              <button type="button" class="tw-mini-btn" id="twCancelClearArchiveBtn" style="flex:1;padding:7px;background:var(--bg-sub);color:var(--text-main);border-color:var(--border-outer);font-weight:bold;">取消保留</button>
+              <button type="button" class="tw-refresh-forum-btn" id="twConfirmClearArchiveBtn" style="flex:1;padding:7px;">确定清空</button>
+            </div>
           </div>
         </div>
         <div class="tw-head">
@@ -1022,9 +1031,8 @@
                 <div style="display:flex;gap:6px;align-items:center;margin-bottom:6px;"><span class="tw-label" style="white-space:nowrap;">私聊对象：</span><select class="tw-select" id="twDmNpcSelect" style="margin-bottom:0;flex:1;padding:4px 8px;"></select></div>
                 <div class="tw-chatroom-messages" id="twDmBox"></div>
                 <div class="tw-chat-quote-bar" id="twDmQuoteBar"><span id="twDmQuoteText" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:82%;"></span><button type="button" class="tw-act-btn" id="twCancelDmQuoteBtn" style="color:var(--accent);font-weight:bold;">取消引用</button></div>
-                <div class="tw-chat-btn-hint"><span>💡 点「发送」仅发消息，点右侧无字按钮让对方回复</span></div>
                 <div style="display:flex;gap:5px;align-items:stretch;">
-                  <input class="tw-input" id="twDmInput" style="margin-bottom:0;flex:1;" placeholder="输入私聊消息……">
+                  <input class="tw-input" id="twDmInput" style="margin-bottom:0;flex:1;" placeholder="点「发送」仅发消息，点右侧按钮让对方回复……">
                   <button type="button" class="tw-refresh-forum-btn" id="twDmSendBtn">发送</button>
                   <button type="button" class="tw-ai-wait-btn" id="twDmWaitAiBtn" title="等待对方回复"></button>
                 </div>
@@ -1048,15 +1056,11 @@
                 <div class="tw-chatroom-messages" id="twChatroomBox"></div>
                 <div class="tw-chat-quote-bar" id="twChatQuoteBar"><span id="twChatQuoteText" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:82%;"></span><button type="button" class="tw-act-btn" id="twCancelChatQuoteBtn" style="color:var(--accent);font-weight:bold;">取消引用</button></div>
                 <div class="tw-at-picker-bar" id="twAtPickerBar">
-                  <div class="tw-label" style="margin-bottom:3px;">点击下方群成员即可插入 @艾特：</div>
+                  <div class="tw-label" style="margin-bottom:3px;">选择要 @艾特 的群成员：</div>
                   <div class="tw-chip-row tw-nowrap-scroll" id="twAtPickerChips" style="margin-bottom:0;"></div>
                 </div>
-                <div class="tw-chat-btn-hint">
-                  <span>💡 点「发送」仅发消息，点右侧无字按钮触发群友回复</span>
-                  <button type="button" class="tw-reply-npc-btn" id="twToggleAtPickerBtn">@ 艾特群友</button>
-                </div>
                 <div style="display:flex;gap:5px;align-items:stretch;">
-                  <input class="tw-input" id="twChatroomInput" style="margin-bottom:0;flex:1;" placeholder="发句闲话聊聊（可点上方@艾特群友）……">
+                  <input class="tw-input" id="twChatroomInput" style="margin-bottom:0;flex:1;" placeholder="输入 @ 选人艾特，点「发送」仅发消息，点右侧按钮触发群友回复……">
                   <button type="button" class="tw-refresh-forum-btn" id="twChatroomSendBtn">发送</button>
                   <button type="button" class="tw-ai-wait-btn" id="twChatroomWaitAiBtn" title="等待群友回复"></button>
                 </div>
@@ -2073,10 +2077,10 @@
     if (state.dmQuoteTarget) {
       bar.classList.add("active");
       txt.innerHTML = `正在引用 <b>${state.dmQuoteTarget.sender}</b>：“${state.dmQuoteTarget.text}”`;
-      if (inp) inp.placeholder = `引用回复 ${npcName}……`;
+      if (inp) inp.placeholder = `引用回复 ${npcName}（点发送仅发消息，点右侧按钮让对方回复）……`;
     } else {
       bar.classList.remove("active"); txt.innerHTML = "";
-      if (inp) inp.placeholder = `给 ${npcName} 发送私密消息……`;
+      if (inp) inp.placeholder = `给 ${npcName} 发消息（点「发送」仅发消息，点右侧按钮让对方回复）……`;
     }
   }
 
@@ -2096,10 +2100,10 @@
         const isSelfRecall = Boolean(m.selfRecall || m.recallBy === state.userName);
         const delBtn = isSelfRecall ? `<button type="button" class="tw-del-btn" data-dm-del-idx="${idx}">删除</button>` : "";
         const peekBtn = (!isSelfRecall && m.originalText)
-          ? `<button type="button" class="tw-peek-recall-btn" data-dm-peek-idx="${idx}">${m.showRecalled ? "收起撤回内容" : "点击查看撤回内容"}</button>`
+          ? `<button type="button" class="tw-peek-recall-btn" data-dm-peek-idx="${idx}">${m.showRecalled ? "收起" : "点击查看撤回内容"}</button>`
           : "";
         const revealBox = (!isSelfRecall && m.originalText && m.showRecalled)
-          ? `<div class="tw-recalled-reveal-box">“${enforceAddressingRules(m.originalText)}”</div>`
+          ? `<div class="tw-recalled-reveal-box">${enforceAddressingRules(m.originalText)}</div>`
           : "";
         return `<div class="tw-chat-sys-tip"><div class="tw-chat-sys-line"><span>— ${enforceAddressingRules(m.text)} —</span>${peekBtn}${delBtn}</div>${revealBox}</div>`;
       }
@@ -2147,7 +2151,7 @@
       const memLimit = Math.max(4, Math.min(60, Number(config.chatMemoryCount) || 20));
       const historySlice = state.dmHistories[npcId].slice(-memLimit);
       const hist = historySlice.map(m => {
-        if (m.type === "recall") return `[系统提示：${m.text}（撤回原话为：“${m.originalText || ""}”，对方已看到撤回动作）]`;
+        if (m.type === "recall") return `[系统提示：${m.text}（撤回内容为：“${m.originalText || ""}”，对方已看到撤回动作）]`;
         if (m.type) return `[${m.text}]`;
         return `${m.sender}：${m.text}`;
       }).join("\n");
@@ -2361,18 +2365,39 @@
   function renderAtPickerBar() {
     const bar = targetDoc.getElementById("twAtPickerBar"), chipsBox = targetDoc.getElementById("twAtPickerChips");
     if (!bar || !chipsBox) return;
-    bar.classList.toggle("active", Boolean(state.showAtPicker));
-    const names = ["全体成员", ...state.dmNpcOptions.map(x => x.name)];
-    chipsBox.innerHTML = names.map(n => `<span class="tw-chip" data-at-name="${n}">@${n}</span>`).join("");
+    if (!state.showAtPicker) {
+      bar.classList.remove("active");
+      return;
+    }
+    const kw = (state.atFilterKeyword || "").trim().toLowerCase();
+    const allCandidates = ["全体成员", ...state.dmNpcOptions.map(x => x.name)];
+    const filtered = kw ? allCandidates.filter(n => n.toLowerCase().includes(kw)) : allCandidates;
+    if (!filtered.length) {
+      bar.classList.remove("active");
+      return;
+    }
+    bar.classList.add("active");
+    chipsBox.innerHTML = filtered.map(n => `<span class="tw-chip" data-at-name="${n}">@${n}</span>`).join("");
   }
 
   function insertAtMentionIntoChatInput(targetName) {
     const inp = targetDoc.getElementById("twChatroomInput");
     if (!inp || !targetName) return;
-    const mentionStr = `@${targetName} `;
-    if (!inp.value.includes(mentionStr)) {
-      inp.value = inp.value ? `${inp.value.trimEnd()} ${mentionStr}` : mentionStr;
+    const val = inp.value;
+    if (/(?:^|\s)@([^\s@]*)$/.test(val)) {
+      inp.value = val.replace(/(?:^|\s)@([^\s@]*)$/, (match) => {
+        const prefixSpace = match.startsWith(" ") ? " " : "";
+        return `${prefixSpace}@${targetName} `;
+      });
+    } else {
+      const mentionStr = `@${targetName} `;
+      if (!val.includes(mentionStr)) {
+        inp.value = val ? `${val.trimEnd()} ${mentionStr}` : mentionStr;
+      }
     }
+    state.showAtPicker = false;
+    state.atFilterKeyword = "";
+    renderAtPickerBar();
     inp.focus();
   }
 
@@ -2389,10 +2414,10 @@
     if (state.chatQuoteTarget) {
       bar.classList.add("active");
       txt.innerHTML = `正在引用回复 <b>@${state.chatQuoteTarget.sender}</b>：“${state.chatQuoteTarget.text}”`;
-      if (inp) inp.placeholder = `单独回复 @${state.chatQuoteTarget.sender}……`;
+      if (inp) inp.placeholder = `单独回复 @${state.chatQuoteTarget.sender}（点发送仅发消息，点右侧按钮触发群友回复）……`;
     } else {
       bar.classList.remove("active"); txt.innerHTML = "";
-      if (inp) inp.placeholder = "发句闲话聊聊（可点上方@艾特群友）……";
+      if (inp) inp.placeholder = "输入 @ 选人艾特，点「发送」仅发消息，点右侧按钮触发群友回复……";
     }
   }
 
@@ -2413,10 +2438,10 @@
         const isSelfRecall = Boolean(m.selfRecall || m.recallBy === state.userName);
         const delBtn = isSelfRecall ? `<button type="button" class="tw-del-btn" data-chat-del-idx="${idx}">删除</button>` : "";
         const peekBtn = (!isSelfRecall && m.originalText)
-          ? `<button type="button" class="tw-peek-recall-btn" data-chat-peek-idx="${idx}">${m.showRecalled ? "收起撤回内容" : "点击查看撤回内容"}</button>`
+          ? `<button type="button" class="tw-peek-recall-btn" data-chat-peek-idx="${idx}">${m.showRecalled ? "收起" : "点击查看撤回内容"}</button>`
           : "";
         const revealBox = (!isSelfRecall && m.originalText && m.showRecalled)
-          ? `<div class="tw-recalled-reveal-box">“${enforceAddressingRules(m.originalText)}”</div>`
+          ? `<div class="tw-recalled-reveal-box">${enforceAddressingRules(m.originalText)}</div>`
           : "";
         return `<div class="tw-chat-sys-tip"><div class="tw-chat-sys-line"><span>— ${enforceAddressingRules(m.text)} —</span>${peekBtn}${delBtn}</div>${revealBox}</div>`;
       }
@@ -2427,7 +2452,7 @@
       const quoteHtml = m.quote ? `<div class="tw-chat-quoted-block">「${formatConsortStandardName(m.quote.sender)}：${m.quote.text}」</div>` : "";
       const actionBtns = m.self
         ? `<button type="button" class="tw-chat-quote-btn" data-chat-recall-idx="${idx}">撤回</button><button type="button" class="tw-del-btn" data-chat-del-idx="${idx}">删除</button>`
-        : `<button type="button" class="tw-chat-quote-btn" data-chat-at-sender="${stdSender}">@TA</button><button type="button" class="tw-chat-quote-btn" data-chat-quote-idx="${idx}">引用</button>`;
+        : `<button type="button" class="tw-chat-quote-btn" data-chat-quote-idx="${idx}">引用</button>`;
       return `<div class="tw-chat-msg ${m.self ? "self" : ""}"><div class="tw-chat-head-row"><span class="tw-chat-sender">${stdSender}</span>${actionBtns}</div><div class="tw-chat-bubble">${quoteHtml}<div>${highlightMentionsHtml(m.text)}</div></div></div>`;
     });
     if (state.chatroomTyping) {
@@ -2616,6 +2641,19 @@
   targetDoc.getElementById("twBtnClearAll").addEventListener("click", function (e) {
     e.preventDefault();
     e.stopPropagation();
+    targetDoc.getElementById("twClearConfirmModal")?.classList.add("show");
+  });
+
+  targetDoc.getElementById("twCancelClearArchiveBtn")?.addEventListener("click", function (e) {
+    e.preventDefault();
+    e.stopPropagation();
+    targetDoc.getElementById("twClearConfirmModal")?.classList.remove("show");
+  });
+
+  targetDoc.getElementById("twConfirmClearArchiveBtn")?.addEventListener("click", function (e) {
+    e.preventDefault();
+    e.stopPropagation();
+    targetDoc.getElementById("twClearConfirmModal")?.classList.remove("show");
     targetWin.__twIsManuallyCleared = true;
     const vk = getActiveVaultKey(), v34k = vk.replace("v35", "v34");
     explicitClearCurrentArchive();
@@ -2648,7 +2686,7 @@
       }
     } catch (err) {}
     renderAll();
-    showModuleSuccessToast("已清空");
+    showModuleSuccessToast("本档已彻底清空");
   });
 
   targetDoc.getElementById("twSaveForumNickBtn").addEventListener("click", () => {
@@ -2678,14 +2716,23 @@
   });
   targetDoc.getElementById("twGroupCustomThemeInput")?.addEventListener("input", (e) => { config.groupChatCustomThemeText = e.target.value.trim(); saveConfig(); });
 
-  targetDoc.getElementById("twToggleAtPickerBtn")?.addEventListener("click", () => {
-    state.showAtPicker = !state.showAtPicker;
-    renderAtPickerBar();
-  });
   targetDoc.getElementById("twAtPickerChips")?.addEventListener("click", (e) => {
     const chip = e.target.closest(".tw-chip[data-at-name]");
     if (!chip) return;
     insertAtMentionIntoChatInput(chip.dataset.atName);
+  });
+
+  targetDoc.getElementById("twChatroomInput")?.addEventListener("input", (e) => {
+    const val = e.target.value || "";
+    const m = val.match(/(?:^|\s)@([^\s@]*)$/);
+    if (m) {
+      state.showAtPicker = true;
+      state.atFilterKeyword = m[1] || "";
+    } else {
+      state.showAtPicker = false;
+      state.atFilterKeyword = "";
+    }
+    renderAtPickerBar();
   });
 
   targetDoc.getElementById("twDmNpcSelect")?.addEventListener("change", (e) => {
@@ -2965,11 +3012,6 @@
   });
 
   targetDoc.getElementById("twChatroomBox").addEventListener("click", (e) => {
-    const atBtn = e.target.closest("button[data-chat-at-sender]");
-    if (atBtn) {
-      insertAtMentionIntoChatInput(atBtn.dataset.chatAtSender);
-      return;
-    }
     const qBtn = e.target.closest("button[data-chat-quote-idx]");
     if (qBtn) {
       const idx = Number(qBtn.dataset.chatQuoteIdx), targetMsg = state.groupMessages[idx];
@@ -3017,6 +3059,8 @@
     const sender = state.userName;
     const quotedObj = state.chatQuoteTarget ? { ...state.chatQuoteTarget } : null;
     state.chatQuoteTarget = null;
+    state.showAtPicker = false;
+    state.atFilterKeyword = "";
     state.groupMessages.push({
       sender,
       text: enforceAddressingRules(userMsg),
@@ -3045,7 +3089,7 @@
       const hasRecentUserMsg = Boolean(lastNonSys && lastNonSys.self);
 
       const hist = historySlice.map(m => {
-        if (m.type === "recall") return `[系统提示：${m.text}（撤回原话为：“${m.originalText || ""}”，群成员均看到了撤回）]`;
+        if (m.type === "recall") return `[系统提示：${m.text}（撤回内容为：“${m.originalText || ""}”，群成员均看到了撤回）]`;
         if (m.type === "join" || m.type === "system") return `[系统提示：${m.text}]`;
         return `${m.sender}：${m.text}`;
       }).join("\n");
