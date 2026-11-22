@@ -2150,10 +2150,11 @@
     try {
       const memLimit = Math.max(4, Math.min(60, Number(config.chatMemoryCount) || 20));
       const historySlice = state.dmHistories[npcId].slice(-memLimit);
-      const hist = historySlice.map(m => {
+            const hist = historySlice.map(m => {
         if (m.type === "recall") return `[系统提示：${m.text}（撤回内容为：“${m.originalText || ""}”，对方已看到撤回动作）]`;
         if (m.type) return `[${m.text}]`;
-        return `${m.sender}：${m.text}`;
+        const quotePrefix = (m.quote && m.quote.sender) ? `（引用了 ${m.quote.sender} 的消息：“${m.quote.text}”）` : "";
+        return `${m.sender}${quotePrefix}：${m.text}`;
       }).join("\n");
       const relCtx = getRelationshipAndFamiliarityContext();
       const prompt = `这里是 ${state.userName} 与【${npcMeta.name}（${npcMeta.title}）】的 1对1 私密对话。\n人设：${npcMeta.personality}（萧承稷必自称朕，禁称孤）\n${relCtx}\n最近聊天记录：\n${hist || "（暂无对话，请主动开启话题）"}\n请让 ${npcMeta.name} 直接回复 1~3 条简短自然的私聊消息。如果情绪微妙、口误失言或口是心非，可随机在某条消息设置 "recall": true（代表发出去后又撤回，玩家可点击查看撤回内容）。严禁替 ${state.userName} 发言！\n直接输出纯 JSON 数组：\n[{"sender": "${npcMeta.name}", "text": "回复内容", "recall": false}]`;
@@ -2705,14 +2706,12 @@
     const chip = e.target.closest(".tw-chip[data-fstyle]"); if (!chip) return;
     config.forumSpeakStyle = chip.dataset.fstyle || "lively"; saveConfig(); updateForumNicknameUI();
   });
-  targetDoc.getElementById("twForumCustomStyleInput").addEventListener("input", (e) => { config.forumCustomStyleText = e.target.value.trim(); saveConfig(); });
-
-  targetDoc.getElementById("twGroupThemeChips")?.addEventListener("click", (e) => {
+    targetDoc.getElementById("twGroupThemeChips")?.addEventListener("click", (e) => {
     const chip = e.target.closest(".tw-chip[data-gtheme]"); if (!chip) return;
-    const newTheme = chip.dataset.gtheme || "story_sync", changed = config.groupChatTheme !== newTheme;
-    config.groupChatTheme = newTheme; saveConfig(); updateGroupThemeUI();
+    config.groupChatTheme = chip.dataset.gtheme || "story_sync";
+    saveConfig(); updateGroupThemeUI();
     chip.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
-    if (changed) { state.groupMessages = []; state.chatQuoteTarget = null; saveCurrentChatSessionData(false); renderChatroom(); }
+    renderChatroom();
   });
   targetDoc.getElementById("twGroupCustomThemeInput")?.addEventListener("input", (e) => { config.groupChatCustomThemeText = e.target.value.trim(); saveConfig(); });
 
@@ -3088,15 +3087,26 @@
       const lastNonSys = [...historySlice].reverse().find(m => !m.type);
       const hasRecentUserMsg = Boolean(lastNonSys && lastNonSys.self);
 
+      let targetDirective = "";
+      if (hasRecentUserMsg && lastNonSys) {
+        const mentionedList = (lastNonSys.text.match(/@([\u4e00-\u9fa5A-Za-z0-9_·（）：:]+)/g) || []).map(s => s.slice(1));
+        if (lastNonSys.quote && lastNonSys.quote.sender) {
+          targetDirective = `\n【🎯 重点回复指令】：${state.userName} 刚刚专门【引用回复】了「${lastNonSys.quote.sender}」说的“${lastNonSys.quote.text}”，并说：“${lastNonSys.text}”！请务必让「${lastNonSys.quote.sender}」第一个出来直接针对这句话作出回应（并在返回的 JSON 中带上 "quote": {"sender": "${state.userName}", "text": "${lastNonSys.text}"}），其他群友再顺着话头接话！`;
+        } else if (mentionedList.length > 0) {
+          targetDirective = `\n【🎯 重点回复指令】：${state.userName} 刚刚在群里点名艾特了【${mentionedList.join("、")}】说：“${lastNonSys.text}”！请务必让被艾特的【${mentionedList.join("、")}】优先出来直接回应 ${state.userName}！`;
+        }
+      }
+
       const hist = historySlice.map(m => {
         if (m.type === "recall") return `[系统提示：${m.text}（撤回内容为：“${m.originalText || ""}”，群成员均看到了撤回）]`;
         if (m.type === "join" || m.type === "system") return `[系统提示：${m.text}]`;
-        return `${m.sender}：${m.text}`;
+        const quotePrefix = (m.quote && m.quote.sender) ? `（引用回复 @${m.quote.sender}：“${m.quote.text}”）` : "";
+        return `${m.sender}${quotePrefix}：${m.text}`;
       }).join("\n");
       const relCtx = getRelationshipAndFamiliarityContext();
       const themeInfo = getGroupThemePromptBlock(hasRecentUserMsg);
 
-      const prompt = `《太微宫茶话群聊》最近记忆上下文：\n${hist || "（暂无对话）"}\n\n${themeInfo.block}\n${themeInfo.isIfMode ? "" : relCtx}\n请模拟真实鲜活的太微宫微信群聊，让 4~6 位不同性格的 NPC 紧接上面的对话与当前主题【${themeInfo.name}】热聊起来！\n- 若刚刚 ${state.userName} 发了话或 @了某人，被 @的人或群友自然回应 ${state.userName}，同时群友之间也会互相 @对方 接话抬杠；若 ${state.userName} 没说话且非女主中心主题，大家就聊自己的事！\n- 中途穿插 1 条符合角色性格与动作的花样进群提示（{"type": "join", "text": "某角色 + 特色动作神态 + 进入了聊天室"}）！\n- 如果某个NPC说了失言、害羞或嘴硬的话，可随机给其中 1 条消息设置 "recall": true（代表发出后撤回）。严禁代替 ${state.userName} 发言！\n输出 ${msgCount} 项 JSON 数组（普通发言格式为 {"sender": "姓名（后妃带位分）", "text": "简短口语化消息（可含@某人）", "recall": false}）：`;
+      const prompt = `《太微宫茶话群聊》最近记忆上下文：\n${hist || "（暂无对话）"}\n\n${themeInfo.block}\n${themeInfo.isIfMode ? "" : relCtx}${targetDirective}\n请模拟真实鲜活的太微宫微信群聊，让 4~6 位不同性格的 NPC 紧接上面的对话与当前主题【${themeInfo.name}】热聊起来！\n- 若刚刚 ${state.userName} 引用或 @了某人，被引用/被 @的人必须正面回应 ${state.userName}，同时群友之间也会互相 @对方 接话抬杠；若 ${state.userName} 没说话且非女主中心主题，大家就聊自己的事！\n- 中途穿插 1 条符合角色性格与动作的花样进群提示（{"type": "join", "text": "某角色 + 特色动作神态 + 进入了聊天室"}）！\n- 如果某个NPC说了失言、害羞或嘴硬的话，可随机给其中 1 条消息设置 "recall": true（代表发出后撤回）。严禁代替 ${state.userName} 发言！\n输出 ${msgCount} 项 JSON 数组（普通发言格式为 {"sender": "姓名（后妃带位分）", "text": "简短口语化消息（可含@某人）", "quote": {"sender": "被引用人姓名（可选）", "text": "被引用原话（可选）"}, "recall": false}）：`;
       const resp = await callAI(prompt, "太微群聊回复");
       state.chatroomTyping = false;
       renderChatroom();
@@ -3110,6 +3120,7 @@
     }
   }
 
+
   async function triggerAiNpcRandomTopic() {
     const topicBtn = targetDoc.getElementById("twRandomChatTopicBtn");
     topicBtn.disabled = true; topicBtn.textContent = "刷新中…";
@@ -3122,7 +3133,8 @@
     try {
       const msgCount = 8;
       const relCtx = getRelationshipAndFamiliarityContext();
-      const prompt = `这里是《太微宫茶话群聊》。\n${themeInfo.block}\n${themeInfo.isIfMode ? "" : relCtx}\n请从霍惊弦、陆敬、沈砚、谢无咎、温言酌、端王萧承泽、裴玄度、苏枕月（丽嫔）、秦昭华（德妃）、崔清漪（淑妃）、卢婉兮（修仪）、柳如絮（婕妤）、赵怀安、萧承稷中挑 5~7 位不同人物，严格围绕当前主题【${themeInfo.name}】开启新话题斗嘴、八卦或插科打诨！\n- 群友之间自然使用 @对方 互相吐槽或接话；\n- 中途穿插 1~2 条带角色特色动作神态的花样进群提示（{"type": "join", "text": "某角色 + 特色动作神态 + 进入了聊天室"}，严禁只写干巴巴的“进入了聊天室”）；\n- 可随机给某 1 条失言或嘴硬的消息设置 "recall": true（发出后又撤回）。严禁代替 ${state.userName} 发言！\n总共生成 ${msgCount} 项 JSON 数组（普通发言格式：{"sender": "姓名（后妃带位分）", "text": "简短口语化消息6至26字", "recall": false}）：`;
+            const allRosterNames = state.dmNpcOptions.map(x => x.name).join("、");
+      const prompt = `这里是《太微宫茶话群聊》。\n${themeInfo.block}\n${themeInfo.isIfMode ? "" : relCtx}\n当前群成员池共有：${allRosterNames}。\n请根据当前主题【${themeInfo.name}】的氛围，从上述成员池中随机挑选 5~7 位最贴合该话题的不同人物（例如深宫八卦多挑各宫高低位妃嫔与内侍，市井趣闻多挑谢无咎/霍惊弦/洛青衣/顾清商/阿古拉等，朝堂或同步剧情结合文武百官与后妃），严格围绕当前主题开启新话题斗嘴、八卦或插科打诨！\n- 群友之间自然使用 @对方 互相吐槽或接话；\n- 中途穿插 1~2 条带角色特色动作神态的花样进群提示（{"type": "join", "text": "某角色 + 特色动作神态 + 进入了聊天室"}，严禁只写干巴巴的“进入了聊天室”）；\n- 可随机给某 1 条失言或嘴硬的消息设置 "recall": true（发出后又撤回）。严禁代替 ${state.userName} 发言！\n总共生成 ${msgCount} 项 JSON 数组（普通发言格式：{"sender": "姓名（后妃带位分）", "text": "简短口语化消息6至26字", "recall": false}）：`;
       const resp = await callAI(prompt, `太微群聊·${themeInfo.name}`);
       state.chatroomTyping = false;
       renderChatroom();
