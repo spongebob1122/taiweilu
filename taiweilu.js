@@ -21,15 +21,33 @@
     sandboxWin.addEventListener("pagehide", destroyTaiweiUI);
   }
 
-  const GLOBAL_CFG_KEY = "tw_palace_global_cfg_v37";
-  const CHAT_BIND_VAR_KEY = "tw_palace_archive_v37";
-  const LOCAL_BACKUP_PREFIX = "tw_palace_chat_backup_v37_";
-  const SOLO_ARCHIVE_PREFIX = "tw_palace_solo_archive_v37_";
-  const WALLPAPER_STORAGE_KEY = "tw_palace_custom_wallpaper_v37";
+  const GLOBAL_CFG_KEY = "tw_palace_global_cfg_v39";
+  const CHAT_BIND_VAR_KEY = "tw_palace_archive_v39";
+  const LOCAL_BACKUP_PREFIX = "tw_palace_chat_backup_v39_";
+  const SOLO_ARCHIVE_PREFIX = "tw_palace_solo_archive_v39_";
+  const WALLPAPER_STORAGE_KEY = "tw_palace_custom_wallpaper_v39";
+  const DEFAULT_THEME_WALLPAPER_URL = "https://i.imgs.ovh/2026/11/23/8caf45191a96f707e35109b504552bf3.png";
   const EMPEROR_BG_URL = "https://i.imgs.ovh/2026/11/22/60e9175b05663f7d9316d86a2f57a557.png";
   const CATCH_AVATAR_URL = "https://i.imgs.ovh/2026/11/22/7bc0ecf4c0ca3764421f7e0dda4c2ca0.jpg";
   const DEFAULT_PLOT_WORD_LIMIT = 55;
   const DEFAULT_PLOT_CUSTOM_PROMPT = "以女主名字开头，简明概括本轮发生的核心事件、关键互动与结果，语言自然凝练。";
+
+  function freeUpStorageQuota() {
+    try {
+      const store = targetWin.localStorage || localStorage;
+      const keysToRemove = [];
+      for (let i = 0; i < store.length; i++) {
+        const k = store.key(i);
+        if (k && /^tw_palace_custom_wallpaper_v(3[0-8]|2\d)/.test(k)) {
+          keysToRemove.push(k);
+        }
+      }
+      keysToRemove.forEach(k => {
+        try { store.removeItem(k); localStorage.removeItem(k); } catch (e) {}
+      });
+    } catch (e) {}
+  }
+  freeUpStorageQuota();
 
   const FORUM_STYLE_PRESETS = {
     lively: { name: "鲜活茶水间", desc: "像真实的宫人妃嫔、朝臣百姓私下嗑瓜子唠嗑！多用自然鲜活口语词，句子短促有活人感，既有直接针对主帖发表看法的，也有 @楼上其他NPC 互相接话、抬杠、拆台、追问细节的。" },
@@ -54,28 +72,28 @@
 
   const BASE_DM_NPC_CATALOG = [
     { id: "萧承稷", name: "萧承稷", display: "萧承稷（大景天子）", title: "甘露殿 · 皇帝", seal: "御笔亲敕", keywords: ["萧承稷", "陛下", "圣人"], personality: "大景皇帝，必自称“朕”或私下对熟人称“我”（禁称“孤”）。冷峻威严、城府极深、掌控欲强，说话简短直接，私下对女主护短细腻、占有欲深重。" },
-    { id: "沈砚", name: "沈砚", display: "沈砚（中书侍郎）", title: "政事堂 · 中书侍郎", seal: "沈氏清臣", keywords: ["沈砚", "沈清臣", "沈侍郎"], personality: "字清臣，寒门辅政重臣。温润守礼、理智冷静、考虑周全，面对感情克制隐忍，动心后占有欲极强。" },
-    { id: "陆敬", name: "陆敬", display: "陆敬（镇国大将军）", title: "北衙禁军 · 大统领", seal: "镇国将军印", keywords: ["陆敬", "陆怀远", "陆大将军", "陆统领"], personality: "字怀远，禁军统帅。爽朗直率、重情护短、武将风范，说话痛快直接。" },
-    { id: "谢无咎", name: "谢无咎", display: "谢无咎（四海商行老板）", title: "醉仙楼 · 长安首富", seal: "四海无咎", keywords: ["谢无咎", "谢老板"], personality: "表面风流随性、算账精明、爱开玩笑，实则重情讲义气、考虑周密。" },
-    { id: "霍惊弦", name: "霍惊弦", display: "霍惊弦（定远侯世子）", title: "飞龙厩 · 小侯爷", seal: "惊弦私印", keywords: ["霍惊弦", "小侯爷"], personality: "19岁少年心性，活泼开朗、爱笑爱闹、直接热烈，喜欢搜罗西市好玩物品送人。" },
-    { id: "温言酌", name: "温言酌", display: "温言酌（太医署院判）", title: "尚药局 · 御前侍医", seal: "杏林温氏", keywords: ["温言酌", "温太医", "温院判"], personality: "表面温和，实则极有主见，说话直接不留情面，唯一敢逼萧承稷喝苦药的人。" },
-    { id: "裴玄度", name: "裴玄度", display: "裴玄度（大理寺卿）", title: "大理寺 · 司法重臣", seal: "大理正卿", keywords: ["裴玄度", "裴正卿", "裴卿"], personality: "字正卿，冷肃古板、刚正不阿、话少严谨，一旦关心人便会生硬直接地替对方扫清隐患。" },
-    { id: "卫凛", name: "卫凛", display: "卫凛（羽林中郎将）", title: "甘露殿 · 副统领", seal: "羽林卫凛", keywords: ["卫凛", "卫统领", "卫中郎将"], personality: "沉稳寡言、执行命令彻底，熟悉的人面前略显局促实在，重实际行动。" },
-    { id: "赵怀安", name: "赵怀安", display: "赵怀安（内侍监大总管）", title: "甘露殿 · 皇城司统领", seal: "内侍总管", keywords: ["赵怀安", "赵总管"], personality: "自称“奴婢”，对外人严厉狠辣，唯独对陛下恭敬细致、绝对忠诚。" },
-    { id: "苏枕月（丽嫔）", name: "苏枕月（丽嫔）", display: "苏枕月（丽嫔）", title: "玉照宫 · 正二品丽嫔", seal: "玉照枕月", keywords: ["苏枕月", "苏丽嫔", "丽嫔"], personality: "自称“妾”或“妾身”。江南豪商之女，慵懒散漫、人间清醒，酷爱美食华服与看戏话本。" },
-    { id: "秦昭华（德妃）", name: "秦昭华（德妃）", display: "秦昭华（德妃）", title: "承香殿 · 正一品德妃", seal: "陇右昭华", keywords: ["秦昭华", "秦德妃", "德妃"], personality: "自称“妾身”。将门虎女，明艳张扬、脾气直接、护短好面子。" },
-    { id: "崔清漪（淑妃）", name: "崔清漪（淑妃）", display: "崔清漪（淑妃）", title: "淑景殿 · 正一品淑妃", seal: "清河崔氏", keywords: ["崔清漪", "崔淑妃", "淑妃"], personality: "自称“妾身”。清河崔氏嫡女，端庄冷傲、心机深沉、极重世家规矩。" },
-    { id: "柳如絮（婕妤）", name: "柳如絮（婕妤）", display: "柳如絮（婕妤）", title: "听竹轩 · 正三品婕妤", seal: "听竹如絮", keywords: ["柳如絮", "柳婕妤", "婕妤"], personality: "自称“妾”。江南寒门才女，清冷坚韧、聪慧自持。" },
-    { id: "卢婉兮（修仪）", name: "卢婉兮（修仪）", display: "卢婉兮（修仪）", title: "凝华殿 · 正二品修仪", seal: "范阳卢氏", keywords: ["卢婉兮", "卢修仪", "修仪"], personality: "自称“妾身”。范阳卢氏贵女，善妒刻薄、掐尖要强。" },
-    { id: "郑芷兰（美人）", name: "郑芷兰（美人）", display: "郑芷兰（美人）", title: "流霞阁 · 正四品美人", seal: "流霞芷兰", keywords: ["郑芷兰", "郑美人"], personality: "自称“妾”。表面温顺寡言，实则心机深沉。" },
-    { id: "周妙音（才人）", name: "周妙音（才人）", display: "周妙音（才人）", title: "揽月阁 · 正五品才人", seal: "揽月妙音", keywords: ["周妙音", "周才人"], personality: "自称“妾”。虚荣张扬，巴结淑妃与修仪。" },
-    { id: "韩怜儿（宝林）", name: "韩怜儿（宝林）", display: "韩怜儿（宝林）", title: "秋水居 · 正六品宝林", seal: "秋水韩氏", keywords: ["韩怜儿", "韩宝林"], personality: "自称“妾”。表面楚楚可怜，实则怨毒算计。" },
-    { id: "沈青禾（选侍）", name: "沈青禾（选侍）", display: "沈青禾（选侍）", title: "翠微居 · 正七品选侍", seal: "翠微青禾", keywords: ["沈青禾", "沈选侍"], personality: "自称“妾”。胆小本分、懂医药草木。" },
-    { id: "萧承泽", name: "萧承泽", display: "萧承泽（端王）", title: "皇室宗亲 · 七弟端王", seal: "端王之宝", keywords: ["萧承泽", "端王"], personality: "19岁先帝幼子，心思单纯、怕皇兄查功课，酷爱养猎犬与骑射。" },
-    { id: "阿古拉", name: "阿古拉", display: "阿古拉（铁勒三王子）", title: "鸿胪寺 · 铁勒质子", seal: "漠北狼印", keywords: ["阿古拉", "三王子"], personality: "表面豪爽顺从，实则心思细密。" },
-    { id: "洛青衣", name: "洛青衣", display: "洛青衣（胡月酒肆老板娘）", title: "西市 · 退役女侦察兵", seal: "胡月青衣", keywords: ["洛青衣", "胡月酒肆"], personality: "直爽干脆、待客热情、办事利落。" },
-    { id: "顾清商", name: "顾清商", display: "顾清商（听雨楼花魁）", title: "平康坊 · 皇城司暗探", seal: "听雨清商", keywords: ["顾清商", "听雨楼"], personality: "八面玲珑、观察敏锐、果断狠辣。" },
-    { id: "小禄子", name: "小禄子", display: "小禄子（御前小内侍）", title: "甘露殿 · 奉茶内侍", seal: "御前陈禄", keywords: ["小禄子", "陈禄"], personality: "自称“奴婢”，机灵乖巧、口风极严。" }
+    { id: "沈砚", name: "沈砚", display: "沈砚（中书侍郎）", title: "政事堂 · 中书侍郎", seal: "清臣私印", keywords: ["沈砚", "沈清臣", "沈侍郎"], personality: "字清臣，寒门辅政重臣。温润守礼、理智冷静、考虑周全，面对感情克制隐忍，动心后占有欲极强。" },
+    { id: "陆敬", name: "陆敬", display: "陆敬（镇国大将军）", title: "北衙禁军 · 大统领", seal: "怀远兵符", keywords: ["陆敬", "陆怀远", "陆大将军", "陆统领"], personality: "字怀远，禁军统帅。爽朗直率、重情护短、武将风范，说话痛快直接。" },
+    { id: "谢无咎", name: "谢无咎", display: "谢无咎（四海商行老板）", title: "醉仙楼 · 长安首富", seal: "四海商印", keywords: ["谢无咎", "谢老板"], personality: "表面风流随性、算账精明、爱开玩笑，实则重情讲义气、考虑周密。" },
+    { id: "霍惊弦", name: "霍惊弦", display: "霍惊弦（定远侯世子）", title: "飞龙厩 · 小侯爷", seal: "惊弦私记", keywords: ["霍惊弦", "小侯爷"], personality: "19岁少年心性，活泼开朗、爱笑爱闹、直接热烈，喜欢搜罗西市好玩物品送人。" },
+    { id: "温言酌", name: "温言酌", display: "温言酌（太医署院判）", title: "尚药局 · 御前侍医", seal: "太医署印", keywords: ["温言酌", "温太医", "温院判"], personality: "表面温和，实则极有主见，说话直接不留情面，唯一敢逼萧承稷喝苦药的人。" },
+    { id: "裴玄度", name: "裴玄度", display: "裴玄度（大理寺卿）", title: "大理寺 · 司法重臣", seal: "正卿法印", keywords: ["裴玄度", "裴正卿", "裴卿"], personality: "字正卿，冷肃古板、刚正不阿、话少严谨，一旦关心人便会生硬直接地替对方扫清隐患。" },
+    { id: "卫凛", name: "卫凛", display: "卫凛（羽林中郎将）", title: "甘露殿 · 副统领", seal: "羽林卫印", keywords: ["卫凛", "卫统领", "卫中郎将"], personality: "沉稳寡言、执行命令彻底，熟悉的人面前略显局促实在，重实际行动。" },
+    { id: "赵怀安", name: "赵怀安", display: "赵怀安（内侍监大总管）", title: "甘露殿 · 皇城司统领", seal: "内侍监印", keywords: ["赵怀安", "赵总管"], personality: "自称“奴婢”，对外人严厉狠辣，唯独对陛下恭敬细致、绝对忠诚。" },
+    { id: "苏枕月（丽嫔）", name: "苏枕月（丽嫔）", display: "苏枕月（丽嫔）", title: "玉照宫 · 正二品丽嫔", seal: "玉照花笺", keywords: ["苏枕月", "苏丽嫔", "丽嫔"], personality: "自称“妾”或“妾身”。江南豪商之女，慵懒散漫、人间清醒，酷爱美食华服与看戏话本。" },
+    { id: "秦昭华（德妃）", name: "秦昭华（德妃）", display: "秦昭华（德妃）", title: "承香殿 · 正一品德妃", seal: "承香私笺", keywords: ["秦昭华", "秦德妃", "德妃"], personality: "自称“妾身”。将门虎女，明艳张扬、脾气直接、护短好面子。" },
+    { id: "柳如絮（婕妤）", name: "柳如絮（婕妤）", display: "柳如絮（婕妤）", title: "听竹轩 · 正三品婕妤", seal: "听竹素笺", keywords: ["柳如絮", "柳婕妤", "婕妤"], personality: "自称“妾”。江南寒门才女，清冷坚韧、聪慧自持。" },
+    { id: "沈青禾（选侍）", name: "沈青禾（选侍）", display: "沈青禾（选侍）", title: "翠微居 · 正七品选侍", seal: "青禾草笺", keywords: ["沈青禾", "沈选侍"], personality: "自称“妾”。胆小本分、懂医药草木。" },
+    { id: "崔清漪（淑妃）", name: "崔清漪（淑妃）", display: "崔清漪（淑妃）", title: "淑景殿 · 正一品淑妃", seal: "淑景凤笺", keywords: ["崔清漪", "崔淑妃", "淑妃"], personality: "自称“妾身”。清河崔氏嫡女，端庄冷傲、心机深沉、极重世家规矩。" },
+    { id: "卢婉兮（修仪）", name: "卢婉兮（修仪）", display: "卢婉兮（修仪）", title: "凝华殿 · 正二品修仪", seal: "凝华花笺", keywords: ["卢婉兮", "卢修仪", "修仪"], personality: "自称“妾身”。范阳卢氏贵女，善妒刻薄、掐尖要强。" },
+    { id: "郑芷兰（美人）", name: "郑芷兰（美人）", display: "郑芷兰（美人）", title: "流霞阁 · 正四品美人", seal: "流霞素笺", keywords: ["郑芷兰", "郑美人"], personality: "自称“妾”。表面温顺寡言，实则心机深沉。" },
+    { id: "周妙音（才人）", name: "周妙音（才人）", display: "周妙音（才人）", title: "揽月阁 · 正五品才人", seal: "揽月香笺", keywords: ["周妙音", "周才人"], personality: "自称“妾”。虚荣张扬，巴结淑妃与修仪。" },
+    { id: "韩怜儿（宝林）", name: "韩怜儿（宝林）", display: "韩怜儿（宝林）", title: "秋水居 · 正六品宝林", seal: "秋水残笺", keywords: ["韩怜儿", "韩宝林"], personality: "自称“妾”。表面楚楚可怜，实则怨毒算计。" },
+    { id: "萧承泽", name: "萧承泽", display: "萧承泽（端王）", title: "皇室宗亲 · 七弟端王", seal: "端王府印", keywords: ["萧承泽", "端王"], personality: "19岁先帝幼子，心思单纯、怕皇兄查功课，酷爱养猎犬与骑射。" },
+    { id: "阿古拉", name: "阿古拉", display: "阿古拉（铁勒三王子）", title: "鸿胪寺 · 铁勒质子", seal: "狼头火漆", keywords: ["阿古拉", "三王子"], personality: "表面豪爽顺从，实则心思细密。" },
+    { id: "洛青衣", name: "洛青衣", display: "洛青衣（胡月酒肆老板娘）", title: "西市 · 退役女侦察兵", seal: "胡月酒印", keywords: ["洛青衣", "胡月酒肆"], personality: "直爽干脆、待客热情、办事利落。" },
+    { id: "顾清商", name: "顾清商", display: "顾清商（听雨楼花魁）", title: "平康坊 · 皇城司暗探", seal: "听雨花印", keywords: ["顾清商", "听雨楼"], personality: "八面玲珑、观察敏锐、果断狠辣。" },
+    { id: "小禄子", name: "小禄子", display: "小禄子（御前小内侍）", title: "甘露殿 · 奉茶内侍", seal: "甘露内记", keywords: ["小禄子", "陈禄"], personality: "自称“奴婢”，机灵乖巧、口风极严。" }
   ];
 
   const NPC_FANCY_JOIN_MAP = {
@@ -155,18 +173,18 @@
     status: ["twHomeRefreshStatusBtn"],
     plot: ["twAppendLatestPlotBtn", "twRebuildFullPlotBtn"],
     actions: ["twRefreshActionsBtn"],
+    mailbox: ["twRefreshMailboxBtn"],
     world: ["twRefreshWorldBtn"],
     emperor: ["twRefreshEmperorSpyBtn"],
     forum: ["twRefreshForumBtn"]
   };
 
-  /* 桌面12大古风App（第1、2位固定为剧情梳理、剧情选择） */
   const PHONE_APPS_META = [
     { id: "plot", title: "剧情梳理", sub: "起居编年", color: "linear-gradient(145deg,#8f2922,#54120e)", svg: `<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#fff6e0" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>` },
     { id: "actions", title: "剧情选择", sub: "六大走向", color: "linear-gradient(145deg,#b57c34,#754b16)", svg: `<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#fff6e0" stroke-width="1.8"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>` },
     { id: "chat", title: "灵犀传音", sub: "私聊·群聊", color: "linear-gradient(145deg,#993948,#5c1b26)", svg: `<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#fff6e0" stroke-width="1.8"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>` },
-    { id: "letter", title: "飞鸽传书", sub: "鱼雁往来", color: "linear-gradient(145deg,#355e53,#1b362f)", svg: `<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#fff6e0" stroke-width="1.8"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>` },
-    { id: "world", title: "地图", sub: "堪舆动向", color: "linear-gradient(145deg,#466e62,#233d35)", svg: `<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#fff6e0" stroke-width="1.8"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>` },
+    { id: "mailbox", title: "鱼雁信匣", sub: "收信·寄信", color: "linear-gradient(145deg,#8f523b,#4d2619)", svg: `<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#fff6e0" stroke-width="1.8"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>` },
+    { id: "world", title: "宫闱动态", sub: "宫内·宫外", color: "linear-gradient(145deg,#466e62,#233d35)", svg: `<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#fff6e0" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>` },
     { id: "emperor", title: "帝王起居", sub: "偷窥圣躬", color: "linear-gradient(145deg,#3b332b,#1c1713)", svg: `<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#f5dfb3" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/></svg>` },
     { id: "forum", title: "宫内外坛", sub: "六宫吃瓜", color: "linear-gradient(145deg,#6e552b,#3d2e14)", svg: `<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#fff6e0" stroke-width="1.8"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>` },
     { id: "theater", title: "小剧场", sub: "泥金画卷", color: "linear-gradient(145deg,#824654,#4c232d)", svg: `<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#fff6e0" stroke-width="1.8"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>` },
@@ -178,50 +196,122 @@
 
   let config = {
     theme: "xuanpaper", autoMasterAll: true,
-    autoModules: { status: true, plot: true, world: true },
+    autoModules: { status: true, plot: true, world: true, mailbox: true },
     plotWordLimit: DEFAULT_PLOT_WORD_LIMIT, plotCustomPrompt: DEFAULT_PLOT_CUSTOM_PROMPT,
     chatMemoryCount: 20, forumNickname: "", forumSpeakStyle: "lively", forumCustomStyleText: "",
     groupChatTheme: "story_sync", groupChatCustomThemeText: "", lastKnownUserName: "",
+    lastOpenApp: "home", lastActiveChatTab: "dm",
     customSaveSlot: "chat_bind", fabCustomTopRatio: null, apiMode: "tavern",
     apiName: "", apiUrl: "https://api.openai.com/v1", apiKey: "", apiModel: "gpt-4o-mini",
     fetchedModels: [], savedApiPresets: [], activePresetId: "",
-    wallpaperMaskOpacity: 0.2, customWallpaperUrl: "",
+    wallpaperMaskOpacity: 0.16, customWallpaperUrl: DEFAULT_THEME_WALLPAPER_URL,
     wallpaperTextColorMode: "auto", detectedWpIsLight: true
   };
 
-  function getSavedWallpaperDataUrl() {
-    if (config.customWallpaperUrl) return config.customWallpaperUrl;
+    function getSavedWallpaperDataUrl() {
+    // 1. 优先读取顶层窗口内存中的最新壁纸（切窗口0延迟且不受5MB限制）
+    if (typeof targetWin.__twRuntimeWallpaper === "string") {
+      return targetWin.__twRuntimeWallpaper === "__NONE__" ? "" : targetWin.__twRuntimeWallpaper;
+    }
+    // 2. 其次读取独立壁纸存储键
     try {
-      return targetWin.localStorage.getItem(WALLPAPER_STORAGE_KEY) || localStorage.getItem(WALLPAPER_STORAGE_KEY) || "";
-    } catch (e) { return ""; }
-  }
-  function saveWallpaperDataUrl(dataUrl) {
-    config.customWallpaperUrl = dataUrl || "";
-    saveConfig();
-    try {
-      if (!dataUrl) {
-        targetWin.localStorage.removeItem(WALLPAPER_STORAGE_KEY);
-        localStorage.removeItem(WALLPAPER_STORAGE_KEY);
-      } else {
-        targetWin.localStorage.setItem(WALLPAPER_STORAGE_KEY, dataUrl);
-        localStorage.setItem(WALLPAPER_STORAGE_KEY, dataUrl);
+      const stored = targetWin.localStorage?.getItem(WALLPAPER_STORAGE_KEY) || localStorage.getItem(WALLPAPER_STORAGE_KEY);
+      if (stored === "__NONE__") return "";
+      if (stored) {
+        targetWin.__twRuntimeWallpaper = stored;
+        return stored;
       }
     } catch (e) {}
+    // 3. 最后读取 config 配置里的链接
+    if (config.customWallpaperUrl === "__NONE__") return "";
+    return config.customWallpaperUrl || DEFAULT_THEME_WALLPAPER_URL;
   }
 
-  function loadGlobalConfig() {
+  function saveWallpaperDataUrl(dataUrl) {
+    const cleanUrl = dataUrl || "__NONE__";
+    // 1. 立即锁入顶层窗口内存，保证当前会话与切屏绝对生效
+    targetWin.__twRuntimeWallpaper = cleanUrl;
+    // 2. 如果是网络链接或纯色标记，同步记入 config；如果是本地Base64图片，记特殊标记 "__LOCAL_DATA__" 防止被默认壁纸覆盖！
+    config.customWallpaperUrl = cleanUrl.startsWith("data:") ? "__LOCAL_DATA__" : cleanUrl;
     try {
-      const legacyStr = localStorage.getItem(GLOBAL_CFG_KEY) || localStorage.getItem("tw_palace_global_cfg_v36") || localStorage.getItem("tw_palace_global_cfg_v35") || "";
-      if (legacyStr) Object.assign(config, JSON.parse(legacyStr));
+      try { targetWin.localStorage?.setItem(WALLPAPER_STORAGE_KEY, cleanUrl); } catch (e) {
+        freeUpStorageQuota();
+        targetWin.localStorage?.setItem(WALLPAPER_STORAGE_KEY, cleanUrl);
+      }
+      try { localStorage.setItem(WALLPAPER_STORAGE_KEY, cleanUrl); } catch (e) {}
     } catch (e) {}
+    saveConfig();
+  }
+
+    function loadGlobalConfig() {
+    let bestCfg = null;
+    let bestTime = 0;
+
+    const candidateSources = [];
+    try {
+      const topStore = targetWin.localStorage;
+      if (topStore) {
+        candidateSources.push(
+          topStore.getItem(GLOBAL_CFG_KEY),
+          topStore.getItem("tw_palace_global_cfg_v38"),
+          topStore.getItem("tw_palace_global_cfg_v37")
+        );
+      }
+    } catch (e) {}
+    try {
+      candidateSources.push(
+        localStorage.getItem(GLOBAL_CFG_KEY),
+        localStorage.getItem("tw_palace_global_cfg_v38"),
+        localStorage.getItem("tw_palace_global_cfg_v37")
+      );
+    } catch (e) {}
+
+    for (const raw of candidateSources) {
+      if (!raw) continue;
+      try {
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === "object") {
+          const t = Number(parsed._cfgSavedAt) || 1;
+          if (t >= bestTime) {
+            bestTime = t;
+            bestCfg = parsed;
+    // 放在 loadGlobalConfig() 函数的末尾（最后一个 if 之后）：
+    if (typeof config.mailCooldownRounds !== "number" || isNaN(config.mailCooldownRounds)) config.mailCooldownRounds = 2;
+    if (typeof config.mailTriggerProb !== "number" || isNaN(config.mailTriggerProb)) config.mailTriggerProb = 35;
+
+          }
+        }
+      } catch (e) {}
+    }
+
     try {
       const th = targetWin.TavernHelper || window.TavernHelper;
       const stCtx = targetWin.SillyTavern?.getContext?.() || window.SillyTavern?.getContext?.();
-      const backendCfg = th?.getVariables?.({ type: "global" })?.[GLOBAL_CFG_KEY] || stCtx?.extensionSettings?.[GLOBAL_CFG_KEY];
-      if (backendCfg && typeof backendCfg === "object") Object.assign(config, backendCfg);
+      const backendCandidates = [
+        targetWin.__twRuntimeGlobalConfig,
+        th?.getVariables?.({ type: "chat" })?.[GLOBAL_CFG_KEY],
+        th?.getVariables?.({ type: "global" })?.[GLOBAL_CFG_KEY],
+        stCtx?.extensionSettings?.[GLOBAL_CFG_KEY]
+      ];
+      for (const bCfg of backendCandidates) {
+        if (bCfg && typeof bCfg === "object") {
+          const bt = Number(bCfg._cfgSavedAt) || 0;
+          if (!bestCfg || bt > bestTime) {
+            bestTime = bt;
+            bestCfg = bCfg;
+          }
+        }
+      }
     } catch (e) {}
-    if (!config.autoModules || typeof config.autoModules !== "object") config.autoModules = { status: true, plot: true, world: true };
+
+    if (bestCfg) Object.assign(config, bestCfg);
+
+    if (!config.autoModules || typeof config.autoModules !== "object") {
+      config.autoModules = { status: true, plot: true, world: true, mailbox: true };
+    }
+    if (typeof config.autoModules.mailbox !== "boolean") config.autoModules.mailbox = true;
     delete config.autoModules.actions;
+    delete config.autoModules.bonds;
     if (!Array.isArray(config.savedApiPresets)) config.savedApiPresets = [];
     if (!config.plotWordLimit || isNaN(Number(config.plotWordLimit))) config.plotWordLimit = DEFAULT_PLOT_WORD_LIMIT;
     if (typeof config.plotCustomPrompt !== "string" || !config.plotCustomPrompt.trim()) config.plotCustomPrompt = DEFAULT_PLOT_CUSTOM_PROMPT;
@@ -231,20 +321,43 @@
     if (typeof config.forumCustomStyleText !== "string") config.forumCustomStyleText = "";
     if (!config.groupChatTheme || !GROUP_CHAT_THEMES[config.groupChatTheme]) config.groupChatTheme = "story_sync";
     if (typeof config.groupChatCustomThemeText !== "string") config.groupChatCustomThemeText = "";
+    if (!config.lastOpenApp || ["letter", "meta", "bonds"].includes(config.lastOpenApp)) config.lastOpenApp = "home";
+    if (!config.lastActiveChatTab) config.lastActiveChatTab = "dm";
     if (!config.customSaveSlot || config.customSaveSlot === "auto_bind" || config.customSaveSlot === "vault_main") config.customSaveSlot = "chat_bind";
     if (config.theme === "palaceglass") config.theme = "palace";
-    if (typeof config.wallpaperMaskOpacity !== "number" || isNaN(config.wallpaperMaskOpacity)) config.wallpaperMaskOpacity = 0.2;
+    if (typeof config.wallpaperMaskOpacity !== "number" || isNaN(config.wallpaperMaskOpacity)) config.wallpaperMaskOpacity = 0.16;
     if (!["auto", "dark", "light"].includes(config.wallpaperTextColorMode)) config.wallpaperTextColorMode = "auto";
+    if (!config.customWallpaperUrl) config.customWallpaperUrl = DEFAULT_THEME_WALLPAPER_URL;
   }
 
   const saveConfig = () => {
-    try { localStorage.setItem(GLOBAL_CFG_KEY, JSON.stringify(config)); } catch (e) {}
     try {
+      config._cfgSavedAt = Date.now();
+      const toSave = { ...config };
+      if (toSave.customWallpaperUrl && toSave.customWallpaperUrl.startsWith("data:")) {
+        toSave.customWallpaperUrl = DEFAULT_THEME_WALLPAPER_URL;
+      }
+      const str = JSON.stringify(toSave);
+      try { targetWin.localStorage.setItem(GLOBAL_CFG_KEY, str); } catch (e) {
+        freeUpStorageQuota();
+        try { targetWin.localStorage.setItem(GLOBAL_CFG_KEY, str); } catch (e2) {}
+      }
+      try { localStorage.setItem(GLOBAL_CFG_KEY, str); } catch (e) {}
+      targetWin.__twRuntimeGlobalConfig = toSave;
       const th = targetWin.TavernHelper || window.TavernHelper;
-      if (th && typeof th.insertOrAssignVariables === "function") th.insertOrAssignVariables({ [GLOBAL_CFG_KEY]: config }, { type: "global" });
+      if (th && typeof th.insertOrAssignVariables === "function") {
+        try { th.insertOrAssignVariables({ [GLOBAL_CFG_KEY]: toSave }, { type: "global" }); } catch (e) {}
+        try { th.insertOrAssignVariables({ [GLOBAL_CFG_KEY]: toSave }, { type: "chat" }); } catch (e) {}
+      }
+      const stCtx = targetWin.SillyTavern?.getContext?.() || window.SillyTavern?.getContext?.();
+      if (stCtx && stCtx.extensionSettings) {
+        stCtx.extensionSettings[GLOBAL_CFG_KEY] = toSave;
+        if (typeof stCtx.saveSettingsDebounced === "function") stCtx.saveSettingsDebounced();
+      }
     } catch (e) {}
   };
   loadGlobalConfig();
+
 
   const isAutoModuleOn = (modName) => config.autoMasterAll ? true : Boolean(config.autoModules && config.autoModules[modName]);
   const escapeRegExp = (str) => String(str || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -255,7 +368,7 @@
       if (stCtx?.name1 && String(stCtx.name1).trim() && stCtx.name1 !== "User") return String(stCtx.name1).trim();
       const th = targetWin.TavernHelper || window.TavernHelper;
       if (th && typeof th.substitutes === "function") {
-        const u = th.substitutes("user");
+        const u = th.substitutes("云鸢");
         if (u && !u.includes("{{") && u.trim() && u.trim() !== "User") return u.trim();
       }
       const userMesList = targetDoc.querySelectorAll('#chat .mes[is_user="true"]');
@@ -274,16 +387,12 @@
       const stCtx = targetWin.SillyTavern?.getContext?.() || window.SillyTavern?.getContext?.();
       const p1 = stCtx?.powerUserSettings?.persona_description || "";
       if (p1 && String(p1).trim()) return String(p1).trim().slice(0, 600);
-      const th = targetWin.TavernHelper || window.TavernHelper;
-      if (th && typeof th.substitutes === "function") {
-        const p2 = th.substitutes("{{persona}}");
-        if (p2 && !p2.includes("{{") && p2.trim()) return p2.trim().slice(0, 600);
-      }
       const domPersona = targetDoc.getElementById("persona_description")?.value || "";
       if (domPersona.trim()) return domPersona.trim().slice(0, 600);
     } catch (e) {}
     return "";
   }
+
   function getCurrentChatFileId() {
     try {
       const stCtx = targetWin.SillyTavern?.getContext?.() || window.SillyTavern?.getContext?.();
@@ -295,15 +404,14 @@
         const cleanCid = String(cid).replace(/[^a-zA-Z0-9_\-\u4e00-\u9fa5]/g, "_");
         if (cleanCid && cleanCid !== "default_chat" && cleanCid !== "undefined" && cleanCid !== "null") {
           targetWin.__twLastValidChatId = cleanCid;
-          try { targetWin.localStorage.setItem("tw_last_valid_cid_v37", cleanCid); } catch (e) {}
+          try { targetWin.localStorage.setItem("tw_last_valid_cid_v39", cleanCid); } catch (e) {}
           return cleanCid;
         }
       }
     } catch (e) {}
-    // 防止刚点进去瞬间酒馆还未加载完 chatId 导致跳回 default_chat 引发回档
     if (targetWin.__twLastValidChatId) return targetWin.__twLastValidChatId;
     try {
-      const cached = targetWin.localStorage.getItem("tw_last_valid_cid_v37");
+      const cached = targetWin.localStorage.getItem("tw_last_valid_cid_v39") || targetWin.localStorage.getItem("tw_last_valid_cid_v38") || targetWin.localStorage.getItem("tw_last_valid_cid_v37");
       if (cached) return cached;
     } catch (e) {}
     return "default_chat";
@@ -318,30 +426,34 @@
     if (!obj || typeof obj !== "object") return false;
     return Boolean(
       (Array.isArray(obj.plotSummary) && obj.plotSummary.length > 0) ||
+      (Array.isArray(obj.mailboxList) && obj.mailboxList.length > 0) ||
       (Array.isArray(obj.posts) && obj.posts.length > 0) ||
       (Array.isArray(obj.palaceDynamics) && obj.palaceDynamics.length > 0) ||
       (Array.isArray(obj.outsideDynamics) && obj.outsideDynamics.length > 0) ||
+      (Array.isArray(obj.npcFocusDynamics) && obj.npcFocusDynamics.length > 0) ||
       (Array.isArray(obj.storyPlans) && obj.storyPlans.length > 0) ||
       (Array.isArray(obj.groupMessages) && obj.groupMessages.length > 0) ||
-      (Array.isArray(obj.lettersList) && obj.lettersList.length > 0) ||
       (obj.dmHistories && Object.keys(obj.dmHistories).some(k => Array.isArray(obj.dmHistories[k]) && obj.dmHistories[k].length > 0)) ||
       obj.emperorSpyData || obj.theaterText || obj.innerThought || obj.diary || obj.tacitData
     );
   }
 
   const state = {
-    isHydrated: false, savedAt: 0, currentApp: "home", activeChatTab: "dm",
+    isHydrated: false, savedAt: 0, currentApp: config.lastOpenApp || "home", activeChatTab: config.lastActiveChatTab || "dm",
     appUnreadBadges: {},
     currentSessionKey: getActiveVaultKey(), boundChatId: getCurrentChatFileId(),
     userName: detectCurrentUserName(), userIdentity: "未同步", time: "未同步", location: "未同步",
     mood: "未同步", pose: "未同步", clothes: "未同步", innerThought: "", diary: "",
     affection: 0, hasAffection: false, stage: "未同步", inNews: "", outNews: "", todo1: "", todo2: "",
-    hasDirectStatusTags: false, lastSyncedMsgKey: "", lastAutoProcessedRoundId: "", plotSummary: [], palaceDynamics: [],
-    outsideDynamics: [], posts: [], storyPlans: [], theaterText: "", theaterTitle: "", replyTargets: {},
+    hasDirectStatusTags: false, lastSyncedMsgKey: "", lastAutoProcessedRoundId: "",
+    plotSummary: [], palaceDynamics: [], outsideDynamics: [], npcFocusDynamics: [],
+    mailboxList: [], activeMailId: null, mailComposeOpen: false, mailComposeTarget: "萧承稷",
+    roundSnapshots: {},
+    posts: [], storyPlans: [], theaterText: "", theaterTitle: "", replyTargets: {},
     chatQuoteTarget: null, dmQuoteTarget: null, showAtPicker: false, atFilterKeyword: "",
-    groupMessages: [], dmNpcOptions: [...BASE_DM_NPC_CATALOG],
+    groupMessages: [], groupLockedTheme: "", groupLockedCustomText: "", pendingGroupThemeSwitch: null,
+    dmNpcOptions: [...BASE_DM_NPC_CATALOG],
     dmActiveNpc: "萧承稷", dmHistories: {}, dmTyping: false, chatroomTyping: false,
-    letterActiveNpc: "萧承稷", lettersList: [], activeLetterViewId: null,
     tacitMode: "guess_xiao", tacitTopic: "日常小习惯与怪癖", tacitData: null, tacitUserChoices: {},
     emperorSpyData: null, emperorSpyRevealed: {},
     emperorActiveDetailKey: null, emperorCardClickCount: 0, emperorPeekAccumulatedSec: 0,
@@ -376,11 +488,13 @@
     state.innerThought = ""; state.diary = ""; state.affection = 0; state.hasAffection = false;
     state.stage = "未同步"; state.inNews = ""; state.outNews = ""; state.todo1 = ""; state.todo2 = "";
     state.hasDirectStatusTags = false; state.lastSyncedMsgKey = ""; state.lastAutoProcessedRoundId = "";
-    state.plotSummary = []; state.palaceDynamics = []; state.outsideDynamics = [];
+    state.plotSummary = []; state.palaceDynamics = []; state.outsideDynamics = []; state.npcFocusDynamics = [];
+    state.mailboxList = []; state.activeMailId = null; state.mailComposeOpen = false;
+    state.roundSnapshots = {};
     state.posts = []; state.storyPlans = []; state.theaterText = ""; state.theaterTitle = ""; state.replyTargets = {};
     state.chatQuoteTarget = null; state.dmQuoteTarget = null; state.showAtPicker = false; state.atFilterKeyword = "";
-    state.groupMessages = []; state.dmActiveNpc = "萧承稷"; state.dmHistories = {};
-    state.lettersList = []; state.activeLetterViewId = null;
+    state.groupMessages = []; state.groupLockedTheme = ""; state.groupLockedCustomText = ""; state.pendingGroupThemeSwitch = null;
+    state.dmActiveNpc = "萧承稷"; state.dmHistories = {};
     state.tacitData = null; state.tacitUserChoices = {};
     state.dmTyping = false; state.chatroomTyping = false;
     state.emperorSpyData = null; state.emperorSpyRevealed = {}; state.emperorActiveDetailKey = null;
@@ -411,12 +525,22 @@
     if (Array.isArray(parsed.plotSummary)) state.plotSummary = parsed.plotSummary;
     if (Array.isArray(parsed.palaceDynamics)) state.palaceDynamics = parsed.palaceDynamics;
     if (Array.isArray(parsed.outsideDynamics)) state.outsideDynamics = parsed.outsideDynamics;
+    if (Array.isArray(parsed.npcFocusDynamics)) state.npcFocusDynamics = parsed.npcFocusDynamics;
+    if (Array.isArray(parsed.mailboxList)) state.mailboxList = parsed.mailboxList;
+    if (parsed.roundSnapshots && typeof parsed.roundSnapshots === "object") {
+      state.roundSnapshots = parsed.roundSnapshots;
+    }
     if (Array.isArray(parsed.posts)) state.posts = parsed.posts;
     if (Array.isArray(parsed.storyPlans)) state.storyPlans = parsed.storyPlans;
     if (parsed.theaterText !== undefined) state.theaterText = parsed.theaterText;
     if (parsed.theaterTitle !== undefined) state.theaterTitle = parsed.theaterTitle;
     if (Array.isArray(parsed.groupMessages)) state.groupMessages = parsed.groupMessages;
-    if (Array.isArray(parsed.lettersList)) state.lettersList = parsed.lettersList;
+    if (parsed.groupLockedTheme !== undefined) state.groupLockedTheme = parsed.groupLockedTheme;
+    if (parsed.groupLockedCustomText !== undefined) state.groupLockedCustomText = parsed.groupLockedCustomText;
+    if (!state.groupLockedTheme && Array.isArray(state.groupMessages) && state.groupMessages.length > 0) {
+      state.groupLockedTheme = config.groupChatTheme || "story_sync";
+      state.groupLockedCustomText = config.groupChatCustomThemeText || "";
+    }
     if (parsed.tacitData !== undefined) state.tacitData = parsed.tacitData;
     if (parsed.tacitUserChoices && typeof parsed.tacitUserChoices === "object") state.tacitUserChoices = parsed.tacitUserChoices;
     if (parsed.dmActiveNpc) state.dmActiveNpc = parsed.dmActiveNpc;
@@ -439,38 +563,91 @@
   let readFromTavernBackend = function (vaultKey) {
     if (targetWin.__twIsManuallyCleared) return null;
     try {
+      const th = targetWin.TavernHelper || window.TavernHelper;
+      if (th && typeof th.getVariables === "function") {
+        const chatVars = th.getVariables({ type: "chat" });
+        if (chatVars && chatVars[vaultKey] && hasSubstantialData(chatVars[vaultKey])) {
+          return chatVars[vaultKey];
+        }
+      }
+    } catch (e) {}
+    try {
       const store = targetWin.localStorage || localStorage;
-      const raw = store.getItem(SOLO_ARCHIVE_PREFIX + vaultKey) || localStorage.getItem(SOLO_ARCHIVE_PREFIX + vaultKey) || store.getItem("tw_palace_solo_archive_v36_" + vaultKey.replace("v37", "v36"));
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        if (parsed && parsed.__cleared) return null;
-        if (hasSubstantialData(parsed)) return parsed;
+      const v38Key = vaultKey.replace("v39", "v38");
+      const v37Key = vaultKey.replace("v39", "v37");
+      const candidates = [
+        store.getItem(SOLO_ARCHIVE_PREFIX + vaultKey),
+        localStorage.getItem(SOLO_ARCHIVE_PREFIX + vaultKey),
+        store.getItem("tw_palace_solo_archive_v38_" + v38Key),
+        store.getItem("tw_palace_solo_archive_v37_" + v37Key)
+      ];
+      for (const raw of candidates) {
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed && parsed.__cleared) return null;
+          if (hasSubstantialData(parsed)) return parsed;
+        }
       }
     } catch (e) {}
     return null;
   };
 
   let writeToTavernBackend = function (vaultKey, payload) {
-    try {
-      const store = targetWin.localStorage || localStorage;
-      if (!payload || Object.keys(payload).length === 0 || payload.__cleared) {
+    if (!payload || Object.keys(payload).length === 0 || payload.__cleared) {
+      try {
+        const store = targetWin.localStorage || localStorage;
         store.removeItem(SOLO_ARCHIVE_PREFIX + vaultKey);
         localStorage.removeItem(SOLO_ARCHIVE_PREFIX + vaultKey);
-        return;
+      } catch (e) {}
+      return;
+    }
+    targetWin.__twIsManuallyCleared = false;
+    try {
+      const th = targetWin.TavernHelper || window.TavernHelper;
+      if (th && typeof th.insertOrAssignVariables === "function") {
+        th.insertOrAssignVariables({ [vaultKey]: payload }, { type: "chat" });
       }
-      targetWin.__twIsManuallyCleared = false;
+    } catch (e) {}
+    try {
+      const store = targetWin.localStorage || localStorage;
       const str = JSON.stringify(payload);
       store.setItem(SOLO_ARCHIVE_PREFIX + vaultKey, str);
       try { localStorage.setItem(SOLO_ARCHIVE_PREFIX + vaultKey, str); } catch (e) {}
-    } catch (e) {}
+    } catch (quotaErr) {
+      freeUpStorageQuota();
+      try {
+        const slimPayload = { ...payload, roundSnapshots: {} };
+        const str = JSON.stringify(slimPayload);
+        (targetWin.localStorage || localStorage).setItem(SOLO_ARCHIVE_PREFIX + vaultKey, str);
+      } catch (e2) {}
+    }
   };
+
+  function saveRoundSnapshot(roundId) {
+    if (!roundId) return;
+    if (!state.roundSnapshots || typeof state.roundSnapshots !== "object") state.roundSnapshots = {};
+    state.roundSnapshots[roundId] = {
+      palaceDynamics: JSON.parse(JSON.stringify(state.palaceDynamics || [])),
+      outsideDynamics: JSON.parse(JSON.stringify(state.outsideDynamics || [])),
+      npcFocusDynamics: JSON.parse(JSON.stringify(state.npcFocusDynamics || [])),
+      mailboxList: JSON.parse(JSON.stringify(state.mailboxList || []))
+    };
+    const keys = Object.keys(state.roundSnapshots);
+    if (keys.length > 6) {
+      delete state.roundSnapshots[keys[0]];
+    }
+  }
 
   function saveCurrentChatSessionData(forceAllowEmpty = false) {
     if (!state.isHydrated && !forceAllowEmpty) return;
     deduplicateTimelineInPlace();
+    const curCid = getCurrentChatFileId();
+    if (curCid === "default_chat" && state.boundChatId && state.boundChatId !== "default_chat") {
+      return;
+    }
     const vaultKey = getActiveVaultKey();
     state.currentSessionKey = vaultKey;
-    state.boundChatId = getCurrentChatFileId();
+    state.boundChatId = curCid;
     state.savedAt = Date.now();
     const payload = {
       savedAt: state.savedAt, vaultKey, boundChatId: state.boundChatId,
@@ -482,9 +659,12 @@
       inNews: state.inNews, outNews: state.outNews, todo1: state.todo1, todo2: state.todo2,
       lastAutoProcessedRoundId: state.lastAutoProcessedRoundId,
       plotSummary: state.plotSummary, palaceDynamics: state.palaceDynamics,
-      outsideDynamics: state.outsideDynamics, posts: state.posts, storyPlans: state.storyPlans,
-      theaterText: state.theaterText, theaterTitle: state.theaterTitle, groupMessages: state.groupMessages,
-      lettersList: state.lettersList, tacitData: state.tacitData, tacitUserChoices: state.tacitUserChoices,
+      outsideDynamics: state.outsideDynamics, npcFocusDynamics: state.npcFocusDynamics,
+      mailboxList: state.mailboxList, roundSnapshots: state.roundSnapshots,
+      posts: state.posts, storyPlans: state.storyPlans,
+      theaterText: state.theaterText, theaterTitle: state.theaterTitle,
+      groupMessages: state.groupMessages, groupLockedTheme: state.groupLockedTheme, groupLockedCustomText: state.groupLockedCustomText,
+      tacitData: state.tacitData, tacitUserChoices: state.tacitUserChoices,
       dmActiveNpc: state.dmActiveNpc, dmHistories: state.dmHistories,
       dmCustomNpcs: state.dmNpcOptions.filter(x => x.isDynamic),
       emperorSpyData: state.emperorSpyData, emperorSpyRevealed: state.emperorSpyRevealed,
@@ -503,27 +683,40 @@
     writeToTavernBackend(vaultKey, payload);
   }
 
-  let loadChatSessionData = function (explicitSlotOrChatSwitch = false) {
-    if (explicitSlotOrChatSwitch) targetWin.__twIsManuallyCleared = false;
+  let loadChatSessionData = function (explicitChatSwitch = false) {
+    if (explicitChatSwitch) targetWin.__twIsManuallyCleared = false;
     if (targetWin.__twIsManuallyCleared) { state.isHydrated = true; return false; }
+    const curCid = getCurrentChatFileId();
+    if (curCid === "default_chat" && hasSubstantialData(state)) {
+      state.isHydrated = true;
+      return true;
+    }
     const vaultKey = getActiveVaultKey();
     state.currentSessionKey = vaultKey;
-    state.boundChatId = getCurrentChatFileId();
+    state.boundChatId = curCid;
     const backendData = readFromTavernBackend(vaultKey);
     if (backendData && hasSubstantialData(backendData)) {
-      // 只有在切换到新聊天窗口，或者本地保存的数据比当前内存更新时，才覆盖内存，绝不拿旧档回退新档！
-      if (explicitSlotOrChatSwitch || !hasSubstantialData(state) || (Number(backendData.savedAt) || 0) >= (Number(state.savedAt) || 0)) {
-        if (explicitSlotOrChatSwitch) explicitClearCurrentArchive();
+      if (explicitChatSwitch || !hasSubstantialData(state) || (Number(backendData.savedAt) || 0) >= (Number(state.savedAt) || 0)) {
         applyParsedPayloadToState(backendData);
       }
       state.isHydrated = true;
       return true;
     }
-    if (explicitSlotOrChatSwitch) explicitClearCurrentArchive();
     state.isHydrated = true;
     return false;
   };
 
+  targetDoc.addEventListener("visibilitychange", () => {
+    if (targetDoc.hidden) {
+      if (state.isHydrated && hasSubstantialData(state)) {
+        saveCurrentChatSessionData(false);
+      }
+    } else {
+      if (!hasSubstantialData(state)) {
+        if (loadChatSessionData(false)) renderAll();
+      }
+    }
+  });
 
   function getForumStylePromptBlock() {
     const styleKey = config.forumSpeakStyle || "lively";
@@ -638,31 +831,36 @@
   }
 
   let toastTimer = null;
-  function showModuleSuccessToast(moduleTitle) {
+  function showModuleSuccessToast(moduleTitle, isAutoSync = false) {
     triggerFabGlowReminder();
+    if (isAutoSync) return;
+    const ov = targetDoc.getElementById("twModalOverlay");
+    if (ov && ov.classList.contains("tw-hidden")) return;
     const toast = targetDoc.getElementById("twModuleToast"), txt = targetDoc.getElementById("twModuleToastText");
     if (!toast || !txt) return;
     txt.textContent = `✨ ${moduleTitle}`;
     toast.classList.add("show");
     if (toastTimer) clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => toast.classList.remove("show"), 2600);
+    toastTimer = setTimeout(() => toast.classList.remove("show"), 2400);
   }
 
   let wechatBannerTimer = null;
-  function showWechatNotification(senderName, previewText, jumpTarget = { app: "chat", chatTab: "dm", npc: "" }) {
+  function showWechatNotification(senderName, previewText, jumpTarget = { app: "chat", chatTab: "dm", npc: "", mailId: "" }) {
     triggerFabGlowReminder();
     const banner = targetDoc.getElementById("twWechatBanner"), avatarEl = targetDoc.getElementById("twWechatAvatar");
     const senderEl = targetDoc.getElementById("twWechatSender"), msgEl = targetDoc.getElementById("twWechatPreview");
     if (!banner || !senderEl || !msgEl) return;
-    if (avatarEl) avatarEl.textContent = String(senderName || "宫").charAt(0);
+    const isMail = jumpTarget.app === "mailbox";
+    if (avatarEl) avatarEl.textContent = isMail ? "信" : String(senderName || "宫").charAt(0);
     senderEl.textContent = senderName || "太微宫传信";
-    msgEl.textContent = cleanPureText(previewText).slice(0, 42);
+    msgEl.textContent = cleanPureText(previewText).slice(0, 44);
     banner.dataset.jumpApp = jumpTarget.app || "chat";
     banner.dataset.jumpChatTab = jumpTarget.chatTab || "dm";
     banner.dataset.jumpNpc = jumpTarget.npc || "";
+    banner.dataset.jumpMailId = jumpTarget.mailId || "";
     banner.classList.add("show");
     if (wechatBannerTimer) clearTimeout(wechatBannerTimer);
-    wechatBannerTimer = setTimeout(() => banner.classList.remove("show"), 4500);
+    wechatBannerTimer = setTimeout(() => banner.classList.remove("show"), 5200);
   }
 
   function addApiLog(entry) {
@@ -782,7 +980,7 @@
     return String(raw)
       .replace(/<thinking>[\s\S]*?<\/thinking>/gi, "")
       .replace(/<xiao_chengji_cot>[\s\S]*?<\/xiao_chengji_cot>/gi, "")
-      .replace(/<(角色名|时间|地点|天气|穿着|姿势|心情|心理活动|好感度数值|好感度阶段|user身份|预留字段1|宫内见闻|帝王日记|待办1|待办2|预留字段2|宫外见闻)>[\s\S]*?<\/\1>/gi, "")
+      .replace(/<(角色名|时间|地点|天气|穿着|姿势|心情|心理活动|好感度数值|user身份|预留字段1|宫内见闻|帝王日记|待办1|待办2|预留字段2|宫外见闻)>[\s\S]*?<\/\1>/gi, "")
       .replace(/```[\s\S]*?```/g, "").replace(/<[^>]+>/g, "").replace(/\n{3,}/g, "\n\n").trim();
   }
 
@@ -798,22 +996,16 @@
     #tw-floating-root[data-theme="newspaper"] { --bg-paper:#ece5d5; --bg-card:rgba(244,239,228,0.92); --bg-nav:#dfd6c3; --bg-sub:rgba(228,220,203,0.75); --border-outer:#221e1a; --border-inner:#524a40; --border-soft:#8c8273; --head-grad:linear-gradient(180deg, #1f1b18 0%, #2e2924 100%); --fab-grad:linear-gradient(145deg, #2b2622 0%, #14110f 100%); --text-main:#1a1715; --text-sub:#575047; --accent:#8f241e; --accent-strong:#14110f; --gold:#7a6a53; --head-text:#f4efe4; --paper-vignette:inset 0 0 40px rgba(40, 32, 22, 0.14); font-family:"Songti SC","Noto Serif SC","SimSun","STSong",serif; }
     #tw-floating-root * { box-sizing:border-box; }
     #tw-floating-root.tw-chat-inactive { display:none !important; }
-    @keyframes twFabShineSweep { 0% { transform:translateX(-130%) rotate(25deg); } 100% { transform:translateX(230%) rotate(25deg); } }
     @keyframes twPulseTyping { 0%, 100% { opacity: 0.45; } 50% { opacity: 1; } }
     @keyframes twBubblePop { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:translateY(0); } }
-    @keyframes twMapRadar { 0% { r: 3.5; opacity: 0.95; } 100% { r: 12; opacity: 0; } }
-    @keyframes twDashFlow { to { stroke-dashoffset: -24; } }
-
-    .tw-fab-ball { position:fixed !important; top:calc(50vh - 34px); right:14px !important; left:auto !important; bottom:auto !important; width:58px; height:68px; background:var(--fab-grad); border:2px solid var(--gold); border-radius:14px 14px 26px 26px; color:var(--head-text); display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer; user-select:none; touch-action:none; z-index:2147483645; box-shadow:0 8px 24px rgba(0,0,0,0.55),inset 0 0 0 3px rgba(255,255,255,0.12),inset 0 0 14px rgba(212,168,87,0.35); overflow:hidden; transition:opacity .18s ease; }
-    /* 打开小手机面板时隐藏悬浮球，绝不遮挡手机 */
+    @keyframes twSpinCw { to { transform:rotate(360deg); } }
+    @keyframes twSpinCcw { to { transform:rotate(-360deg); } }
+    @keyframes twPulseGlow { 0%,100% { transform:scale(1); opacity:.85; filter:drop-shadow(0 0 6px rgba(245,214,123,.45)); } 50% { transform:scale(1.06); opacity:1; filter:drop-shadow(0 0 14px rgba(255,232,158,.95)); } }
+    .tw-fab-ball { position:fixed !important; top:calc(50vh - 27px); right:14px !important; left:auto !important; bottom:auto !important; width:54px; height:54px; background:transparent !important; border:none !important; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; user-select:none; touch-action:none; z-index:2147483645; box-shadow:none !important; overflow:visible !important; transition:transform .25s ease, opacity .18s ease; }
+    .tw-fab-ball:hover { transform:scale(1.06) !important; }
     .tw-fab-ball.tw-fab-hidden-when-open { display:none !important; opacity:0 !important; pointer-events:none !important; }
-    .tw-fab-ball::before { content:""; position:absolute; inset:4px; border:1px solid rgba(245,223,179,0.45); border-radius:10px 10px 22px 22px; pointer-events:none; }
-    .tw-fab-ball.tw-fab-glow-active::after { content:""; position:absolute; top:-30%; left:-50%; width:55%; height:160%; background:linear-gradient(90deg, transparent, rgba(255,245,210,0.58), transparent); animation:twFabShineSweep 2.4s infinite ease-in-out; pointer-events:none; }
-    .tw-fab-dot { display:none; position:absolute; top:5px; right:6px; width:9px; height:9px; border-radius:50%; background:#e6392e; border:1.5px solid #fff8eb; box-shadow:0 1px 4px rgba(0,0,0,0.4); }
+    .tw-fab-dot { display:none; position:absolute; top:0px; right:0px; z-index:6; width:9px; height:9px; border-radius:50%; background:#e6392e; border:1.5px solid #fff8eb; box-shadow:0 0 8px rgba(230,57,46,0.85); }
     .tw-fab-ball.tw-fab-glow-active .tw-fab-dot { display:block; }
-    .tw-fab-top { font-size:9.5px; letter-spacing:2px; opacity:.85; border-bottom:1px solid rgba(245,223,179,0.4); padding-bottom:2px; margin-bottom:3px; }
-    .tw-fab-main { font-size:14px; font-weight:bold; letter-spacing:2.5px; line-height:1.15; }
-    .tw-fab-ornament { width:18px; height:3px; margin-top:4px; background:linear-gradient(90deg,transparent,var(--gold),transparent); }
     .tw-wechat-banner { position:fixed; top:16px; left:50%; transform:translateX(-50%) translateY(-130%); width:360px; max-width:92vw; background:rgba(32, 35, 42, 0.94); color:#fff; backdrop-filter:blur(12px); border:1px solid rgba(212, 168, 87, 0.65); border-radius:12px; padding:10px 13px; display:flex; align-items:center; gap:10px; z-index:2147483647; box-shadow:0 10px 28px rgba(0,0,0,0.45); cursor:pointer; transition:transform .32s cubic-bezier(0.22, 1, 0.36, 1), opacity .28s ease; opacity:0; pointer-events:none; }
     .tw-wechat-banner.show { transform:translateX(-50%) translateY(0); opacity:1; pointer-events:auto; }
     .tw-wechat-avatar { width:36px; height:36px; border-radius:8px; background:linear-gradient(135deg,#852922,#b88a3e); color:#fff8eb; font-weight:bold; font-size:15px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
@@ -826,10 +1018,10 @@
     .tw-modal-overlay { position:fixed; top:0; left:0; right:0; bottom:0; width:100vw; height:100vh; background:rgba(12,8,5,0.62); backdrop-filter:blur(3px); display:flex; align-items:center; justify-content:center; padding:10px; z-index:2147483646; opacity:1; transition:opacity .2s ease; }
     .tw-modal-overlay.tw-hidden { opacity:0; pointer-events:none; display:none !important; }
 
-    /* 古风小手机外壳与壁纸层 */
     .tw-panel { width:416px; max-width:95vw; height:760px; max-height:92vh; background-color:var(--bg-paper); background-image:repeating-linear-gradient(0deg,rgba(120,90,50,0.03) 0px,rgba(120,90,50,0.03) 1px,transparent 1px,transparent 5px),repeating-linear-gradient(90deg,rgba(120,90,50,0.025) 0px,rgba(120,90,50,0.025) 1px,transparent 1px,transparent 7px); border:4px solid var(--border-outer); outline:1.5px solid var(--gold); outline-offset:-7px; border-radius:34px; box-shadow:0 24px 65px rgba(5,2,1,0.82), inset 0 0 0 2px rgba(255,248,230,0.22), var(--paper-vignette); display:flex; flex-direction:column; overflow:hidden; position:relative; margin:auto; }
+    .tw-panel.has-custom-wp { background-color:transparent !important; background-image:none !important; }
     .tw-phone-wallpaper { position:absolute; inset:0; background-size:cover; background-position:center; background-repeat:no-repeat; z-index:0; pointer-events:none; transition:opacity .25s ease; }
-    .tw-phone-wallpaper-mask { position:absolute; inset:0; background:rgba(18, 12, 8, 0.2); z-index:1; pointer-events:none; opacity:0; transition:opacity .25s ease; }
+    .tw-phone-wallpaper-mask { position:absolute; inset:0; background:rgba(18, 12, 8, 0.16); z-index:1; pointer-events:none; opacity:0; transition:opacity .25s ease; }
     .tw-panel.has-custom-wp .tw-phone-wallpaper-mask { opacity:1; }
     .tw-phone-statusbar { position:relative; z-index:5; padding:8px 18px 5px; background:var(--head-grad); color:var(--head-text); font-size:10.5px; display:flex; justify-content:space-between; align-items:center; letter-spacing:1px; border-bottom:1px solid rgba(255,240,200,0.22); }
     .tw-phone-notch { width:64px; height:5px; border-radius:4px; background:rgba(0,0,0,0.35); border:1px solid rgba(245,223,179,0.35); }
@@ -844,7 +1036,6 @@
     .tw-mini-btn:disabled { opacity:.55; cursor:wait; }
     .tw-manual-refresh-btn.disabled-gray, .tw-manual-refresh-btn:disabled { opacity:0.42 !important; filter:grayscale(100%) !important; cursor:not-allowed !important; pointer-events:none !important; }
 
-    /* 小手机桌面与App角标（支持根据壁纸深浅自适应文字颜色） */
     .tw-content { position:relative; z-index:4; flex:1; overflow-y:auto; padding:11px 12px 13px; font-size:12.5px; display:flex; flex-direction:column; }
     .tw-tab-page { display:none; flex-direction:column; flex:1; animation:twBubblePop .18s ease-out; }
     .tw-tab-page.active { display:flex; }
@@ -864,10 +1055,8 @@
     .tw-app-badge { position:absolute; top:-5px; right:-6px; min-width:19px; height:19px; padding:0 5px; border-radius:10px; background:linear-gradient(135deg,#ff3b30,#c91c14); color:#fff; font-size:10px; font-weight:bold; display:flex; align-items:center; justify-content:center; border:1.5px solid #fff8eb; box-shadow:0 2px 6px rgba(0,0,0,0.45); z-index:4; pointer-events:none; font-family:sans-serif; }
     .tw-app-name { font-size:11.5px; font-weight:bold; color:var(--text-main); letter-spacing:0.5px; text-shadow:0 1px 3px rgba(255,255,255,0.85); line-height:1.2; transition:color .2s, text-shadow .2s; }
     .tw-app-sub { font-size:9px; color:var(--text-sub); margin-top:1px; transition:color .2s, text-shadow .2s; }
-    /* 浅色壁纸/深色文字模式（默认清晰墨褐字+白描边光晕） */
     .tw-panel.wp-text-dark .tw-app-name { color:#261710 !important; text-shadow:0 0 6px rgba(255,252,245,0.98), 0 1px 2px rgba(255,255,255,0.95) !important; }
     .tw-panel.wp-text-dark .tw-app-sub { color:#4a3325 !important; font-weight:bold; text-shadow:0 0 5px rgba(255,252,245,0.98), 0 1px 2px rgba(255,255,255,0.9) !important; }
-    /* 深色壁纸/浅色文字模式（泥金白字+黑阴影） */
     .tw-panel.wp-text-light .tw-app-name { color:#fff9ed !important; text-shadow:0 1px 4px rgba(0,0,0,0.95), 0 0 8px rgba(0,0,0,0.82) !important; }
     .tw-panel.wp-text-light .tw-app-sub { color:#f0dec0 !important; text-shadow:0 1px 3px rgba(0,0,0,0.95) !important; }
     #tw-floating-root[data-theme="obsidian"] .tw-panel:not(.wp-text-dark) .tw-app-name { color:#f5dfb3; text-shadow:0 1px 4px rgba(0,0,0,0.9); }
@@ -879,7 +1068,16 @@
     .tw-phone-home-pill { width:108px; height:5px; border-radius:4px; background:var(--border-outer); opacity:0.75; transition:all .15s; }
     .tw-phone-bottom-bar:hover .tw-phone-home-pill { width:126px; opacity:1; background:var(--accent); }
 
-    /* 小剧场泥金画卷美化样式 */
+    .tw-mail-item { background:var(--bg-sub); border:1px solid var(--border-soft); border-left:4px solid var(--border-outer); border-radius:8px; padding:9px 10px; margin-bottom:7px; cursor:pointer; transition:all .15s; position:relative; }
+    .tw-mail-item.unread { border-left-color:var(--accent); background:var(--bg-card); box-shadow:0 3px 10px rgba(133,41,34,0.1); }
+    .tw-mail-item:hover { transform:translateX(2px); border-color:var(--accent); }
+    .tw-mail-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:3px; font-size:11px; }
+    .tw-mail-title { font-size:13px; font-weight:bold; color:var(--accent-strong); margin-bottom:3px; }
+    .tw-mail-preview { font-size:11.5px; color:var(--text-sub); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .tw-mail-paper { background:linear-gradient(180deg, #fbf4e4 0%, #f4e8ce 100%); border:1.5px solid #8c5a32; outline:1px dashed #c9a368; outline-offset:-5px; border-radius:9px; padding:13px 14px; color:#2b1d12; margin-bottom:9px; line-height:1.8; font-size:12.5px; position:relative; }
+    #tw-floating-root[data-theme="obsidian"] .tw-mail-paper { background:linear-gradient(180deg, #2b241d 0%, #221c16 100%); color:#e8dcc8; border-color:#b88d44; }
+    .tw-mail-seal { display:inline-block; padding:1px 7px; border:1.5px solid #a8201a; color:#a8201a; font-weight:bold; font-size:10px; border-radius:3px; transform:rotate(-3deg); float:right; }
+
     .tw-theater-scroll-card { background:linear-gradient(180deg, #fbf4e4 0%, #f4e8ce 50%, #efe0c0 100%); border:2px solid #8c5a32; outline:1px solid #c9a368; outline-offset:-6px; border-radius:10px; padding:15px 16px; color:#2b1d12; position:relative; box-shadow:inset 0 0 32px rgba(138, 96, 48, 0.2), 0 6px 16px rgba(0,0,0,0.1); max-height:390px; overflow-y:auto; }
     #tw-floating-root[data-theme="obsidian"] .tw-theater-scroll-card { background:linear-gradient(180deg, #2b241d 0%, #221c16 100%); color:#e8dcc8; border-color:#b88d44; outline-color:#6e552b; }
     .tw-theater-scroll-head { text-align:center; border-bottom:1.5px double #b88a3e; padding-bottom:8px; margin-bottom:10px; }
@@ -894,7 +1092,6 @@
     #tw-floating-root[data-theme="obsidian"] .tw-theater-quote { color:#f2c97d; }
     .tw-theater-scroll-foot { display:flex; justify-content:space-between; align-items:center; margin-top:12px; padding-top:8px; border-top:1px dashed rgba(140,90,50,0.4); font-size:10.5px; color:#785c49; }
     .tw-theater-stamp { padding:2px 8px; border:1.5px solid #a8201a; color:#a8201a; font-weight:bold; font-size:10px; border-radius:3px; letter-spacing:1.5px; transform:rotate(-4deg); background:rgba(168,32,26,0.06); }
-    /* 帝王起居专属背景图（防提示条顶开露底 + 100%锁死全覆盖 + 纯白字体） */
     .tw-content:has(#tw-page-emperor.active) {
       background-image: linear-gradient(rgba(10, 6, 4, 0.14), rgba(10, 6, 4, 0.28)), url("${EMPEROR_BG_URL}") !important;
       background-size: cover !important;
@@ -923,10 +1120,6 @@
     #tw-page-emperor .tw-spy-entry-item { background:rgba(20, 14, 10, 0.45) !important; border:1px solid rgba(255, 240, 200, 0.35) !important; border-left:3.5px solid #ffe8a3 !important; color:#ffffff !important; text-shadow:0 1px 3px rgba(0,0,0,0.95) !important; }
     #tw-page-emperor .tw-spy-murmur-box { background:rgba(30, 18, 14, 0.52) !important; border:1.5px dashed #ffe8a3 !important; border-left:4px solid #ffe8a3 !important; color:#fff6d6 !important; text-shadow:0 1px 3px rgba(0,0,0,0.95) !important; }
 
-
-
-
-    /* 抓包弹窗大尺寸帝王头像 */
     .tw-catch-modal { display:none; position:absolute; inset:0; background:rgba(15, 8, 6, 0.84); backdrop-filter:blur(5px); z-index:99; align-items:center; justify-content:center; padding:16px; }
     .tw-catch-modal.show { display:flex; }
     .tw-catch-card { width:100%; max-width:370px; background:var(--bg-paper); border:2px solid #9e241e; outline:1px solid var(--gold); outline-offset:-5px; border-radius:14px; padding:16px; box-shadow:0 16px 40px rgba(0,0,0,0.75); text-align:center; }
@@ -934,28 +1127,6 @@
     .tw-catch-title { font-size:15.5px; font-weight:bold; color:#9e241e; margin-bottom:8px; letter-spacing:1.5px; }
     .tw-catch-desc { font-size:12px; line-height:1.65; color:var(--text-main); margin-bottom:12px; text-align:left; background:var(--bg-sub); padding:9px 11px; border-radius:6px; border-left:3px solid #9e241e; max-height:320px; overflow-y:auto; white-space:pre-wrap; }
 
-    /* 飞鸽传书（仿真古风信笺） */
-    .tw-letter-paper { background-color:#f9f1e1; background-image:repeating-linear-gradient(90deg, transparent 0px, transparent 31px, rgba(168, 68, 56, 0.22) 31px, rgba(168, 68, 56, 0.22) 32px); border:2px solid #8c5a32; outline:1px solid #c9a368; outline-offset:-5px; border-radius:8px; padding:14px 16px; color:#2b1d12; position:relative; box-shadow:inset 0 0 28px rgba(138, 96, 48, 0.18), 0 4px 12px rgba(0,0,0,0.08); margin-bottom:10px; }
-    .tw-letter-salutation { font-size:13.5px; font-weight:bold; color:#5e1d18; margin-bottom:8px; letter-spacing:1.5px; }
-    .tw-letter-body { font-size:12.5px; line-height:1.95; white-space:pre-wrap; min-height:95px; letter-spacing:0.8px; }
-    .tw-letter-footer { display:flex; justify-content:flex-end; align-items:center; gap:10px; margin-top:12px; padding-top:6px; }
-    .tw-letter-sign { font-size:12px; font-weight:bold; color:#4a2c18; letter-spacing:1px; }
-    .tw-letter-seal { width:38px; height:38px; border:2px solid #a8201a; border-radius:4px; color:#a8201a; font-size:10px; font-weight:bold; line-height:1.15; display:flex; align-items:center; justify-content:center; text-align:center; padding:2px; transform:rotate(-7deg); background:rgba(168, 32, 26, 0.08); box-shadow:inset 0 0 0 1px rgba(168, 32, 26, 0.35); font-family:"STKaiti","Kaiti SC",serif; }
-    .tw-letter-item-card { background:var(--bg-sub); border:1px solid var(--border-soft); border-left:3.5px solid var(--accent); border-radius:6px; padding:8px 10px; margin-bottom:7px; cursor:pointer; transition:all .15s; }
-    .tw-letter-item-card:hover { border-color:var(--accent); transform:translateX(2px); }
-
-    /* 仿真堪舆动态地图 */
-    .tw-map-canvas { width:100%; height:205px; background:radial-gradient(circle at center, #f4ead5 0%, #dfd0b2 100%); border:2px solid var(--border-outer); border-radius:10px; position:relative; overflow:hidden; margin-bottom:9px; box-shadow:inset 0 0 24px rgba(90, 58, 24, 0.28); }
-    #tw-floating-root[data-theme="obsidian"] .tw-map-canvas { background:radial-gradient(circle at center, #2b241d 0%, #17130f 100%); }
-    .tw-map-svg { width:100%; height:100%; display:block; }
-    .tw-map-route { stroke:#8c6239; stroke-width:1.4; stroke-dasharray:4 4; fill:none; opacity:0.65; animation:twDashFlow 3s linear infinite; }
-    .tw-map-pulse { fill:none; stroke:#b82921; stroke-width:1.6; animation:twMapRadar 2.2s infinite ease-out; }
-    .tw-map-node { fill:#852922; stroke:#fff8eb; stroke-width:1.5; cursor:pointer; }
-    .tw-map-node.gold { fill:#b88a3e; }
-    .tw-map-label { font-size:9.5px; font-weight:bold; fill:#3b2314; text-anchor:middle; pointer-events:none; }
-    #tw-floating-root[data-theme="obsidian"] .tw-map-label { fill:#f0d9b5; }
-
-    /* 默契挑战选项样式 */
     .tw-tacit-q-card { background:var(--bg-sub); border:1px solid var(--border-soft); border-radius:8px; padding:9px 10px; margin-bottom:8px; }
     .tw-tacit-q-title { font-size:12.5px; font-weight:bold; color:var(--accent-strong); margin-bottom:6px; line-height:1.45; }
     .tw-tacit-opt { display:block; width:100%; text-align:left; padding:6px 9px; margin-bottom:5px; font-size:11.5px; background:var(--bg-card); border:1px solid var(--border-soft); border-radius:6px; cursor:pointer; font-family:inherit; color:var(--text-main); transition:all .14s; }
@@ -975,7 +1146,7 @@
     .tw-row:last-child { border-bottom:0; }
     .tw-row b { color:var(--accent-strong); }
     .tw-spy-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:6px; }
-        .tw-spy-tile { position:relative; background:linear-gradient(145deg, rgba(251,246,234,0.48) 0%, rgba(226,211,183,0.36) 100%); backdrop-filter:blur(2px); border:1.5px solid rgba(140, 98, 57, 0.75); border-radius:10px; padding:10px 8px; cursor:pointer; transition:all .2s ease; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; min-height:92px; text-shadow:0 0 6px rgba(255,252,245,0.95); }
+    .tw-spy-tile { position:relative; background:linear-gradient(145deg, rgba(251,246,234,0.48) 0%, rgba(226,211,183,0.36) 100%); backdrop-filter:blur(2px); border:1.5px solid rgba(140, 98, 57, 0.75); border-radius:10px; padding:10px 8px; cursor:pointer; transition:all .2s ease; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; min-height:92px; text-shadow:0 0 6px rgba(255,252,245,0.95); }
     #tw-floating-root[data-theme="obsidian"] .tw-spy-tile { background:linear-gradient(145deg, rgba(32,26,22,0.52) 0%, rgba(20,16,12,0.42) 100%); text-shadow:0 1px 4px rgba(0,0,0,0.95); }
     .tw-spy-tile:hover { transform:translateY(-2px); border-color:var(--accent); }
     .tw-spy-tile.visited { border-color:var(--gold); }
@@ -1068,10 +1239,12 @@
     .tw-stone { width:19px; height:19px; border-radius:50%; z-index:2; box-shadow:1px 2px 4px rgba(0,0,0,0.45); }
     .tw-stone.black { background:radial-gradient(circle at 30% 30%,#555,#111); }
     .tw-stone.white { background:radial-gradient(circle at 30% 30%,#fff,#d4cec3); border:1px solid #999; }
+    .tw-chat-theme-banner { background:linear-gradient(90deg, rgba(133,41,34,0.12), rgba(184,138,62,0.15), rgba(133,41,34,0.12)); border:1px solid var(--border-outer); border-radius:6px; padding:5px 9px; margin-bottom:6px; font-size:11px; color:var(--accent-strong); display:flex; justify-content:space-between; align-items:center; gap:6px; }
+
     .tw-chatroom-messages { height:400px; overflow-y:auto; background:var(--bg-sub); border:1px solid var(--border-soft); border-radius:8px; padding:9px 10px; margin-bottom:6px; display:flex; flex-direction:column; gap:7px; }
     .tw-chat-sys-tip { align-self:center; font-size:10px; color:var(--text-sub); background:rgba(140, 98, 57, 0.12); border:1px dashed var(--border-soft); padding:3px 10px; border-radius:12px; margin:2px 0; text-align:center; display:flex; flex-direction:column; align-items:center; gap:3px; }
     .tw-chat-sys-line { display:flex; align-items:center; gap:5px; flex-wrap:wrap; justify-content:center; }
-       .tw-chat-msg { display:flex; flex-direction:column; align-self:flex-start; align-items:flex-start; width:fit-content; max-width:84%; animation:twBubblePop .22s ease-out; }
+    .tw-chat-msg { display:flex; flex-direction:column; align-self:flex-start; align-items:flex-start; width:fit-content; max-width:84%; animation:twBubblePop .22s ease-out; }
     .tw-chat-msg.self { align-self:flex-end; align-items:flex-end; }
     .tw-chat-head-row { display:flex; align-items:center; gap:5px; margin-bottom:2px; flex-wrap:wrap; }
     .tw-chat-sender { font-size:10px; color:var(--text-sub); font-weight:bold; }
@@ -1111,11 +1284,17 @@
   rootEl.innerHTML = `
     <div class="tw-fab-ball" id="twFabBall" title="点击展开太微玉简小手机（可上下拖动）">
       <span class="tw-fab-dot"></span>
-      <span class="tw-fab-top">太微</span>
-      <span class="tw-fab-main">玉简</span>
-      <span class="tw-fab-ornament"></span>
+      <span style="position:absolute;inset:-6px;border-radius:50%;background:radial-gradient(circle,rgba(232,193,98,.45) 0%,rgba(167,124,50,.15) 52%,transparent 72%);animation:twPulseGlow 3s ease-in-out infinite;pointer-events:none;"></span>
+      <span style="position:absolute;inset:6px;border:1px solid rgba(245,214,123,.48);border-radius:5px;transform:rotate(45deg);box-shadow:0 0 10px rgba(217,185,106,.28);pointer-events:none;"></span>
+      <span style="position:absolute;inset:0;border-radius:50%;border:1px solid rgba(245,214,123,.32);border-top:1.5px solid #fff0b8;border-bottom:1.5px solid #e5b95c;box-shadow:0 0 12px rgba(245,214,123,.38);animation:twSpinCw 14s linear infinite;pointer-events:none;">
+        <span style="position:absolute;top:-2.5px;left:50%;margin-left:-2px;width:4px;height:4px;border-radius:50%;background:#fff6d1;box-shadow:0 0 8px #fff0b8,0 0 14px #e5b95c;"></span>
+        <span style="position:absolute;bottom:-2.5px;left:50%;margin-left:-2px;width:4px;height:4px;border-radius:50%;background:#fff6d1;box-shadow:0 0 8px #fff0b8,0 0 14px #e5b95c;"></span>
+      </span>
+      <span style="position:absolute;inset:5px;border:1px dashed rgba(247,223,148,.88);border-radius:50%;animation:twSpinCcw 22s linear infinite;pointer-events:none;"></span>
+      <span style="position:relative;z-index:2;display:flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:50%;background:radial-gradient(circle,rgba(72,48,20,.72) 0%,rgba(42,28,12,.45) 88%);border:1px solid rgba(247,223,148,.75);box-shadow:inset 0 0 10px rgba(247,223,148,.42);color:#fff3c4;font-size:17px;font-weight:700;letter-spacing:.06em;text-indent:.06em;animation:twPulseGlow 3s ease-in-out infinite;">萧</span>
+      <span style="position:absolute;right:0px;bottom:0px;z-index:3;width:13px;height:13px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#b33931,#7d221c);color:#fff2c6;border:1px solid #f5d67b;border-radius:3px;font-size:7.5px;line-height:1;box-shadow:0 0 8px rgba(179,57,49,.6);">御</span>
     </div>
-    <div class="tw-wechat-banner" id="twWechatBanner" title="点击直接查看消息">
+    <div class="tw-wechat-banner" id="twWechatBanner" title="点击直接打开查看">
       <div class="tw-wechat-avatar" id="twWechatAvatar">萧</div>
       <div class="tw-wechat-body">
         <div class="tw-wechat-top"><span id="twWechatSender">萧承稷</span><span class="tw-wechat-tag">刚刚 · 点击查看</span></div>
@@ -1140,7 +1319,7 @@
         <div class="tw-catch-modal" id="twClearConfirmModal">
           <div class="tw-catch-card">
             <div class="tw-catch-title">⚠️ 确定要清空当前存档吗？</div>
-            <div class="tw-catch-desc">此操作将彻底清除本档已生成的【故事时间轴、地图动态、帝王起居、宫内外坛、灵犀传音、飞鸽传书与默契挑战】，清空后不可恢复。是否继续？</div>
+            <div class="tw-catch-desc">此操作将彻底清除本档已生成的【故事时间轴、宫闱动态、鱼雁信匣、帝王起居、宫内外坛、灵犀传音与默契挑战】，清空后不可恢复。是否继续？</div>
             <div style="display:flex;gap:8px;justify-content:center;">
               <button type="button" class="tw-mini-btn" id="twCancelClearArchiveBtn" style="flex:1;padding:7px;background:var(--bg-sub);color:var(--text-main);border-color:var(--border-outer);font-weight:bold;">取消保留</button>
               <button type="button" class="tw-refresh-forum-btn" id="twConfirmClearArchiveBtn" style="flex:1;padding:7px;">确定清空</button>
@@ -1148,10 +1327,21 @@
           </div>
         </div>
 
+        <div class="tw-catch-modal" id="twThemeSwitchConfirmModal">
+          <div class="tw-catch-card">
+            <div class="tw-catch-title">🏮 切换群聊主题确认</div>
+            <div class="tw-catch-desc" id="twThemeSwitchConfirmDesc">当前主题为【同步当前剧情】，是否改为【我是皇帝】？聊天记录将重置。</div>
+            <div style="display:flex;gap:8px;justify-content:center;">
+              <button type="button" class="tw-mini-btn" id="twCancelThemeSwitchBtn" style="flex:1;padding:7px;background:var(--bg-sub);color:var(--text-main);border-color:var(--border-outer);font-weight:bold;">取消</button>
+              <button type="button" class="tw-refresh-forum-btn" id="twConfirmThemeSwitchBtn" style="flex:1;padding:7px;">确认重置并刷新</button>
+            </div>
+          </div>
+        </div>
+
         <div class="tw-phone-statusbar">
           <span id="twPhoneTopShichen">大景延昭 · 太微宫</span>
           <div class="tw-phone-notch"></div>
-          <span>灵犀满格 · ❖ 玖成</span>
+          <span id="twPhoneTopSignal">灵犀满格 · ❖ 玖成</span>
         </div>
 
         <div class="tw-app-header home-mode" id="twAppHeaderBar">
@@ -1170,7 +1360,6 @@
           <div class="tw-status-tip" id="twApiStatusBar">刷新中…</div>
           <div class="tw-error-banner" id="twApiErrorBanner"><span id="twApiErrorText">API 调用出错</span><button type="button" class="tw-error-close" id="twCloseErrorBannerBtn">知道了</button></div>
 
-          <!-- 0. 古风小手机主桌面 (Home Screen) -->
           <div class="tw-tab-page active" id="tw-page-home">
             <div class="tw-home-hero-card">
               <div class="tw-home-clock-row">
@@ -1181,7 +1370,7 @@
                 </div>
               </div>
               <div class="tw-home-mini-status">
-                <div><span class="tw-label">当前身份：</span><b id="twHomeUserTxt">--</b></div>
+                <div><span class="tw-label">当前身份：</span><b id="twHomeUserTxt">未同步</b></div>
                 <div><span class="tw-label">帝王好感：</span><b id="twHomeAffTxt" style="color:var(--accent);">-- / 100</b></div>
                 <div style="grid-column:1 / -1;"><div class="tw-bar" style="margin:2px 0 4px;"><i id="twAffBar"></i></div></div>
                 <div style="grid-column:1 / -1;"><span class="tw-label">圣人心情：</span><span class="tw-badge" id="twHomeMoodBadge">待同步</span><span id="twHomePoseTxt" style="font-size:11px;color:var(--text-sub);"></span></div>
@@ -1192,7 +1381,6 @@
             <div class="tw-phone-dock" id="twPhoneDockGrid"></div>
           </div>
 
-          <!-- 1. 剧情梳理 App（第一顺位） -->
           <div class="tw-tab-page" id="tw-page-plot">
             <div class="tw-box">
               <div class="tw-sec-head"><span>故事时间轴</span><div style="display:flex;gap:5px;"><button type="button" class="tw-reply-npc-btn tw-manual-refresh-btn" id="twAppendLatestPlotBtn">同步最新一轮</button><button type="button" class="tw-reply-npc-btn tw-manual-refresh-btn" id="twRebuildFullPlotBtn" style="background:var(--accent);color:#fff;">全量重梳全部楼层</button></div></div>
@@ -1200,7 +1388,6 @@
             </div>
           </div>
 
-          <!-- 2. 剧情选择 App（第二顺位） -->
           <div class="tw-tab-page" id="tw-page-actions">
             <div class="tw-box">
               <div class="tw-sec-head"><span>自定义剧情走向与灵感</span><button type="button" class="tw-refresh-forum-btn tw-manual-refresh-btn" id="twRefreshActionsBtn" style="padding:4px 10px;font-size:11px;">手动刷新</button></div>
@@ -1213,7 +1400,6 @@
             <div class="tw-box"><div class="tw-sec-head"><span>六大剧情发展建议</span><span class="tw-badge">第三人称 · 点击导入</span></div><div id="twStoryPlanList"></div></div>
           </div>
 
-          <!-- 3. 灵犀传音 App（单人私聊 + 太微群聊） -->
           <div class="tw-tab-page" id="tw-page-chat">
             <div class="tw-game-tabs">
               <button type="button" class="tw-game-tab-btn active" data-chattab="dm">💬 单人私密传音</button>
@@ -1274,73 +1460,69 @@
             </div>
           </div>
 
-          <!-- 4. 飞鸽传书 App（仿真古风信笺写信与回信） -->
-          <div class="tw-tab-page" id="tw-page-letter">
+                    <div class="tw-tab-page" id="tw-page-mailbox">
             <div class="tw-box">
               <div class="tw-sec-head">
-                <span>🕊️ 鱼雁尺素 · 亲笔修书</span>
-                <button type="button" class="tw-reply-npc-btn" id="twLetterClearAllBtn">清空信箱</button>
-              </div>
-              <div style="display:flex;gap:6px;align-items:center;margin-bottom:8px;">
-                <span class="tw-label" style="white-space:nowrap;">收信之人：</span>
-                <select class="tw-select" id="twLetterNpcSelect" style="margin-bottom:0;flex:1;padding:4px 8px;"></select>
-              </div>
-              <div class="tw-letter-paper">
-                <div class="tw-letter-salutation" id="twLetterWriteSalutation">展信佳：</div>
-                <textarea class="tw-textarea" id="twLetterWriteBody" style="background:transparent;border:0;padding:0;min-height:90px;line-height:1.95;font-size:12.5px;color:#2b1d12;outline:none;box-shadow:none;" placeholder="在此提笔写下书信内容，遣内侍或信鸽送往对方案头……"></textarea>
-                <div class="tw-letter-footer">
-                  <span class="tw-letter-sign" id="twLetterWriteSign">知名手启</span>
-                  <div class="tw-letter-seal">太微<br>尺素</div>
+                <span>🕊️ 鱼雁信匣 · 宫廷书信往来</span>
+                <div style="display:flex;gap:5px;">
+                  <button type="button" class="tw-reply-npc-btn" id="twToggleMailFreqBarBtn" style="font-size:10.5px;">⚙️ 频率：<span id="twMailFreqBadgeTxt">隔2轮·35%</span></button>
+                  <button type="button" class="tw-reply-npc-btn" id="twOpenComposeMailBtn" style="border-color:var(--accent);font-weight:bold;">✍️ 写信</button>
+                  <button type="button" class="tw-refresh-forum-btn tw-manual-refresh-btn" id="twRefreshMailboxBtn" style="padding:3px 9px;font-size:11px;">查收新信</button>
                 </div>
               </div>
-              <button type="button" class="tw-refresh-forum-btn" id="twSendLetterBtn" style="width:100%;padding:7px;">🕊️ 封缄用印 · 飞鸽投递并静候回音</button>
-            </div>
-            <div class="tw-box">
-              <div class="tw-sec-head"><span>📜 往来尺素锦匣（点击展信阅览）</span><span class="tw-badge" id="twLetterCountBadge">共 0 封</span></div>
-              <div id="twLetterDetailView" style="display:none;"></div>
-              <div id="twLetterListBox"></div>
+
+              <!-- 新增：页面内嵌收信频率调节面板（点击上方“⚙️ 频率”按钮展开/收起） -->
+              <div id="twMailFreqConfigBar" style="display:none;background:var(--bg-sub);border:1px dashed var(--border-outer);border-radius:8px;padding:8px 10px;margin-bottom:8px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
+                  <b style="font-size:11.5px;color:var(--accent-strong);">⏱️ 自动收信频率调节（手动点“查收新信”不受限）</b>
+                </div>
+                <div class="tw-chip-row" id="twMailFreqPresetChips" style="margin-bottom:6px;">
+                  <span class="tw-chip" data-mcd="0" data-mprob="80">🔥 高频(每轮80%)</span>
+                  <span class="tw-chip" data-mcd="2" data-mprob="35">🕊️ 适中(隔2轮·35%)</span>
+                  <span class="tw-chip" data-mcd="4" data-mprob="20">🌙 稀有(隔4轮·20%)</span>
+                  <span class="tw-chip" data-mcd="99" data-mprob="0">🔕 纯手动(关闭自动)</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;font-size:11px;">
+                  <span class="tw-label" style="white-space:nowrap;">冷却间隔：至少隔</span>
+                  <input type="number" id="twMailCooldownInput" min="0" max="20" value="2" class="tw-input" style="width:52px;margin-bottom:0;padding:2px 5px;text-align:center;">
+                  <span class="tw-label" style="white-space:nowrap;">轮 | 触发概率：</span>
+                  <input type="range" id="twMailProbRange" min="0" max="100" step="5" value="35" style="flex:1;">
+                  <b id="twMailProbValTxt" style="min-width:32px;text-align:right;color:var(--accent);">35%</b>
+                </div>
+              </div>
+
+              <div class="tw-label" style="margin-bottom:7px;">随剧情推进，相关人物会按你设定的频率寄来书信或口谕。信件内容与【灵犀传音·私聊】共享记忆，亦可一键拆信入戏填入酒馆正剧。</div>
+              <div id="twMailComposeBox" style="display:none;background:var(--bg-sub);border:1.5px solid var(--border-outer);border-radius:8px;padding:9px 10px;margin-bottom:9px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                  <b style="color:var(--accent-strong);">✉️ 撰写新信笺</b>
+                  <button type="button" class="tw-act-btn" id="twCloseComposeMailBtn">收起 ✕</button>
+                </div>
+                <div style="display:flex;gap:6px;align-items:center;margin-bottom:6px;">
+                  <span class="tw-label" style="white-space:nowrap;">收信人：</span>
+                  <select class="tw-select" id="twMailTargetSelect" style="margin-bottom:0;flex:1;padding:4px 8px;"></select>
+                </div>
+                <input class="tw-input" id="twMailSubjectInput" placeholder="信笺标题（可留空自动拟定）……">
+                <textarea class="tw-textarea" id="twMailBodyInput" placeholder="写下你想对TA倾诉、试探、托付或询问的信中内容……"></textarea>
+                <input class="tw-input" id="twMailGiftInput" placeholder="随信附赠小物（可选，如：亲手做的桂花糕、平安香囊）……">
+                <button type="button" class="tw-refresh-forum-btn" id="twSendNewMailBtn" style="width:100%;padding:7px;">🕊️ 遣人投递并等候回信</button>
+              </div>
+              <div id="twMailboxMainView"></div>
             </div>
           </div>
 
-          <!-- 5. 地图 App（动态仿真堪舆图 + 宫内外动向） -->
-          <div class="tw-tab-page" id="tw-page-world">
-            <div class="tw-box" style="padding:9px 10px;">
+<div class="tw-tab-page" id="tw-page-world">
+            <div class="tw-box" style="padding:9px 11px;">
               <div class="tw-sec-head">
-                <span>🗺️ 大景太微宫与长安百坊堪舆图</span>
-                <button type="button" class="tw-refresh-forum-btn tw-manual-refresh-btn" id="twRefreshWorldBtn" style="padding:3px 10px;font-size:11px;">刷新动向</button>
+                <span>🌐 太微宫闱与长安百坊实时动态</span>
+                <button type="button" class="tw-refresh-forum-btn tw-manual-refresh-btn" id="twRefreshWorldBtn" style="padding:3px 10px;font-size:11px;">刷新动态</button>
               </div>
-              <div class="tw-map-canvas">
-                <svg class="tw-map-svg" viewBox="0 0 360 200">
-                  <rect x="18" y="8" width="324" height="112" rx="4" fill="rgba(140,98,57,0.08)" stroke="#8c6239" stroke-width="1.5"/>
-                  <rect x="18" y="126" width="324" height="66" rx="4" fill="rgba(70,110,98,0.08)" stroke="#6e5a49" stroke-width="1.2" stroke-dasharray="3 2"/>
-                  <path class="tw-map-route" d="M180 28 L180 62 L180 102 L180 155"/>
-                  <path class="tw-map-route" d="M75 55 L180 62 L285 55"/>
-                  <path class="tw-map-route" d="M125 90 L180 62 L235 90"/>
-                  <path class="tw-map-route" d="M85 158 L180 155 L275 158"/>
-                  <circle class="tw-map-pulse" cx="180" cy="62" r="5"/>
-                  <circle class="tw-map-pulse" cx="75" cy="55" r="5"/>
-                  <circle class="tw-map-pulse" cx="285" cy="55" r="5"/>
-                  <circle class="tw-map-pulse" cx="85" cy="158" r="5"/>
-                  <circle class="tw-map-pulse" cx="275" cy="158" r="5"/>
-                  <circle class="tw-map-node gold" cx="180" cy="24" r="4.5"/><text class="tw-map-label" x="180" y="16">北苑·太液池</text>
-                  <circle class="tw-map-node" cx="180" cy="62" r="5.5"/><text class="tw-map-label" x="180" y="52">★甘露殿(帝寝)</text>
-                  <circle class="tw-map-node" cx="75" cy="55" r="4.5"/><text class="tw-map-label" x="75" y="45">西六宫·承香殿</text>
-                  <circle class="tw-map-node" cx="285" cy="55" r="4.5"/><text class="tw-map-label" x="285" y="45">东六宫·淑景殿</text>
-                  <circle class="tw-map-node gold" cx="125" cy="92" r="4"/><text class="tw-map-label" x="125" y="106">延英殿</text>
-                  <circle class="tw-map-node gold" cx="180" cy="102" r="4.5"/><text class="tw-map-label" x="180" y="115">宣政殿·丹凤门</text>
-                  <circle class="tw-map-node gold" cx="235" cy="92" r="4"/><text class="tw-map-label" x="235" y="106">尚食·秘阁</text>
-                  <circle class="tw-map-node" cx="85" cy="158" r="4.5"/><text class="tw-map-label" x="85" y="175">西市·胡月酒肆</text>
-                  <circle class="tw-map-node gold" cx="180" cy="155" r="4.5"/><text class="tw-map-label" x="180" y="172">朱雀街·崇仁坊</text>
-                  <circle class="tw-map-node" cx="275" cy="158" r="4.5"/><text class="tw-map-label" x="275" y="175">东市·醉仙平康</text>
-                </svg>
-              </div>
-              <div class="tw-label" style="text-align:center;" id="twMapCurrentLocHint">📍 当前所在方位：太微宫 · 甘露殿</div>
+              <div class="tw-label" id="twMapCurrentLocHint">📍 当前所在场域：太微宫 · 甘露殿</div>
             </div>
-            <div class="tw-box"><div class="tw-sec-head"><span>宫内各处实时动向</span><span class="tw-badge">太微宫禁</span></div><div id="twPalaceWorldList"></div></div>
-            <div class="tw-box"><div class="tw-sec-head"><span>长安百坊与边塞动向</span><span class="tw-badge">宫墙之外</span></div><div id="twOutsideWorldList"></div></div>
+            <div class="tw-box"><div class="tw-sec-head"><span>🏮 宫内各处实时动向</span><span class="tw-badge">太微宫禁</span></div><div id="twPalaceWorldList"></div></div>
+            <div class="tw-box"><div class="tw-sec-head"><span>🐎 长安百坊与边塞动向</span><span class="tw-badge">宫墙之外</span></div><div id="twOutsideWorldList"></div></div>
+            <div class="tw-box"><div class="tw-sec-head"><span>👥 相关NPC焦点动态</span><span class="tw-badge">群像交集</span></div><div id="twNpcFocusWorldList"></div></div>
           </div>
 
-          <!-- 6. 帝王起居 App（专属古风背景图） -->
           <div class="tw-tab-page" id="tw-page-emperor">
             <div class="tw-box">
               <div class="tw-sec-head"><span>甘露殿起居秘录·偷窥圣人</span><div style="display:flex;gap:6px;align-items:center;"><button type="button" class="tw-refresh-forum-btn tw-manual-refresh-btn" id="twRefreshEmperorSpyBtn" style="padding:4px 10px;font-size:11px;">偷窥刷新</button></div></div>
@@ -1349,7 +1531,6 @@
             </div>
           </div>
 
-          <!-- 7. 宫内外坛 App（八卦论坛） -->
           <div class="tw-tab-page" id="tw-page-forum">
             <div class="tw-box" style="padding:8px 10px;margin-bottom:8px;">
               <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
@@ -1376,7 +1557,6 @@
             </div>
           </div>
 
-          <!-- 8. 小剧场 App（泥金画卷美化排版 + 清空按钮） -->
           <div class="tw-tab-page" id="tw-page-theater">
             <div class="tw-box">
               <div class="tw-sec-head">
@@ -1399,7 +1579,6 @@
             </div>
           </div>
 
-          <!-- 9. 默契挑战 App（结合User人设与酒馆剧情 + 古风白话） -->
           <div class="tw-tab-page" id="tw-page-tacit">
             <div class="tw-game-tabs">
               <button type="button" class="tw-game-tab-btn active" data-tacitmode="guess_xiao">🎯 我猜萧承稷（圣人阅卷打分）</button>
@@ -1430,7 +1609,6 @@
             </div>
           </div>
 
-          <!-- 10. 御案批折 App -->
           <div class="tw-tab-page" id="tw-page-memorial">
             <div class="tw-box">
               <div class="tw-sec-head"><span>甘露殿御案 · 代圣人朱批奏章</span><div style="display:flex;gap:5px;"><button type="button" class="tw-reply-npc-btn" id="twNextMemorialBtn">换一封预设折子</button><button type="button" class="tw-reply-npc-btn" id="twAiMemorialBtn" style="background:var(--accent);color:#fff;">AI生成新折子</button></div></div>
@@ -1441,7 +1619,6 @@
             <div class="tw-box"><div class="tw-sec-head"><span>萧承稷的反应与朱批点评</span></div><div id="twMemorialReaction" style="line-height:1.75;min-height:65px;white-space:pre-wrap;">挑选或输入朱批后点击“朱批用印”，即可查看萧承稷的反应。</div></div>
           </div>
 
-          <!-- 11. 纹枰手谈 App -->
           <div class="tw-tab-page" id="tw-page-gomoku">
             <div class="tw-box">
               <div class="tw-sec-head"><span>延英殿手谈 · 与萧承稷对弈五子棋</span><button type="button" class="tw-reply-npc-btn" id="twRestartGomokuBtn">重新开局</button></div>
@@ -1450,18 +1627,21 @@
             </div>
           </div>
 
-          <!-- 12. 设置 App（含壁纸更换、App文字深浅自适应与系统配置） -->
           <div class="tw-tab-page" id="tw-page-settings">
             <div class="tw-box" style="display:none !important;">
               <select class="tw-select" id="twSaveSlotSelect"><option value="chat_bind">自动绑定当前聊天记录</option></select>
               <button type="button" id="twResetFabPosBtn">悬浮球恢复居中</button>
             </div>
             <div class="tw-box">
-              <div class="tw-sec-head"><span>🖼️ 桌面壁纸与图标文字颜色</span><span class="tw-badge">智能明暗适配</span></div>
-              <div class="tw-wp-preview" id="twWpPreviewBox">当前使用主题默认古风宣纸底纹</div>
-              <div style="display:flex;gap:6px;margin-bottom:7px;">
-                <button type="button" class="tw-refresh-forum-btn" id="twUploadWpBtn" style="flex:1;padding:6px;">📂 选择本地图片上传</button>
-                <button type="button" class="tw-reply-npc-btn" id="twClearWpBtn" style="padding:6px 10px;font-size:11px;">恢复默认底纹</button>
+              <div class="tw-sec-head"><span>🖼️ 桌面壁纸与图标文字颜色</span><span class="tw-badge">默认主题壁纸已启用</span></div>
+              <div class="tw-wp-preview" id="twWpPreviewBox">当前使用默认古风宫廷壁纸</div>
+              <div style="display:flex;gap:6px;margin-bottom:7px;align-items:center;">
+                <label class="tw-refresh-forum-btn" id="twUploadWpLabel" style="flex:1;padding:6px;text-align:center;cursor:pointer;display:inline-block;margin:0;">
+                  📂 选择本地图片上传
+                  <input type="file" id="twDirectWpFileInput" accept="image/*" style="display:none;">
+                </label>
+                <button type="button" class="tw-reply-npc-btn" id="twResetDefaultWpBtn" style="padding:6px 8px;font-size:11px;">恢复默认壁纸</button>
+                <button type="button" class="tw-reply-npc-btn" id="twClearWpBtn" style="padding:6px 8px;font-size:11px;">纯色宣纸</button>
               </div>
               <div style="display:flex;gap:5px;margin-bottom:8px;">
                 <input class="tw-input" id="twWpUrlInput" style="margin-bottom:0;flex:1;padding:4px 8px;" placeholder="或直接粘贴图片网络链接 (https://...)…">
@@ -1477,8 +1657,8 @@
               </div>
               <div style="display:flex;align-items:center;gap:8px;">
                 <span class="tw-label" style="white-space:nowrap;">壁纸暗角遮罩浓度：</span>
-                <input type="range" id="twWpMaskRange" min="0" max="75" value="20" style="flex:1;">
-                <span class="tw-label" id="twWpMaskValTxt">20%</span>
+                <input type="range" id="twWpMaskRange" min="0" max="75" value="16" style="flex:1;">
+                <span class="tw-label" id="twWpMaskValTxt">16%</span>
               </div>
             </div>
             <div class="tw-box">
@@ -1493,13 +1673,14 @@
             <div class="tw-box">
               <div class="tw-sec-head"><span>自动刷新总控与分模块开关</span><span class="tw-badge" id="twAutoMasterStatusHint">总控开启中</span></div>
               <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 9px;background:var(--bg-sub);border:1px solid var(--border-soft);border-radius:6px;margin-bottom:8px;">
-                <div><b style="color:var(--accent-strong);">一键开启自动刷新</b><div class="tw-label">关闭总开关后可单独开关各模块自动刷新</div></div>
+                <div><b style="color:var(--accent-strong);">一键开启自动刷新</b><div class="tw-label">关闭总开关后可单独开关各模块自动刷新（删楼时同步回滚）</div></div>
                 <button type="button" class="tw-toggle-btn" id="twMasterAutoToggleBtn">已开启</button>
               </div>
               <div id="twSubAutoSwitchList">
                 <div class="tw-sub-switch-row" data-sub-row="status"><span>① 首页顶部状态卡</span><button type="button" class="tw-toggle-btn tw-sub-auto-btn" data-mod="status">已开启</button></div>
-                <div class="tw-sub-switch-row" data-sub-row="plot"><span>② 剧情梳理</span><button type="button" class="tw-toggle-btn tw-sub-auto-btn" data-mod="plot">已开启</button></div>
-                <div class="tw-sub-switch-row" data-sub-row="world"><span>③ 地图动向</span><button type="button" class="tw-toggle-btn tw-sub-auto-btn" data-mod="world">已开启</button></div>
+                <div class="tw-sub-switch-row" data-sub-row="plot"><span>② 剧情梳理（时间轴）</span><button type="button" class="tw-toggle-btn tw-sub-auto-btn" data-mod="plot">已开启</button></div>
+                <div class="tw-sub-switch-row" data-sub-row="world"><span>③ 宫闱动态（宫内/宫外/NPC）</span><button type="button" class="tw-toggle-btn tw-sub-auto-btn" data-mod="world">已开启</button></div>
+                <div class="tw-sub-switch-row" data-sub-row="mailbox"><span>④ 鱼雁信匣（随剧情收信弹窗）</span><button type="button" class="tw-toggle-btn tw-sub-auto-btn" data-mod="mailbox">已开启</button></div>
               </div>
             </div>
             <div class="tw-box">
@@ -1545,6 +1726,7 @@
   `;
   targetDoc.body.appendChild(rootEl);
   const fab = targetDoc.getElementById("twFabBall"), overlay = targetDoc.getElementById("twModalOverlay");
+  let modalJustOpenedAt = 0;
 
   function syncFabVisibilityWithModal() {
     if (!fab || !overlay) return;
@@ -1552,19 +1734,28 @@
     fab.classList.toggle("tw-fab-hidden-when-open", isModalOpen);
   }
 
-    function setModalOpenState(open) {
+  function setModalOpenState(open) {
     if (!overlay) return;
     overlay.classList.toggle("tw-hidden", !open);
     syncFabVisibilityWithModal();
     if (open) {
-      openAppPage("home"); 
+      modalJustOpenedAt = Date.now();
+      const targetApp = config.lastOpenApp || state.currentApp || "home";
+      openAppPage(targetApp);
+      if (targetApp === "chat") {
+        const targetTab = config.lastActiveChatTab || state.activeChatTab || "dm";
+        state.activeChatTab = targetTab;
+        rootEl.querySelectorAll("button[data-chattab]").forEach(b => b.classList.toggle("active", b.dataset.chattab === targetTab));
+        targetDoc.getElementById("tw-chat-pane-dm")?.classList.toggle("active", targetTab === "dm");
+        targetDoc.getElementById("tw-chat-pane-chatroom")?.classList.toggle("active", targetTab === "chatroom");
+        scrollChatBoxesToBottom();
+      }
       clearFabGlowReminder();
       syncFromWorldbookAndChat(false);
     }
   }
 
-
-    function scrollChatBoxesToBottom() {
+  function scrollChatBoxesToBottom() {
     requestAnimationFrame(() => {
       const dmBox = targetDoc.getElementById("twDmBox");
       if (dmBox) dmBox.scrollTop = dmBox.scrollHeight;
@@ -1573,8 +1764,19 @@
     });
   }
 
+  function scrollPlotTimelineToBottom() {
+    requestAnimationFrame(() => {
+      const contentBox = rootEl.querySelector(".tw-content");
+      if (contentBox && state.currentApp === "plot") {
+        contentBox.scrollTop = contentBox.scrollHeight;
+      }
+    });
+  }
+
   function openAppPage(appId) {
     state.currentApp = appId || "home";
+    config.lastOpenApp = state.currentApp;
+    saveConfig();
     clearAppBadgeCount(state.currentApp);
     const isHome = state.currentApp === "home";
     const headerBar = targetDoc.getElementById("twAppHeaderBar");
@@ -1593,13 +1795,20 @@
       p.classList.toggle("active", p.id === `tw-page-${state.currentApp}`);
     });
     const contentBox = rootEl.querySelector(".tw-content");
-    if (contentBox) contentBox.scrollTop = 0;
+    if (state.currentApp === "plot") {
+      scrollPlotTimelineToBottom();
+      setTimeout(scrollPlotTimelineToBottom, 60);
+    } else if (contentBox) {
+      contentBox.scrollTop = 0;
+    }
     if (state.currentApp === "chat") {
       scrollChatBoxesToBottom();
       setTimeout(scrollChatBoxesToBottom, 60);
     }
+    if (state.currentApp === "mailbox") {
+      renderMailboxSection();
+    }
   }
-
 
   function renderPhoneHomeGrid() {
     const mainGrid = targetDoc.getElementById("twPhoneAppGrid");
@@ -1623,7 +1832,7 @@
       </div>
     `).join("");
 
-    const dockIds = ["plot", "chat", "letter", "forum"];
+    const dockIds = ["plot", "chat", "mailbox", "forum"];
     const dockApps = dockIds.map(id => PHONE_APPS_META.find(a => a.id === id)).filter(Boolean);
     dockGrid.innerHTML = dockApps.map(app => `
       <div class="tw-app-item" data-open-app="${app.id}">
@@ -1637,11 +1846,10 @@
   }
   renderPhoneHomeGrid();
 
-  /* 检测壁纸图片平均亮度（返回 true 代表浅色背景，适合深色墨字） */
   function detectImageLuminance(imgSrc, callback) {
     if (!imgSrc) { callback(true); return; }
     const img = new Image();
-    img.crossOrigin = "Anonymous";
+    if (!imgSrc.startsWith("data:")) img.crossOrigin = "Anonymous";
     img.onload = function () {
       try {
         const cvs = targetDoc.createElement("canvas");
@@ -1673,7 +1881,7 @@
     const valTxt = targetDoc.getElementById("twWpMaskValTxt");
     const urlInp = targetDoc.getElementById("twWpUrlInput");
     const dataUrl = getSavedWallpaperDataUrl();
-    const maskOp = typeof config.wallpaperMaskOpacity === "number" ? config.wallpaperMaskOpacity : 0.2;
+    const maskOp = typeof config.wallpaperMaskOpacity === "number" ? config.wallpaperMaskOpacity : 0.16;
 
     if (rangeEl && targetDoc.activeElement !== rangeEl) rangeEl.value = Math.round(maskOp * 100);
     if (valTxt) valTxt.textContent = `${Math.round(maskOp * 100)}%`;
@@ -1689,7 +1897,10 @@
     });
 
     if (dataUrl) {
-      if (wpEl) wpEl.style.backgroundImage = `url("${dataUrl}")`;
+      if (wpEl) {
+        wpEl.style.backgroundImage = "none";
+        wpEl.innerHTML = `<img src="${dataUrl}" style="width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;">`;
+      }
       if (panelEl) {
         panelEl.classList.add("has-custom-wp");
         const mode = config.wallpaperTextColorMode || "auto";
@@ -1704,17 +1915,20 @@
         panelEl.classList.toggle("wp-text-light", !useDarkText);
       }
       if (previewEl) {
-        previewEl.style.backgroundImage = `url("${dataUrl}")`;
-        previewEl.innerHTML = `<span style="background:rgba(0,0,0,0.58);color:#fff8eb;padding:3px 9px;border-radius:12px;font-size:10.5px;">已启用自定义壁纸</span>`;
+        previewEl.style.backgroundImage = "none";
+        previewEl.innerHTML = `<img src="${dataUrl}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;"><span style="position:relative;z-index:1;background:rgba(0,0,0,0.62);color:#fff8eb;padding:3px 9px;border-radius:12px;font-size:10.5px;">已启用壁纸</span>`;
       }
     } else {
-      if (wpEl) wpEl.style.backgroundImage = "none";
+      if (wpEl) {
+        wpEl.style.backgroundImage = "none";
+        wpEl.innerHTML = "";
+      }
       if (panelEl) {
         panelEl.classList.remove("has-custom-wp", "wp-text-dark", "wp-text-light");
       }
       if (previewEl) {
         previewEl.style.backgroundImage = "none";
-        previewEl.textContent = "当前使用主题默认古风宣纸底纹";
+        previewEl.textContent = "当前使用纯色古风宣纸底纹";
       }
     }
   }
@@ -1722,6 +1936,7 @@
 
   function compressAndSaveImageFile(file) {
     if (!file) return;
+    showModuleSuccessToast("正在处理并更换壁纸…");
     const reader = new FileReader();
     reader.onload = function (ev) {
       const rawDataUrl = ev.target?.result;
@@ -1730,8 +1945,9 @@
       img.onload = function () {
         try {
           const canvas = targetDoc.createElement("canvas");
-          const maxW = 680, maxH = 1200;
-          let w = img.width || 600, h = img.height || 1000;
+          // 适度压缩尺寸（400x720），确保清晰同时体积控制在 80KB~150KB 内，100% 存进 localStorage 不爆容量
+          const maxW = 400, maxH = 720;
+          let w = img.width || 400, h = img.height || 720;
           if (w > maxW || h > maxH) {
             const ratio = Math.min(maxW / w, maxH / h);
             w = Math.round(w * ratio);
@@ -1741,70 +1957,49 @@
           canvas.height = h;
           const ctx = canvas.getContext("2d");
           ctx.drawImage(img, 0, 0, w, h);
-          let outUrl = canvas.toDataURL("image/jpeg", 0.78);
-          if (outUrl.length > 1800000) outUrl = canvas.toDataURL("image/jpeg", 0.55);
+          let outUrl = canvas.toDataURL("image/jpeg", 0.55);
+          if (outUrl.length > 350000) outUrl = canvas.toDataURL("image/jpeg", 0.38);
+          saveWallpaperDataUrl(outUrl);
+          applyCustomWallpaperToUI();
           detectImageLuminance(outUrl, (isLight) => {
             config.detectedWpIsLight = isLight;
-            saveWallpaperDataUrl(outUrl);
+            saveConfig();
             applyCustomWallpaperToUI();
             showModuleSuccessToast(`壁纸已更换（自动匹配${isLight ? "深色墨字" : "浅色金字"}）`);
           });
         } catch (err) {
           saveWallpaperDataUrl(rawDataUrl);
           applyCustomWallpaperToUI();
-          showModuleSuccessToast("壁纸已应用");
+          showModuleSuccessToast("壁纸已成功应用");
         }
       };
       img.onerror = function () {
         saveWallpaperDataUrl(rawDataUrl);
         applyCustomWallpaperToUI();
-        showModuleSuccessToast("壁纸已应用");
+        showModuleSuccessToast("壁纸已成功应用");
       };
       img.src = rawDataUrl;
     };
     reader.readAsDataURL(file);
   }
 
-  function triggerCrossFrameFileSelect() {
-    try {
-      let picker = targetDoc.getElementById("twHiddenWpFilePicker");
-      if (picker) picker.remove();
-      picker = targetDoc.createElement("input");
-      picker.type = "file";
-      picker.id = "twHiddenWpFilePicker";
-      picker.accept = "image/*";
-      picker.style.cssText = "position:fixed;top:-9999px;left:-9999px;opacity:0;pointer-events:none;";
-      targetDoc.body.appendChild(picker);
-      picker.addEventListener("change", (ev) => {
-        const f = ev.target.files?.[0];
-        if (f) compressAndSaveImageFile(f);
-      });
-      picker.click();
-    } catch (e) {
-      showModuleSuccessToast("若浏览器拦截弹窗，请在下方粘贴图片链接");
-    }
+  // 显式绑定上传按钮点击与文件选择，解决跨 iframe 下 label 点击失效问题
+  const wpFileInput = targetDoc.getElementById("twDirectWpFileInput");
+  const wpUploadLabel = targetDoc.getElementById("twUploadWpLabel");
+  if (wpUploadLabel && wpFileInput) {
+    wpUploadLabel.addEventListener("click", (ev) => {
+      if (ev.target !== wpFileInput) {
+        ev.preventDefault();
+        wpFileInput.click();
+      }
+    });
+    wpFileInput.addEventListener("change", (ev) => {
+      const f = ev.target.files?.[0];
+      if (f) compressAndSaveImageFile(f);
+      ev.target.value = "";
+    });
   }
 
-  targetDoc.getElementById("twUploadWpBtn")?.addEventListener("click", (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    triggerCrossFrameFileSelect();
-  });
-  targetDoc.getElementById("twApplyWpUrlBtn")?.addEventListener("click", () => {
-    const u = targetDoc.getElementById("twWpUrlInput")?.value.trim() || "";
-    if (!u) { showModuleSuccessToast("请先输入图片网络链接"); return; }
-    detectImageLuminance(u, (isLight) => {
-      config.detectedWpIsLight = isLight;
-      saveWallpaperDataUrl(u);
-      applyCustomWallpaperToUI();
-      showModuleSuccessToast("网络壁纸应用成功");
-    });
-  });
-  targetDoc.getElementById("twClearWpBtn")?.addEventListener("click", () => {
-    saveWallpaperDataUrl("");
-    applyCustomWallpaperToUI();
-    showModuleSuccessToast("已恢复默认宣纸底纹");
-  });
   targetDoc.getElementById("twWpMaskRange")?.addEventListener("input", (e) => {
     const v = Number(e.target.value) || 0;
     config.wallpaperMaskOpacity = Math.max(0, Math.min(0.85, v / 100));
@@ -1822,6 +2017,11 @@
   rootEl.addEventListener("click", (e) => {
     const appCard = e.target.closest("[data-open-app]");
     if (appCard) {
+      if (Date.now() - modalJustOpenedAt < 380) {
+        e.preventDefault();
+        e.stopPropagation();
+        return;
+      }
       openAppPage(appCard.dataset.openApp);
       return;
     }
@@ -1832,6 +2032,8 @@
   rootEl.querySelectorAll("button[data-chattab]").forEach(btn => {
     btn.addEventListener("click", () => {
       state.activeChatTab = btn.dataset.chattab || "dm";
+      config.lastActiveChatTab = state.activeChatTab;
+      saveConfig();
       rootEl.querySelectorAll("button[data-chattab]").forEach(b => b.classList.toggle("active", b === btn));
       targetDoc.getElementById("tw-chat-pane-dm")?.classList.toggle("active", state.activeChatTab === "dm");
       targetDoc.getElementById("tw-chat-pane-chatroom")?.classList.toggle("active", state.activeChatTab === "chatroom");
@@ -1839,7 +2041,6 @@
       setTimeout(scrollChatBoxesToBottom, 50);
     });
   });
-
 
   function pinFabToRightCenter(forceResetToCenter = false) {
     if (!fab) return;
@@ -1851,10 +2052,10 @@
     fab.style.setProperty("transform", "none", "important");
     const vh = targetWin.innerHeight || targetDoc.documentElement.clientHeight || 0;
     if (typeof config.fabCustomTopRatio === "number" && !isNaN(config.fabCustomTopRatio) && config.fabCustomTopRatio >= 0.05 && config.fabCustomTopRatio <= 0.92 && vh > 240) {
-      const targetTopPx = Math.max(20, Math.min(vh - 88, Math.round(vh * config.fabCustomTopRatio)));
+      const targetTopPx = Math.max(20, Math.min(vh - 76, Math.round(vh * config.fabCustomTopRatio)));
       fab.style.setProperty("top", `${targetTopPx}px`, "important");
     } else {
-      fab.style.setProperty("top", "calc(50vh - 34px)", "important");
+      fab.style.setProperty("top", "calc(50vh - 27px)", "important");
     }
   }
   pinFabToRightCenter(false);
@@ -1872,7 +2073,7 @@
     if (Math.abs(dy) > 5) moved = true;
     if (moved) {
       const vh = targetWin.innerHeight || targetDoc.documentElement.clientHeight || 800;
-      const newTop = Math.max(20, Math.min(vh - 88, startTop + dy));
+      const newTop = Math.max(20, Math.min(vh - 76, startTop + dy));
       fab.style.setProperty("top", `${newTop}px`, "important");
       config.fabCustomTopRatio = newTop / vh;
     }
@@ -1884,9 +2085,16 @@
     if (moved) {
       saveConfig();
     } else {
+      e.preventDefault();
+      e.stopPropagation();
       const willOpen = overlay.classList.contains("tw-hidden");
-      setModalOpenState(willOpen);
+      if (willOpen) modalJustOpenedAt = Date.now();
+      setTimeout(() => setModalOpenState(willOpen), 45);
     }
+  });
+  fab.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
   });
 
   const gThemeBar = targetDoc.getElementById("twGroupThemeChips");
@@ -1916,9 +2124,15 @@
     const jumpApp = banner.dataset.jumpApp || "chat";
     const jumpChatTab = banner.dataset.jumpChatTab || "dm";
     const jumpNpc = banner.dataset.jumpNpc || "";
+    const jumpMailId = banner.dataset.jumpMailId || "";
     openAppPage(jumpApp);
-    if (jumpApp === "chat") {
+    if (jumpApp === "mailbox") {
+      if (jumpMailId) state.activeMailId = Number(jumpMailId) || jumpMailId;
+      renderMailboxSection();
+    } else if (jumpApp === "chat") {
       state.activeChatTab = jumpChatTab;
+      config.lastActiveChatTab = jumpChatTab;
+      saveConfig();
       rootEl.querySelectorAll("button[data-chattab]").forEach(b => b.classList.toggle("active", b.dataset.chattab === jumpChatTab));
       targetDoc.getElementById("tw-chat-pane-dm")?.classList.toggle("active", jumpChatTab === "dm");
       targetDoc.getElementById("tw-chat-pane-chatroom")?.classList.toggle("active", jumpChatTab === "chatroom");
@@ -1935,6 +2149,8 @@
     state.emperorActiveDetailKey = null;
     openAppPage("chat");
     state.activeChatTab = "dm";
+    config.lastActiveChatTab = "dm";
+    saveConfig();
     rootEl.querySelectorAll("button[data-chattab]").forEach(b => b.classList.toggle("active", b.dataset.chattab === "dm"));
     targetDoc.getElementById("tw-chat-pane-dm")?.classList.add("active");
     targetDoc.getElementById("tw-chat-pane-chatroom")?.classList.remove("active");
@@ -1968,7 +2184,7 @@
   }
 
   function setGlobalRefreshingState(isRefreshing, tipMessage = "") {
-    ["all", "status", "plot", "actions", "world", "emperor", "forum"].forEach(k => setModuleRefreshing(k, isRefreshing, tipMessage));
+    ["all", "status", "plot", "actions", "mailbox", "world", "emperor", "forum"].forEach(k => setModuleRefreshing(k, isRefreshing, tipMessage));
   }
 
   function getPlotSummaryInstruction() {
@@ -1980,8 +2196,7 @@
 
   const getUserFullTag = () => {
     state.userName = detectCurrentUserName();
-    const id = state.userIdentity && state.userIdentity !== "未同步" && state.userIdentity.toLowerCase() !== "user" ? enforceAddressingRules(state.userIdentity) : "";
-    return (!id || id === state.userName) ? state.userName : `${id}·${state.userName}`;
+    return (state.userIdentity && state.userIdentity !== "未同步") ? state.userIdentity : "未同步";
   };
   const getForumUserAuthor = () => { const custom = (config.forumNickname || "").trim(); return custom ? custom : state.userName; };
   const isForumUsingAlias = () => { const custom = (config.forumNickname || "").trim(); return Boolean(custom && custom !== state.userName); };
@@ -2012,6 +2227,8 @@
       }
     } catch (e) {}
 
+    if (targetDoc.hidden) return;
+
     if (!checkIsXiaoChat()) {
       rootEl.classList.add("tw-chat-inactive");
       setModalOpenState(false);
@@ -2020,9 +2237,13 @@
     rootEl.classList.remove("tw-chat-inactive");
     const curCid = getCurrentChatFileId();
     if ((config.customSaveSlot || "chat_bind") === "chat_bind" && curCid !== "default_chat" && curCid !== state.boundChatId) {
+      const nextKey = `${CHAT_BIND_VAR_KEY}_${curCid}`;
+      const nextData = readFromTavernBackend(nextKey);
       state.boundChatId = curCid;
-      loadChatSessionData(true);
-      syncFromWorldbookAndChat(false);
+      if (nextData && hasSubstantialData(nextData)) {
+        applyParsedPayloadToState(nextData);
+        renderAll();
+      }
       return;
     }
     if (!hasSubstantialData(state)) {
@@ -2098,18 +2319,33 @@
     }
   }
 
-  function fillUserChatInput(text) {
+    function fillUserChatInput(text) {
     try {
-      const cleaned = enforceAddressingRules(text);
+      // 彻底清洗一切会导致酒馆 Markdown 渲染成 H1/H2 巨型大标题的符号、分割线与多余换行
+      let cleaned = enforceAddressingRules(text || "");
+      cleaned = cleaned
+        .replace(/<[^>]+>/g, "")                       // 移除任何残留 HTML 标签
+        .replace(/^[\s#* fullwidth＃＊\-—=~`>+]+/gm, "") // 移除每行开头可能触发标题/引用的符号 (#, -, =, > 等)
+        .replace(/[-—=]{2,}/g, "")                     // 移除所有 --- 或 === 分割线（防 Setext H1/H2 巨型标题！）
+        .replace(/[`*~_]/g, "")                        // 移除粗体/斜体/代码块符号
+        .replace(/\n{2,}/g, "\n")                      // 将多空行合并为单换行，呈现标准正文段落
+        .trim();
+
       const th = targetWin.TavernHelper || window.TavernHelper;
-      if (th && typeof th.setInput === "function") th.setInput(cleaned);
-      else {
+      if (th && typeof th.setInput === "function") {
+        th.setInput(cleaned);
+      } else {
         const el = targetDoc.getElementById("send_textarea") || targetDoc.querySelector("#send_form textarea");
-        if (el) { el.value = cleaned; el.dispatchEvent(new Event("input", { bubbles: true })); el.focus(); }
+        if (el) {
+          el.value = cleaned;
+          el.dispatchEvent(new Event("input", { bubbles: true }));
+          el.focus();
+        }
       }
       setModalOpenState(false);
     } catch (e) {}
   }
+
 
   const getTag = (s, t) => { const m = (s || "").match(new RegExp(`<${t}>([\\s\\S]*?)<\\/${t}>`, "i")); return m ? m[1].trim() : ""; };
 
@@ -2142,6 +2378,47 @@
   }
 
   const buildStableRoundId = (aiRoundNum, absIdx, cleanBody) => `ai_r${aiRoundNum}_m${absIdx}_${(cleanBody || "").slice(0, 24).replace(/\s+/g, "")}`;
+
+  function pruneDeletedRoundsAndRestoreSnapshot() {
+    try {
+      const fullList = getRawChatList(0);
+      if (fullList.length < 2) return;
+      const aliveRoundIds = new Set();
+      let lastAliveRoundId = "";
+      let aiCount = 0;
+      fullList.forEach(m => {
+        if (m.isUser) return;
+        const body = stripMetaAndStatusTags(m.raw);
+        if (!body) return;
+        aiCount++;
+        const rid = buildStableRoundId(m.aiRoundNum, m.absIdx, body);
+        aliveRoundIds.add(rid);
+        lastAliveRoundId = rid;
+      });
+
+      if (aiCount < 1) return;
+
+      const beforeLen = state.plotSummary.length;
+      state.plotSummary = state.plotSummary.filter((node, idx) => {
+        const rid = node.roundId || node.turnKey || "";
+        if (rid.startsWith("ai_r")) return aliveRoundIds.has(rid);
+        return idx < aiCount;
+      });
+
+      if (state.plotSummary.length < beforeLen) {
+        state.lastAutoProcessedRoundId = lastAliveRoundId;
+        if (lastAliveRoundId && state.roundSnapshots && state.roundSnapshots[lastAliveRoundId]) {
+          const snap = state.roundSnapshots[lastAliveRoundId];
+          if (Array.isArray(snap.palaceDynamics)) state.palaceDynamics = snap.palaceDynamics;
+          if (Array.isArray(snap.outsideDynamics)) state.outsideDynamics = snap.outsideDynamics;
+          if (Array.isArray(snap.npcFocusDynamics)) state.npcFocusDynamics = snap.npcFocusDynamics;
+          if (Array.isArray(snap.mailboxList)) state.mailboxList = snap.mailboxList;
+        }
+        saveCurrentChatSessionData(false);
+        renderAll();
+      }
+    } catch (e) {}
+  }
 
   function getFullStoryContext() {
     const fullList = getRawChatList(0);
@@ -2180,17 +2457,32 @@
     const timelineTail = state.plotSummary.slice(-6).map((x, i) => `${i + 1}. [${x.time}·${x.location}] ${x.summary}`).join("\n");
     const { latestRoundText } = getFullStoryContext();
     const userPersona = getUserPersonaContext();
+    const idLabel = state.userIdentity !== "未同步" ? state.userIdentity : state.userName;
     if (blindUserIdentity) {
       return `\n【当前太微宫与长安城时间局势背景（发帖人真实身份已完全隐匿）】：\n1. 当前时间：${state.time}，圣人所在位置：${state.location}，圣人当前心情：${state.mood}。\n2. 重要提示：当前在论坛发言的「${getForumUserAuthor()}」是一个彻底匿名的神秘马甲！所有NPC【完全不知道】这个马甲背后是谁，只能盲猜！`;
     }
-    return `\n【当前世界背景、人设与时间线参考】：\n1. 当前身份：${getUserFullTag()}，当前地点：${state.location}，当前时间：${state.time}。\n2. ${state.userName} 的人设与性格特征：${userPersona || "（未单独填写固定人设，请直接根据下方近期剧情中她的言行举止、性情反应来推演）"}。\n3. 萧承稷对 ${state.userName} 好感度：${state.hasAffection ? state.affection : 0}（${state.stage || "【淡漠留意】"}），当前心情：${state.mood}。\n4. 近期时间轴脉络：\n${timelineTail || "刚开局"}\n5. 最新酒馆剧情节选：\n${latestRoundText ? latestRoundText.slice(-650) : "暂无"}`;
+    return `\n【当前世界背景、人设与时间线参考】：\n1. 当前身份：${idLabel}，当前地点：${state.location}，当前时间：${state.time}。\n2. ${state.userName} 的人设与性格特征：${userPersona || "（请直接根据下方近期剧情中她的言行举止、性情反应来推演）"}。\n3. 萧承稷对 ${state.userName} 好感度：${state.hasAffection ? state.affection : 0}（${state.stage || "【淡漠观察】"}），当前心情：${state.mood}。\n4. 近期时间轴脉络：\n${timelineTail || "刚开局"}\n5. 最新酒馆剧情节选：\n${latestRoundText ? latestRoundText.slice(-650) : "暂无"}`;
+  }
+
+  function getNpcMailMemoryBlock(npcName) {
+    if (!Array.isArray(state.mailboxList) || !state.mailboxList.length) return "";
+    const related = state.mailboxList.filter(m => m && (m.sender === npcName || m.recipient === npcName || (npcName && String(m.sender).includes(npcName))));
+    if (!related.length) return "";
+    const lines = related.slice(0, 6).map(m => {
+      const base = `[往来书信《${m.title}》(${m.direction === "out" ? `${state.userName}寄给${npcName}` : `${npcName}寄给${state.userName}`})：${m.body}${m.gift ? ` | 随信附物：${m.gift}` : ""}]`;
+      const rep = Array.isArray(m.replies) && m.replies.length
+        ? "\n  " + m.replies.map(r => `↳ ${r.sender}回信：“${r.text}”`).join("\n  ")
+        : "";
+      return base + rep;
+    }).join("\n");
+    return `\n【🕊️ 你们在鱼雁信匣中的历史书信往来记忆（你在对话/回信中必须清楚记得这些信件与随信物品）】：\n${lines}\n`;
   }
 
   function applyFallbackStatusIfMissing(fs) {
     if (!fs || typeof fs !== "object") return;
     if (fs.time && (state.time === "未同步" || !state.hasDirectStatusTags)) state.time = enforceAddressingRules(fs.time);
     if (fs.location && (state.location === "未同步" || !state.hasDirectStatusTags)) state.location = enforceAddressingRules(fs.location);
-    if (fs.userIdentity && (state.userIdentity === "未同步" || !state.hasDirectStatusTags)) state.userIdentity = enforceAddressingRules(fs.userIdentity);
+    if (fs.userIdentity && (state.userIdentity === "未同步" || !state.hasDirectStatusTags)) state.userIdentity = String(fs.userIdentity).trim();
     if (fs.clothes && (state.clothes === "未同步" || !state.hasDirectStatusTags)) state.clothes = enforceAddressingRules(fs.clothes);
     if (fs.pose && (state.pose === "未同步" || !state.hasDirectStatusTags)) state.pose = enforceAddressingRules(fs.pose);
     if (fs.mood && (state.mood === "未同步" || !state.hasDirectStatusTags)) state.mood = enforceAddressingRules(fs.mood);
@@ -2232,7 +2524,7 @@
         const time = getTag(raw, "时间"), loc = getTag(raw, "地点"), clothes = getTag(raw, "穿着"), pose = getTag(raw, "姿势");
         const mood = getTag(raw, "心情"), thought = getTag(raw, "心理活动"), aff = getTag(raw, "好感度数值"), stage = getTag(raw, "好感度阶段");
         const uId = getTag(raw, "user身份"), inN = getTag(raw, "宫内见闻"), diary = getTag(raw, "帝王日记"), td1 = getTag(raw, "待办1"), td2 = getTag(raw, "待办2"), outN = getTag(raw, "宫外见闻");
-        if (time || loc || aff !== "" || stage || inN || outN || thought || diary) {
+        if (time || loc || aff !== "" || stage || uId || inN || outN || thought || diary) {
           if (!latestAiFound && !messages[i].isUser) state.hasDirectStatusTags = true;
           if (time && !time.includes("{{")) state.time = time;
           if (loc && !loc.includes("{{")) state.location = enforceAddressingRules(loc);
@@ -2243,7 +2535,9 @@
           if (diary && !diary.includes("{{")) state.diary = enforceAddressingRules(diary);
           if (aff !== "" && !isNaN(Number(aff))) { state.affection = Number(aff); state.hasAffection = true; }
           if (stage && !stage.includes("{{")) state.stage = stage;
-          if (uId && !uId.includes("{{") && uId.toLowerCase() !== "user") state.userIdentity = enforceAddressingRules(uId);
+          if (uId && !uId.includes("{{")) {
+            state.userIdentity = uId.replace(/<[^>]+>/g, "").trim();
+          }
           if (td1 && !td1.includes("{{")) state.todo1 = enforceAddressingRules(td1);
           if (td2 && !td2.includes("{{")) state.todo2 = enforceAddressingRules(td2);
           if (inN && !inN.includes("{{")) state.inNews = enforceAddressingRules(inN);
@@ -2269,11 +2563,12 @@
   }
 
   async function runEnabledAutoRefreshTasks(currentRoundId = "", totalAiRounds = 0) {
-    const runStatus = isAutoModuleOn("status"), runPlot = isAutoModuleOn("plot"), runWorld = isAutoModuleOn("world");
-    if (!runStatus && !runPlot && !runWorld) return;
+    const runStatus = isAutoModuleOn("status"), runPlot = isAutoModuleOn("plot"), runWorld = isAutoModuleOn("world"), runMail = isAutoModuleOn("mailbox");
+    if (!runStatus && !runPlot && !runWorld && !runMail) return;
     if (runStatus) setModuleRefreshing("status", true, "自动同步中…");
     if (runPlot) setModuleRefreshing("plot", true, "自动同步中…");
     if (runWorld) setModuleRefreshing("world", true, "自动同步中…");
+    if (runMail) setModuleRefreshing("mailbox", true, "自动同步中…");
     try {
       const alreadyInTimeline = Boolean(currentRoundId && state.plotSummary.some(x => (x.roundId || x.turnKey) === currentRoundId));
       if (runPlot && state.plotSummary.length < totalAiRounds - 1) {
@@ -2293,11 +2588,20 @@
         await refreshWorldOnly(null, true);
         setModuleRefreshing("world", false);
       }
-      showModuleSuccessToast("自动同步完成");
+      if (runMail) {
+        await checkAndReceivePlotMail(null, true);
+        setModuleRefreshing("mailbox", false);
+      }
+      if (currentRoundId) {
+        saveRoundSnapshot(currentRoundId);
+        saveCurrentChatSessionData(false);
+      }
+      showModuleSuccessToast("自动同步完成", true);
     } catch (e) {
       setModuleRefreshing("status", false);
       setModuleRefreshing("plot", false);
       setModuleRefreshing("world", false);
+      setModuleRefreshing("mailbox", false);
     }
   }
 
@@ -2315,13 +2619,13 @@
       const plotInstruction = getPlotSummaryInstruction();
       const promptParts = [];
       if (needFallbackStatus) {
-        promptParts.push(`"fallbackStatus": {"time":"当前年号日期时辰","location":"萧承稷所在宫殿","userIdentity":"${uName}当前具体位分","clothes":"萧承稷衣着十字内","pose":"萧承稷动作十字内","mood":"四字情绪","innerThought":"萧承稷第一人称真实心声，自称朕，28字内","affection":${state.hasAffection ? state.affection : 10},"stage":"${state.stage !== "未同步" ? state.stage : "【淡漠留意】"}"}`);
+        promptParts.push(`"fallbackStatus": {"time":"当前年号日期时辰","location":"萧承稷所在宫殿","userIdentity":"${state.userIdentity !== "未同步" ? state.userIdentity : uName}","clothes":"萧承稷衣着十字内","pose":"萧承稷动作十字内","mood":"四字情绪","innerThought":"萧承稷第一人称真实心声，自称朕，28字内","affection":${state.hasAffection ? state.affection : 10},"stage":"${state.stage !== "未同步" ? state.stage : "【淡漠观察】"}"}`);
       }
       if (opts.doPlot) {
         promptParts.push(`"latestTimelineNode": {"time":"本轮具体时间","location":"本轮具体地点","summary":"仅概括最新这一轮新进展，遵守要求：${plotInstruction}"}`);
       }
       if (!promptParts.length) return;
-      const prompt = `你是《太微宫闻录》史官同步助手。当前人物：${uName}（${getUserFullTag()}）。\n已记录脉络：\n${existingTail || "暂无"}\n本轮最新剧情：\n${latestRoundText}\n请输出纯 JSON 对象：\n{\n${promptParts.join(",\n")}\n}`;
+      const prompt = `你是《太微宫闻录》史官同步助手。当前人物：${uName}。\n已记录脉络：\n${existingTail || "暂无"}\n本轮最新剧情：\n${latestRoundText}\n请输出纯 JSON 对象：\n{\n${promptParts.join(",\n")}\n}`;
       const resp = await callAI(prompt, opts.doPlot ? "剧情梳理与状态同步" : "首页状态同步");
       const m = String(resp).match(/{[\s\S]*}/);
       if (m) {
@@ -2334,6 +2638,7 @@
             addAppBadgeCount("plot", 1);
           }
         }
+        if (latestRoundId) saveRoundSnapshot(latestRoundId);
         saveCurrentChatSessionData(false);
         renderAll();
         if (!fromGlobalTask) showModuleSuccessToast(opts.doPlot ? "剧情梳理已更新 (+1)" : "首页状态已刷新");
@@ -2380,7 +2685,10 @@
           }).filter(x => x.summary);
           addAppBadgeCount("plot", 1);
         }
-        if (latestRoundId) state.lastAutoProcessedRoundId = latestRoundId;
+        if (latestRoundId) {
+          state.lastAutoProcessedRoundId = latestRoundId;
+          saveRoundSnapshot(latestRoundId);
+        }
         saveCurrentChatSessionData(false);
         renderAll();
         if (!fromGlobalTask) showModuleSuccessToast("全量时间轴已更新 (+1)");
@@ -2398,6 +2706,450 @@
     try { await autoGenerateCorePlotData(false, { doStatus: true, doPlot: false }); }
     finally { if (btn) btn.textContent = "刷新状态"; }
   }
+
+  function renderMailTargetSelect() {
+    const sel = targetDoc.getElementById("twMailTargetSelect");
+    if (!sel) return;
+    sel.innerHTML = state.dmNpcOptions.map(n => `<option value="${n.id}" ${n.id === state.mailComposeTarget ? "selected" : ""}>${n.inCurrentPlot ? "【剧情登场】" : ""}${n.display || `${n.name}（${n.title}）`}</option>`).join("");
+  }
+
+  function renderMailboxSection() {
+    renderMailTargetSelect();
+    const composeBox = targetDoc.getElementById("twMailComposeBox");
+    if (composeBox) composeBox.style.display = state.mailComposeOpen ? "block" : "none";
+
+    const view = targetDoc.getElementById("twMailboxMainView");
+    if (!view) return;
+    if (!Array.isArray(state.mailboxList)) state.mailboxList = [];
+
+    if (state.activeMailId) {
+      const mail = state.mailboxList.find(m => String(m.id) === String(state.activeMailId));
+      if (!mail) {
+        state.activeMailId = null;
+        renderMailboxSection();
+        return;
+      }
+      if (mail.unread) {
+        mail.unread = false;
+        saveCurrentChatSessionData(false);
+      }
+      const npcName = mail.direction === "out" ? mail.recipient : mail.sender;
+      const repliesHtml = (Array.isArray(mail.replies) && mail.replies.length)
+        ? `<div style="margin-bottom:9px;"><div class="tw-label" style="margin-bottom:5px;">📜 鱼雁往来回函记录：</div>` + mail.replies.map(r => `
+            <div style="background:var(--bg-sub);border-left:3px solid ${r.isSelf ? "var(--gold)" : "var(--accent)"};padding:7px 9px;border-radius:6px;margin-bottom:6px;font-size:12px;line-height:1.65;">
+              <div style="display:flex;justify-content:space-between;font-size:10.5px;color:var(--text-sub);margin-bottom:2px;">
+                <b>${enforceAddressingRules(r.sender)}</b><span>${enforceAddressingRules(r.time || state.time || "刚刚")}</span>
+              </div>
+              <div>${enforceAddressingRules(r.text)}</div>
+              ${r.gift ? `<div style="margin-top:4px;font-size:11px;color:var(--accent-strong);">🎁 随函附物：<b>${enforceAddressingRules(r.gift)}</b></div>` : ""}
+            </div>
+          `).join("") + `</div>`
+        : "";
+
+      view.innerHTML = `
+        <div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <button type="button" class="tw-spy-back-btn" id="twBackToMailListBtn">← 返回信匣列表</button>
+            <button type="button" class="tw-del-btn" data-del-mail="${mail.id}">销毁此信</button>
+          </div>
+          <div class="tw-mail-paper">
+            <span class="tw-mail-seal">${enforceAddressingRules(mail.seal || "谨封")}</span>
+            <div style="font-size:14px;font-weight:bold;color:#7d2019;margin-bottom:4px;">《${enforceAddressingRules(mail.title || "宫廷书信")}》</div>
+            <div style="font-size:10.5px;color:#785c49;margin-bottom:8px;border-bottom:1px dashed rgba(140,90,50,0.35);padding-bottom:5px;">
+              <span>寄信人：<b>${enforceAddressingRules(mail.sender)}</b></span> · <span>收信人：<b>${enforceAddressingRules(mail.recipient || state.userName)}</b></span> · <span>${enforceAddressingRules(mail.time || state.time || "延昭二年")}</span>
+            </div>
+            <div style="white-space:pre-wrap;text-indent:2em;margin-bottom:8px;">${enforceAddressingRules(mail.body)}</div>
+            ${mail.gift ? `<div style="padding:5px 8px;background:rgba(168,32,26,0.08);border:1px dashed #a8201a;border-radius:5px;font-size:11.5px;color:#7d2019;">🎁 <b>随信附赠 / 呈物：</b>${enforceAddressingRules(mail.gift)}</div>` : ""}
+          </div>
+          ${repliesHtml}
+          <div style="background:var(--bg-sub);border:1px solid var(--border-soft);border-radius:8px;padding:8px 9px;margin-bottom:8px;">
+            <div class="tw-label" style="margin-bottom:4px;">✒️ 提笔回信给【${enforceAddressingRules(npcName)}】：</div>
+            <textarea class="tw-textarea" id="twReplyMailTextarea" style="min-height:52px;margin-bottom:6px;" placeholder="写下你的回信内容，对方将结合此前所有书信与剧情记忆回函……"></textarea>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              <button type="button" class="tw-refresh-forum-btn" id="twReplyMailSendBtn" data-mail-id="${mail.id}" style="flex:1;padding:6px;">🕊️ 寄出回信并待回音</button>
+              <button type="button" class="tw-reply-npc-btn" id="twSyncMailToDmBtn" data-mail-id="${mail.id}" style="padding:6px 8px;font-weight:bold;border-color:var(--accent);">💬 携信转入私聊</button>
+              <button type="button" class="tw-reply-npc-btn" id="twSyncMailToStoryBtn" data-mail-id="${mail.id}" style="padding:6px 8px;background:var(--accent);color:#fff;">🎭 拆信入戏(填酒馆)</button>
+            </div>
+          </div>
+        </div>
+      `;
+      return;
+    }
+
+    if (!state.mailboxList.length) {
+      view.innerHTML = `<div class="tw-empty-hint">信匣目前空空如也。<br>随剧情推进，相关NPC会主动寄来信笺；你也可以点击上方「✍️ 执笔写信」或「查收新信」！</div>`;
+      return;
+    }
+
+    view.innerHTML = state.mailboxList.map(m => {
+      const isOut = m.direction === "out";
+      const badgeTxt = isOut ? `寄给 ${m.recipient}` : `来自 ${m.sender}`;
+      const replyCount = Array.isArray(m.replies) ? m.replies.length : 0;
+      return `
+        <div class="tw-mail-item ${m.unread ? "unread" : ""}" data-open-mail="${m.id}">
+          <div class="tw-mail-top">
+            <div>
+              ${m.unread ? '<span class="tw-badge" style="background:var(--accent);color:#fff;">新信未拆</span>' : ""}
+              <span class="tw-badge">${enforceAddressingRules(badgeTxt)}</span>
+              ${replyCount ? `<span class="tw-label">(${replyCount}封回函)</span>` : ""}
+            </div>
+            <span class="tw-label">${enforceAddressingRules(m.time || "刚刚")}</span>
+          </div>
+          <div class="tw-mail-title">《${enforceAddressingRules(m.title || "无题信笺")}》</div>
+          <div class="tw-mail-preview">${enforceAddressingRules(m.body || "")}</div>
+          ${m.gift ? `<div style="font-size:10.5px;color:var(--accent);margin-top:3px;">🎁 附：${enforceAddressingRules(m.gift)}</div>` : ""}
+        </div>
+      `;
+    }).join("");
+  }
+
+    function syncMailFreqUI() {
+    const cd = typeof config.mailCooldownRounds === "number" ? config.mailCooldownRounds : 2;
+    const prob = typeof config.mailTriggerProb === "number" ? config.mailTriggerProb : 35;
+    const badge = targetDoc.getElementById("twMailFreqBadgeTxt");
+    if (badge) {
+      badge.textContent = prob <= 0 ? "纯手动" : (cd <= 0 ? `每轮·${prob}%` : `隔${cd}轮·${prob}%`);
+    }
+    const cdInp = targetDoc.getElementById("twMailCooldownInput");
+    if (cdInp && targetDoc.activeElement !== cdInp) cdInp.value = cd > 20 ? 20 : cd;
+    const probRange = targetDoc.getElementById("twMailProbRange");
+    if (probRange && targetDoc.activeElement !== probRange) probRange.value = prob;
+    const probTxt = targetDoc.getElementById("twMailProbValTxt");
+    if (probTxt) probTxt.textContent = `${prob}%`;
+
+    rootEl.querySelectorAll("#twMailFreqPresetChips .tw-chip").forEach(chip => {
+      const cCd = Number(chip.dataset.mcd), cProb = Number(chip.dataset.mprob);
+      chip.classList.toggle("active", (prob === 0 && cProb === 0) || (cCd === cd && cProb === prob));
+    });
+  }
+
+  targetDoc.getElementById("twToggleMailFreqBarBtn")?.addEventListener("click", () => {
+    const bar = targetDoc.getElementById("twMailFreqConfigBar");
+    if (!bar) return;
+    bar.style.display = bar.style.display === "none" ? "block" : "none";
+    syncMailFreqUI();
+  });
+
+  targetDoc.getElementById("twMailFreqPresetChips")?.addEventListener("click", (e) => {
+    const chip = e.target.closest(".tw-chip[data-mcd]");
+    if (!chip) return;
+    config.mailCooldownRounds = Number(chip.dataset.mcd) || 0;
+    config.mailTriggerProb = Number(chip.dataset.mprob) || 0;
+    saveConfig();
+    syncMailFreqUI();
+    showModuleSuccessToast(`收信频率已设为：${chip.textContent.trim()}`);
+  });
+
+  targetDoc.getElementById("twMailCooldownInput")?.addEventListener("input", (e) => {
+    config.mailCooldownRounds = Math.max(0, Math.min(20, Number(e.target.value) || 0));
+    saveConfig();
+    syncMailFreqUI();
+  });
+
+  targetDoc.getElementById("twMailProbRange")?.addEventListener("input", (e) => {
+    config.mailTriggerProb = Math.max(0, Math.min(100, Number(e.target.value) || 0));
+    saveConfig();
+    syncMailFreqUI();
+  });
+
+  async function checkAndReceivePlotMail(e, isAutoFromPlot = false) {
+    if (e) { e.preventDefault(); e.stopPropagation(); }
+
+    // 读取页面上设定的冷却轮数与触发概率
+    if (isAutoFromPlot) {
+      const cdLimit = typeof config.mailCooldownRounds === "number" ? config.mailCooldownRounds : 2;
+      const probPct = typeof config.mailTriggerProb === "number" ? config.mailTriggerProb : 35;
+      if (probPct <= 0) return; // 纯手动模式，直接跳过
+
+      state.mailRoundsSinceLast = (Number(state.mailRoundsSinceLast) || 0) + 1;
+      // 还在冷却轮数内，直接跳过（0 Token消耗）
+      if (state.mailRoundsSinceLast <= cdLimit) return;
+      // 概率掷骰未命中，直接跳过（0 Token消耗）
+      if (Math.random() * 100 > probPct) return;
+    }
+
+    const btn = targetDoc.getElementById("twRefreshMailboxBtn");
+    if (btn) btn.textContent = "查收中…";
+    if (!isAutoFromPlot) setModuleRefreshing("mailbox", true, "正在查收宫内外飞鸽传书与内侍密函…");
+    try {
+      await syncFromWorldbookAndChat(false);
+      const { lastFullTurn, lastSceneEnding, latestRoundId } = getFullStoryContext();
+      const relCtx = getRelationshipAndFamiliarityContext();
+      const recentMailSenders = (state.mailboxList || []).slice(0, 4).map(m => `${m.sender}《${m.title}》`).join("、");
+      const modeRule = isAutoFromPlot
+        ? `请判断在当前最新一轮剧情结束后，是否有与本轮剧情相关的 NPC（含萧承稷、沈砚、陆敬、谢无咎、霍惊弦、温言酌、裴玄度、卫凛或六宫妃嫔）适合在此时派内侍/飞鸽给 ${state.userName} 送来一封书信、密报、口谕手札或邀约？\n注意：若当前场景正在与某人当面交谈，严禁让该在场之人同时寄信！若无合适寄信契机请设 "shouldSend": false。`
+        : `用户主动点击了「查收新信」，请结合当前最新剧情与人物关系，挑选 1 位最贴合当前局势的 NPC 给 ${state.userName} 寄来一封书信或手札（务必设 "shouldSend": true）！`;
+
+      const prompt = `你是《太微宫闻录》鱼雁信匣总管。\n${modeRule}\n近期已收信件：${recentMailSenders || "暂无"}\n最新剧情：\n${lastFullTurn}\n${lastSceneEnding}\n${relCtx}\n如果寄信，请让寄信人记住此前的剧情与书信往来，写出符合其古风人设的信件正文（约90~140字，萧承稷必自称朕，禁称孤），并可附带一件贴合剧情的随信小物或约见提示。\n请输出纯 JSON 对象：\n{"shouldSend":true,"sender":"寄信人标准姓名（如萧承稷、沈砚、霍惊弦、苏枕月（丽嫔）等）","title":"古风信笺标题8字内","seal":"四字印鉴（如御笔亲敕、清臣私印）","body":"信件古风正文90至140字","gift":"随信附赠之物或约见信物（无则填“无”）"}`;
+      const resp = await callAI(prompt, "鱼雁信匣收信判定");
+      const m = String(resp).match(/{[\s\S]*}/);
+      if (m) {
+        const p = JSON.parse(m[0]);
+        if (p.shouldSend && p.sender && p.body) {
+          const senderStd = formatConsortStandardName(enforceAddressingRules(p.sender));
+          if (!isNpcMatchingUser(senderStd)) {
+            state.mailRoundsSinceLast = 0; // 收信成功，重置冷却计数
+            const giftClean = (p.gift && p.gift !== "无" && p.gift !== "none") ? enforceAddressingRules(p.gift) : "";
+            const newMail = {
+              id: Date.now(),
+              direction: "in",
+              unread: true,
+              sender: senderStd,
+              recipient: state.userName,
+              time: state.time !== "未同步" ? state.time : "刚刚",
+              title: enforceAddressingRules(p.title || `${senderStd}来信`),
+              seal: enforceAddressingRules(p.seal || "谨封"),
+              body: cleanPureText(p.body),
+              gift: giftClean,
+              replies: []
+            };
+            state.mailboxList.unshift(newMail);
+            addAppBadgeCount("mailbox", 1);
+            if (latestRoundId) saveRoundSnapshot(latestRoundId);
+            saveCurrentChatSessionData(false);
+            renderMailboxSection();
+            showWechatNotification(
+              `🕊️ 收到【${senderStd}】的来信`,
+              `《${newMail.title}》：${newMail.body}`,
+              { app: "mailbox", mailId: String(newMail.id) }
+            );
+          }
+        } else if (!isAutoFromPlot) {
+          showModuleSuccessToast("信使回报：眼下暂未有新信送达");
+        }
+      }
+    } catch (err) {}
+    finally {
+      if (btn) btn.textContent = "查收新信";
+      if (!isAutoFromPlot) setModuleRefreshing("mailbox", false);
+    }
+  }
+
+
+  async function sendOrReplyMail(existingMailId = null) {
+    const isReply = Boolean(existingMailId);
+    let targetNpc = state.mailComposeTarget || "萧承稷";
+    let userBody = "";
+    let userTitle = "";
+    let userGift = "";
+    let mailObj = null;
+
+    if (isReply) {
+      mailObj = state.mailboxList.find(m => String(m.id) === String(existingMailId));
+      if (!mailObj) return;
+      targetNpc = mailObj.direction === "out" ? mailObj.recipient : mailObj.sender;
+      userBody = targetDoc.getElementById("twReplyMailTextarea")?.value.trim() || "";
+      if (!userBody) { showModuleSuccessToast("请先写下回信内容"); return; }
+    } else {
+      targetNpc = targetDoc.getElementById("twMailTargetSelect")?.value || "萧承稷";
+      userTitle = targetDoc.getElementById("twMailSubjectInput")?.value.trim() || "";
+      userBody = targetDoc.getElementById("twMailBodyInput")?.value.trim() || "";
+      userGift = targetDoc.getElementById("twMailGiftInput")?.value.trim() || "";
+      if (!userBody) { showModuleSuccessToast("请先写下信件正文"); return; }
+    }
+
+    const npcMeta = state.dmNpcOptions.find(x => x.id === targetNpc || x.name === targetNpc) || BASE_DM_NPC_CATALOG[0];
+    const btnId = isReply ? "twReplyMailSendBtn" : "twSendNewMailBtn";
+    const btn = targetDoc.getElementById(btnId);
+    if (btn) { btn.disabled = true; btn.textContent = "飞鸽传书中…"; }
+
+    try {
+      const relCtx = getRelationshipAndFamiliarityContext();
+      const mailMem = getNpcMailMemoryBlock(npcMeta.name);
+      const dmHist = (state.dmHistories[npcMeta.id] || []).filter(x => !x.type && x.text).slice(-6).map(x => `${x.sender}：“${x.text}”`).join("\n");
+
+      if (!isReply) {
+        mailObj = {
+          id: Date.now(),
+          direction: "out",
+          unread: false,
+          sender: state.userName,
+          recipient: npcMeta.name,
+          time: state.time !== "未同步" ? state.time : "刚刚",
+          title: enforceAddressingRules(userTitle || `致${npcMeta.name}书`),
+          seal: `${state.userName}手启`,
+          body: enforceAddressingRules(userBody),
+          gift: enforceAddressingRules(userGift),
+          replies: []
+        };
+        state.mailboxList.unshift(mailObj);
+        state.mailComposeOpen = false;
+        state.activeMailId = mailObj.id;
+        targetDoc.getElementById("twMailSubjectInput").value = "";
+        targetDoc.getElementById("twMailBodyInput").value = "";
+        targetDoc.getElementById("twMailGiftInput").value = "";
+      } else {
+        if (!Array.isArray(mailObj.replies)) mailObj.replies = [];
+        mailObj.replies.push({
+          isSelf: true,
+          sender: state.userName,
+          time: state.time !== "未同步" ? state.time : "刚刚",
+          text: enforceAddressingRules(userBody)
+        });
+        const repInput = targetDoc.getElementById("twReplyMailTextarea");
+        if (repInput) repInput.value = "";
+      }
+      saveCurrentChatSessionData(false);
+      renderMailboxSection();
+
+      const threadContext = `主信件《${mailObj.title}》（${mailObj.sender} ➔ ${mailObj.recipient}）：“${mailObj.body}”${mailObj.gift ? `（随信附物：${mailObj.gift}）` : ""}\n` +
+        (mailObj.replies || []).map(r => `[${r.sender}回函]：“${r.text}”`).join("\n");
+
+      const prompt = `${state.userName} 刚刚向【${npcMeta.name}（${npcMeta.title}）】寄出了一封信函/回信！\n人设：${npcMeta.personality}（萧承稷必自称朕，禁称孤）\n${relCtx}\n${mailMem}\n近期私聊记忆：\n${dmHist || "无"}\n当前这封信的完整往来内容：\n${threadContext}\n请让 ${npcMeta.name} 结合此前所有的书信记忆与剧情，亲笔写一封符合其性格与当前处境的古风回信（约80~130字），并可选择是否随回信回赠一件小物。\n请输出纯 JSON 对象：\n{"replyText":"回信古风正文80至130字","returnGift":"随回信附赠之物（无则填“无”）"}`;
+      const resp = await callAI(prompt, `信匣回函·${npcMeta.name}`);
+      const m = String(resp).match(/{[\s\S]*}/);
+      if (m) {
+        const p = JSON.parse(m[0]);
+        const rTxt = cleanPureText(p.replyText || "");
+        const rGift = (p.returnGift && p.returnGift !== "无" && p.returnGift !== "none") ? enforceAddressingRules(p.returnGift) : "";
+        if (rTxt) {
+          if (!Array.isArray(mailObj.replies)) mailObj.replies = [];
+          mailObj.replies.push({
+            isSelf: false,
+            sender: npcMeta.name,
+            time: state.time !== "未同步" ? state.time : "刚刚",
+            text: rTxt,
+            gift: rGift
+          });
+          addAppBadgeCount("mailbox", 1);
+          saveCurrentChatSessionData(false);
+          renderMailboxSection();
+          showWechatNotification(
+            `🕊️ 收到【${npcMeta.name}】的回信`,
+            `《${mailObj.title}》回函：${rTxt}`,
+            { app: "mailbox", mailId: String(mailObj.id) }
+          );
+        }
+      }
+    } catch (err) {}
+    finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = isReply ? "🕊️ 寄出回信并待回音" : "🕊️ 遣人投递并等候回信";
+      }
+    }
+  }
+
+  async function syncMailToDmAndOpen(mailId) {
+    const mail = state.mailboxList.find(m => String(m.id) === String(mailId));
+    if (!mail) return;
+    const npcName = mail.direction === "out" ? mail.recipient : mail.sender;
+    const npcMeta = state.dmNpcOptions.find(x => x.id === npcName || x.name === npcName) || { id: npcName, name: npcName, title: "宫廷人物", personality: "贴合人设" };
+    if (!state.dmNpcOptions.some(x => x.id === npcMeta.id)) {
+      state.dmNpcOptions.splice(1, 0, { ...npcMeta, display: `${npcMeta.name}（${npcMeta.title}）`, isDynamic: true });
+    }
+    state.dmActiveNpc = npcMeta.id;
+    if (!Array.isArray(state.dmHistories[npcMeta.id])) state.dmHistories[npcMeta.id] = [];
+
+    const latestReply = (Array.isArray(mail.replies) && mail.replies.length) ? mail.replies[mail.replies.length - 1] : null;
+    const summaryTip = `📜 已携书信《${mail.title}》转入私聊${mail.gift ? `（附：${mail.gift}）` : ""}`;
+    state.dmHistories[npcMeta.id].push({ type: "system", text: summaryTip });
+
+    openAppPage("chat");
+    state.activeChatTab = "dm";
+    config.lastActiveChatTab = "dm";
+    saveConfig();
+    rootEl.querySelectorAll("button[data-chattab]").forEach(b => b.classList.toggle("active", b.dataset.chattab === "dm"));
+    targetDoc.getElementById("tw-chat-pane-dm")?.classList.add("active");
+    targetDoc.getElementById("tw-chat-pane-chatroom")?.classList.remove("active");
+    state.dmTyping = true;
+    renderDmSection();
+
+    try {
+      const relCtx = getRelationshipAndFamiliarityContext();
+      const prompt = `${state.userName} 刚刚拆阅了与【${npcMeta.name}】的往来书信《${mail.title}》（信件内容：“${mail.body}”${latestReply ? `，最新回函：“${latestReply.text}”` : ""}${mail.gift ? `，随信物品：${mail.gift}` : ""}），并直接通过私聊找到了 ${npcMeta.name}。\n请让 ${npcMeta.name} 顺着这封信的内容与随信物品，自然地向 ${state.userName} 发出 1~2 条简短私聊消息（萧承稷必自称朕，禁称孤）！\n${relCtx}\n输出纯 JSON 数组：\n[{"sender":"${npcMeta.name}","text":"顺着信件内容说的话"}]`;
+      const resp = await callAI(prompt, `携信转私聊·${npcMeta.name}`);
+      state.dmTyping = false;
+      const m = String(resp).match(/\[[\s\S]*\]/);
+      if (m) {
+        const arr = JSON.parse(m[0]).filter(x => !isNpcMatchingUser(x.sender));
+        for (const item of arr) {
+          if (item && item.text) {
+            state.dmHistories[npcMeta.id].push({ sender: npcMeta.name, text: cleanPureText(item.text), self: false });
+          }
+        }
+      }
+      saveCurrentChatSessionData(false);
+      renderDmSection();
+    } catch (e) {
+      state.dmTyping = false;
+      renderDmSection();
+    }
+  }
+
+  async function syncMailToTavernStoryAndFill(mailId) {
+    const mail = state.mailboxList.find(m => String(m.id) === String(mailId));
+    if (!mail) return;
+    const btn = targetDoc.getElementById("twSyncMailToStoryBtn");
+    if (btn) { btn.disabled = true; btn.textContent = "转化中…"; }
+    try {
+      const { lastSceneEnding } = getFullStoryContext();
+      const repliesText = (mail.replies || []).map(r => `${r.sender}回信：“${r.text}”${r.gift ? `（附：${r.gift}）` : ""}`).join("\n");
+      const prompt = `请将下方鱼雁信匣中的书信《${mail.title}》（寄信人：${mail.sender}，收信人：${mail.recipient}，正文：“${mail.body}”${mail.gift ? `，随信附物：${mail.gift}` : ""}\n${repliesText}）自然转化为一段符合大景王朝宫廷背景的【第三人称拆信/收礼/写信入戏】剧情描写（约130字），用于直接衔接酒馆当前主线场景（${lastSceneEnding || state.location}）。严禁出现邮箱、手机、APP等现代词。`;
+      const resp = await callAI(prompt, `拆信入戏·《${mail.title}》`);
+      const sceneText = cleanPureText(resp);
+      if (sceneText) {
+        fillUserChatInput(sceneText);
+        showModuleSuccessToast("书信剧情已填入酒馆输入框");
+      }
+    } catch (e) {}
+    finally {
+      if (btn) { btn.disabled = false; btn.textContent = "🎭 拆信入戏(填酒馆)"; }
+    }
+  }
+
+  targetDoc.getElementById("twOpenComposeMailBtn")?.addEventListener("click", () => {
+    state.mailComposeOpen = !state.mailComposeOpen;
+    state.activeMailId = null;
+    renderMailboxSection();
+  });
+  targetDoc.getElementById("twCloseComposeMailBtn")?.addEventListener("click", () => {
+    state.mailComposeOpen = false;
+    renderMailboxSection();
+  });
+  targetDoc.getElementById("twMailTargetSelect")?.addEventListener("change", (e) => {
+    state.mailComposeTarget = e.target.value || "萧承稷";
+  });
+  targetDoc.getElementById("twSendNewMailBtn")?.addEventListener("click", () => sendOrReplyMail(null));
+  targetDoc.getElementById("twRefreshMailboxBtn")?.addEventListener("click", (e) => checkAndReceivePlotMail(e, false));
+
+  targetDoc.getElementById("twMailboxMainView")?.addEventListener("click", (e) => {
+    const openItem = e.target.closest("[data-open-mail]");
+    if (openItem) {
+      state.activeMailId = openItem.dataset.openMail;
+      renderMailboxSection();
+      return;
+    }
+    if (e.target.closest("#twBackToMailListBtn")) {
+      state.activeMailId = null;
+      renderMailboxSection();
+      return;
+    }
+    const delBtn = e.target.closest("[data-del-mail]");
+    if (delBtn) {
+      const id = delBtn.dataset.delMail;
+      state.mailboxList = (state.mailboxList || []).filter(m => String(m.id) !== String(id));
+      state.activeMailId = null;
+      saveCurrentChatSessionData(false);
+      renderMailboxSection();
+      showModuleSuccessToast("已销毁该信笺");
+      return;
+    }
+    const repBtn = e.target.closest("#twReplyMailSendBtn");
+    if (repBtn) {
+      sendOrReplyMail(repBtn.dataset.mailId);
+      return;
+    }
+    const dmBtn = e.target.closest("#twSyncMailToDmBtn");
+    if (dmBtn) {
+      syncMailToDmAndOpen(dmBtn.dataset.mailId);
+      return;
+    }
+    const storyBtn = e.target.closest("#twSyncMailToStoryBtn");
+    if (storyBtn) {
+      syncMailToTavernStoryAndFill(storyBtn.dataset.mailId);
+    }
+  });
 
   function extractSpyEntriesList(infoObj) {
     if (!infoObj || typeof infoObj !== "object") return ["暂无具体记录"];
@@ -2565,25 +3317,27 @@
     if (e) { e.preventDefault(); e.stopPropagation(); }
     const btn = targetDoc.getElementById("twRefreshWorldBtn");
     if (btn) btn.textContent = "刷新中…";
-    if (!fromGlobalTask) setModuleRefreshing("world", true, "地图动向刷新中…");
+    if (!fromGlobalTask) setModuleRefreshing("world", true, "宫闱动态刷新中…");
     try {
       await syncFromWorldbookAndChat(false);
-      const { lastFullTurn, lastSceneEnding } = getFullStoryContext();
-      const prompt = `请根据最新剧情推演此刻同步发生的宫内动态 4 条与宫外动态 3 条。后妃写为「真名（位分）」。\n${lastFullTurn}\n${lastSceneEnding}\n输出纯 JSON：\n{"palaceDynamics":[{"npc":"姓名（位分或官职）","event":"动向50字内","tag":"地点"}],"outsideDynamics":[{"npc":"身份·姓名","event":"动向50字内","tag":"坊市或边关"}]}`;
-      const resp = await callAI(prompt, "地图动向刷新");
+      const { lastFullTurn, lastSceneEnding, latestRoundId } = getFullStoryContext();
+      const prompt = `请根据最新剧情推演此刻同步发生的：1.宫内各处实时动向(3条)；2.长安百坊与边塞动向(3条)；3.与 ${state.userName} 有交集的重点NPC专属动态(3条，如沈砚、陆敬、霍惊弦、卫凛、温言酌、苏枕月、秦昭华等此刻正在做什么与${state.userName}或当前局势相关的事)。后妃写为「真名（位分）」。\n${lastFullTurn}\n${lastSceneEnding}\n输出纯 JSON：\n{"palaceDynamics":[{"npc":"姓名（位分或官职）","event":"动向50字内","tag":"宫殿地点"}],"outsideDynamics":[{"npc":"身份·姓名","event":"动向50字内","tag":"坊市或边关"}],"npcFocusDynamics":[{"npc":"人物姓名","event":"与女主或当前主线相关的专属动向55字内","tag":"人物动向"}]}`;
+      const resp = await callAI(prompt, "宫闱动态刷新");
       const m = String(resp).match(/{[\s\S]*}/);
       if (m) {
         const p = JSON.parse(m[0]);
         if (Array.isArray(p.palaceDynamics)) state.palaceDynamics = p.palaceDynamics.map(x => ({ npc: enforceAddressingRules(x.npc), event: enforceAddressingRules(x.event), tag: enforceAddressingRules(x.tag || "太微宫内") }));
         if (Array.isArray(p.outsideDynamics)) state.outsideDynamics = p.outsideDynamics.map(x => ({ npc: enforceAddressingRules(x.npc), event: enforceAddressingRules(x.event), tag: enforceAddressingRules(x.tag || "宫墙之外") }));
+        if (Array.isArray(p.npcFocusDynamics)) state.npcFocusDynamics = p.npcFocusDynamics.map(x => ({ npc: enforceAddressingRules(x.npc), event: enforceAddressingRules(x.event), tag: enforceAddressingRules(x.tag || "相关NPC") }));
         addAppBadgeCount("world", 1);
+        if (latestRoundId) saveRoundSnapshot(latestRoundId);
         saveCurrentChatSessionData(false);
         renderWorldLists();
-        if (!fromGlobalTask) showModuleSuccessToast("地图动向已刷新 (+1)");
+        if (!fromGlobalTask) showModuleSuccessToast("宫闱动态已刷新 (+1)");
       }
     } catch (err) {}
     finally {
-      if (btn) btn.textContent = "刷新动向";
+      if (btn) btn.textContent = "刷新动态";
       if (!fromGlobalTask) setModuleRefreshing("world", false);
     }
   }
@@ -2639,16 +3393,18 @@
         await autoGenerateCorePlotData(true, { doStatus: true, doPlot: false });
         setModuleRefreshing("status", false, "状态卡已完成，正在重梳时间轴…");
         await rebuildFullLongTimeline(true);
-        setModuleRefreshing("plot", false, "剧情梳理已完成，正在刷新地图动向…");
+        setModuleRefreshing("plot", false, "剧情梳理已完成，正在刷新宫闱动态…");
       } else {
         await autoGenerateCorePlotData(true, { doStatus: true, doPlot: true });
-        setModuleRefreshing("status", false, "状态与剧情已完成，正在刷新地图动向…");
-        setModuleRefreshing("plot", false, "状态与剧情已完成，正在刷新地图动向…");
+        setModuleRefreshing("status", false, "状态与剧情已完成，正在刷新宫闱动态…");
+        setModuleRefreshing("plot", false, "状态与剧情已完成，正在刷新宫闱动态…");
       }
       setModuleRefreshing("actions", false);
       setModuleRefreshing("emperor", false);
       await refreshWorldOnly(null, true);
-      setModuleRefreshing("world", false, "地图动向已完成，正在刷新论坛…");
+      setModuleRefreshing("world", false, "宫闱动态已完成，正在查收鱼雁信匣…");
+      await checkAndReceivePlotMail(null, false);
+      setModuleRefreshing("mailbox", false, "鱼雁信匣已完成，正在刷新论坛…");
       await refreshForumOnly(null, true);
       setModuleRefreshing("forum", false);
       setModuleRefreshing("all", false);
@@ -2679,7 +3435,7 @@
       const relCtx = getRelationshipAndFamiliarityContext(usingAlias), styleBlock = getForumStylePromptBlock();
       const identityRule = usingAlias
         ? `当前发帖/回帖人使用的是纯匿名马甲「${forumUser}」！全场NPC 100%不知道TA的真名，请让NPC根据发言口吻盲猜TA身份！`
-        : `当前使用的是公开本名「${state.userName}」（${getUserFullTag()}），请按熟识度回应。`;
+        : `当前使用的是公开本名「${state.userName}」，请按熟识度回应。`;
       const existingComments = Array.isArray(post.comments) ? post.comments : [];
       const fullThreadHistory = existingComments.map((c, idx) => `[${idx + 1}楼] ${c.isSelfUser ? forumUser : (c.user || c.nick || "路人")}：${usingAlias ? maskRealIdentityForAnonPrompt(c.text, forumUser) : c.text}`).join("\n");
       const safePostTitle = usingAlias ? maskRealIdentityForAnonPrompt(post.title, forumUser) : post.title;
@@ -2743,11 +3499,11 @@
         });
         saveCurrentChatSessionData(false);
         renderDmSection();
-        renderLetterSection();
+        renderMailTargetSelect();
         renderAtPickerBar();
         showModuleSuccessToast("已更新可选人物名单");
       }
-    } catch (e) { scanChatForActiveDmNpcs(); renderDmSection(); renderLetterSection(); }
+    } catch (e) { scanChatForActiveDmNpcs(); renderDmSection(); }
     finally { if (btn) { btn.disabled = false; btn.textContent = "🔄 刷新人物"; } }
   }
 
@@ -2844,7 +3600,8 @@
         return `${m.sender}${quotePrefix}：${m.text}`;
       }).join("\n");
       const relCtx = getRelationshipAndFamiliarityContext();
-      const prompt = `这里是 ${state.userName} 与【${npcMeta.name}（${npcMeta.title}）】的 1对1 私密对话。\n人设：${npcMeta.personality}（萧承稷必自称朕，禁称孤）\n${relCtx}\n最近记录：\n${hist || "（暂无对话，请主动开启话题）"}\n请让 ${npcMeta.name} 直接回复 1~3 条简短自然的消息。如果情绪微妙、口误失言或口是心非，可随机在某条消息设置 "recall": true。严禁替 ${state.userName} 发言！\n直接输出纯 JSON 数组：\n[{"sender": "${npcMeta.name}", "text": "回复内容", "recall": false}]`;
+      const mailMem = getNpcMailMemoryBlock(npcMeta.name);
+      const prompt = `这里是 ${state.userName} 与【${npcMeta.name}（${npcMeta.title}）】的 1对1 私密对话。\n人设：${npcMeta.personality}（萧承稷必自称朕，禁称孤）\n${relCtx}\n${mailMem}\n最近对话记录：\n${hist || "（暂无对话，请主动开启话题）"}\n请让 ${npcMeta.name} 直接回复 1~3 条简短自然的消息（若此前有书信往来或信物，可自然提及或顺着往下聊）。如果情绪微妙、口误失言或口是心非，可随机在某条消息设置 "recall": true。严禁替 ${state.userName} 发言！\n直接输出纯 JSON 数组：\n[{"sender": "${npcMeta.name}", "text": "回复内容", "recall": false}]`;
       const resp = await callAI(prompt, `灵犀传音·${npcMeta.name}`);
       state.dmTyping = false;
       renderDmSection();
@@ -2874,7 +3631,7 @@
           }
         }
         if (addedCount > 0) addAppBadgeCount("chat", addedCount);
-        if (lastReplyText) showWechatNotification(`${npcMeta.name}（传音）`, lastReplyText, { app: "chat", chatTab: "dm", npc: npcMeta.id });
+        if (lastReplyText) showWechatNotification(`💬 ${npcMeta.name}（私密传音）`, lastReplyText, { app: "chat", chatTab: "dm", npc: npcMeta.id });
       }
     } catch (e) {}
     finally {
@@ -2894,7 +3651,8 @@
     try {
       await syncFromWorldbookAndChat(false);
       const { lastFullTurn, lastSceneEnding } = getFullStoryContext(), relCtx = getRelationshipAndFamiliarityContext();
-      const prompt = `根据最新剧情让【${npcMeta.name}（${npcMeta.title}）】主动给 ${state.userName} 发来 2~3 条与当前剧情紧密相关的消息！\n人设：${npcMeta.personality}\n${lastFullTurn}\n${lastSceneEnding}\n${relCtx}\n输出纯 JSON 数组：\n[{"sender": "${npcMeta.name}", "text": "主动发来的消息"}]`;
+      const mailMem = getNpcMailMemoryBlock(npcMeta.name);
+      const prompt = `根据最新剧情让【${npcMeta.name}（${npcMeta.title}）】主动给 ${state.userName} 发来 2~3 条与当前剧情紧密相关的消息！\n人设：${npcMeta.personality}\n${lastFullTurn}\n${lastSceneEnding}\n${relCtx}\n${mailMem}\n输出纯 JSON 数组：\n[{"sender": "${npcMeta.name}", "text": "主动发来的消息"}]`;
       const resp = await callAI(prompt, `传音同步剧情·${npcMeta.name}`);
       state.dmTyping = false;
       renderDmSection();
@@ -2915,7 +3673,7 @@
           }
         }
         if (cnt > 0) addAppBadgeCount("chat", cnt);
-        if (lastTxt) showWechatNotification(`${npcMeta.name}（剧情传音）`, lastTxt, { app: "chat", chatTab: "dm", npc: npcMeta.id });
+        if (lastTxt) showWechatNotification(`💬 ${npcMeta.name}（剧情传音）`, lastTxt, { app: "chat", chatTab: "dm", npc: npcMeta.id });
       }
     } catch (e) {}
     finally {
@@ -2944,13 +3702,12 @@
     finally { if (btn) { btn.disabled = false; btn.textContent = "转线下填入酒馆"; } }
   }
 
-  function isGroupThemeIfOrCustom() {
-    const key = config.groupChatTheme || "story_sync";
+  function isGroupThemeIfOrCustom(themeKeyOverride = "") {
+    const key = themeKeyOverride || state.groupLockedTheme || config.groupChatTheme || "story_sync";
     const preset = GROUP_CHAT_THEMES[key];
     return Boolean(preset?.isIf || key === "custom" || key === "user_empress_harem" || key.startsWith("if_"));
   }
 
-  /* 群聊转酒馆输入框（若为IF线或自定义主题，自动附带完整平行世界/主题背景设定说明） */
   async function exportGroupChatToTavernOffline() {
     const list = (state.groupMessages || []).filter(m => (!m.type || m.type === "recall") && (m.text || m.originalText));
     if (!list.length) {
@@ -2958,11 +3715,11 @@
       return;
     }
     const btn = targetDoc.getElementById("twGroupExportOfflineBtn");
-    const isIfMode = isGroupThemeIfOrCustom();
-    const themeKey = config.groupChatTheme || "story_sync";
-    const themeName = GROUP_CHAT_THEMES[themeKey]?.name || "自定义主题";
-    const customThemeTxt = (config.groupChatCustomThemeText || "").trim();
-    const themeDesc = (themeKey === "custom" && customThemeTxt) ? customThemeTxt : (GROUP_CHAT_THEMES[themeKey]?.desc || themeName);
+    const activeThemeKey = state.groupLockedTheme || config.groupChatTheme || "story_sync";
+    const isIfMode = isGroupThemeIfOrCustom(activeThemeKey);
+    const themeName = getThemeDisplayNameByKey(activeThemeKey, state.groupLockedCustomText || config.groupChatCustomThemeText);
+    const customThemeTxt = (state.groupLockedCustomText || config.groupChatCustomThemeText || "").trim();
+    const themeDesc = (activeThemeKey === "custom" && customThemeTxt) ? customThemeTxt : (GROUP_CHAT_THEMES[activeThemeKey]?.desc || themeName);
     const memLimit = Math.max(8, Math.min(60, Number(config.chatMemoryCount) || 25));
     const chatTranscript = list.slice(-memLimit).map(m => {
       if (m.type === "recall") return `[${m.recallBy} 撤回了一句话：“${m.originalText}”]`;
@@ -2997,208 +3754,6 @@
 
   targetDoc.getElementById("twGroupExportOfflineBtn")?.addEventListener("click", exportGroupChatToTavernOffline);
 
-  /* ==================== 飞鸽传书 App（支持多轮书信往来） ==================== */
-  function renderLetterSection() {
-    const sel = targetDoc.getElementById("twLetterNpcSelect");
-    const salEl = targetDoc.getElementById("twLetterWriteSalutation");
-    const signEl = targetDoc.getElementById("twLetterWriteSign");
-    const countBadge = targetDoc.getElementById("twLetterCountBadge");
-    const listBox = targetDoc.getElementById("twLetterListBox");
-    const detailBox = targetDoc.getElementById("twLetterDetailView");
-    if (!sel || !listBox) return;
-
-    sel.innerHTML = state.dmNpcOptions.map(n => `<option value="${n.id}" ${n.id === state.letterActiveNpc ? "selected" : ""}>${n.display || `${n.name}（${n.title}）`}</option>`).join("");
-    const curNpc = state.dmNpcOptions.find(x => x.id === state.letterActiveNpc) || BASE_DM_NPC_CATALOG[0];
-    if (salEl) salEl.textContent = `致 ${curNpc.name} 展信佳：`;
-    if (signEl) signEl.textContent = `${state.userName} 手启`;
-    if (countBadge) countBadge.textContent = `共 ${state.lettersList.length} 封`;
-
-    if (state.activeLetterViewId) {
-      const item = state.lettersList.find(x => x.id === state.activeLetterViewId);
-      if (item && detailBox) {
-        // 兼容多轮书信历史 rounds 数组
-        const rounds = Array.isArray(item.rounds) && item.rounds.length
-          ? item.rounds
-          : [{
-              userBody: item.userBody,
-              replySalutation: item.replySalutation,
-              replyBody: item.replyBody,
-              replySign: item.replySign,
-              replySeal: item.replySeal,
-              time: item.time
-            }];
-
-        const roundsHtml = rounds.map((r, rIdx) => `
-          <div style="margin-bottom:6px;font-size:10.5px;color:var(--text-sub);text-align:center;">— 第 ${rIdx + 1} 回鱼雁往来（${r.time || item.time || "今日"}） —</div>
-          <div class="tw-letter-paper" style="margin-bottom:8px;opacity:0.92;">
-            <div class="tw-letter-salutation">【寄出】致 ${item.npcName}：</div>
-            <div class="tw-letter-body" style="min-height:40px;">${enforceAddressingRules(r.userBody)}</div>
-            <div class="tw-letter-footer"><span class="tw-letter-sign">${state.userName} 手启</span></div>
-          </div>
-          <div class="tw-letter-paper" style="margin-bottom:12px;">
-            <div class="tw-letter-salutation">${enforceAddressingRules(r.replySalutation || `${state.userName} 亲启：`)}</div>
-            <div class="tw-letter-body">${enforceAddressingRules(r.replyBody || "信使尚在途中……")}</div>
-            <div class="tw-letter-footer">
-              <span class="tw-letter-sign">${enforceAddressingRules(r.replySign || `${item.npcName} 亲笔`)}</span>
-              <div class="tw-letter-seal">${enforceAddressingRules(r.replySeal || "亲笔<br>私印")}</div>
-            </div>
-          </div>
-        `).join("");
-
-        detailBox.style.display = "block";
-        listBox.style.display = "none";
-        detailBox.innerHTML = `
-          <div style="margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">
-            <button type="button" class="tw-spy-back-btn" id="twLetterBackListBtn">← 返回锦匣列表</button>
-            <span class="tw-badge">共 ${rounds.length} 回往来</span>
-          </div>
-          ${roundsHtml}
-          <div class="tw-letter-paper" style="padding:10px 12px;margin-top:6px;">
-            <div class="tw-letter-salutation" style="font-size:12.5px;margin-bottom:4px;">✍️ 紧接此信继续回信给 【${item.npcName}】：</div>
-            <textarea class="tw-textarea" id="twLetterFollowupInput" style="background:transparent;border:0;padding:0;min-height:65px;line-height:1.85;font-size:12px;color:#2b1d12;outline:none;box-shadow:none;" placeholder="看着TA的回信，在此继续提笔回传……"></textarea>
-            <button type="button" class="tw-refresh-forum-btn" id="twSendFollowupLetterBtn" data-letter-id="${item.id}" style="width:100%;padding:6px;margin-top:4px;">🕊️ 再次封缄投递 · 等候TA下一封回信</button>
-          </div>
-        `;
-        return;
-      }
-    }
-    if (detailBox) detailBox.style.display = "none";
-    listBox.style.display = "block";
-    if (!state.lettersList.length) {
-      listBox.innerHTML = `<div class="tw-empty-hint">锦匣内暂无往来书信，请在上方信笺提笔修书投递。</div>`;
-      return;
-    }
-    listBox.innerHTML = state.lettersList.map(item => {
-      const rCount = Array.isArray(item.rounds) ? item.rounds.length : 1;
-      const latestReply = Array.isArray(item.rounds) && item.rounds.length ? item.rounds[item.rounds.length - 1].replyBody : item.replyBody;
-      return `
-        <div class="tw-letter-item-card" data-letter-id="${item.id}">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
-            <b>🕊️ 与【${item.npcName}】的尺素（${rCount}回）</b>
-            <span class="tw-label">${item.time || "刚刚"}</span>
-          </div>
-          <div style="font-size:11.5px;color:var(--text-sub);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">最新回音：${enforceAddressingRules(latestReply || "").slice(0, 38)}……</div>
-        </div>
-      `;
-    }).join("");
-  }
-
-  targetDoc.getElementById("twLetterNpcSelect")?.addEventListener("change", (e) => {
-    state.letterActiveNpc = e.target.value || "萧承稷";
-    renderLetterSection();
-  });
-
-  async function requestNpcLetterReply(npcMeta, userTxt, historyRounds = []) {
-    const relCtx = getRelationshipAndFamiliarityContext();
-    const prevContext = historyRounds.length
-      ? `\n【此前双方书信往来上下文】：\n` + historyRounds.slice(-4).map((r, i) => `第${i + 1}回·${state.userName}去信：“${r.userBody}”\n第${i + 1}回·${npcMeta.name}回信：“${r.replyBody}”`).join("\n\n")
-      : "";
-    const prompt = `${state.userName} 刚刚修书一封，遣信鸽/内侍送至【${npcMeta.name}（${npcMeta.title}）】案头。${prevContext}\n\n【本次最新来信内容】：“${userTxt}”\n收信人人设：${npcMeta.personality}（若为萧承稷必自称朕或我，禁称孤）。\n${relCtx}\n请以 ${npcMeta.name} 的口吻用纯正古风尺素书信体写一封回信（约 120~180 字，紧接上一封信的话头，展现出拆信时的神态心情与对本次来信的细致回应）。\n直接输出纯 JSON 对象：\n{"salutation":"信首称呼（如：${state.userName}展信、或爱妃亲启等）","body":"回信正文（分段自然，古雅真挚，贴合人设）","sign":"落款署名（如：萧承稷 御笔 / 沈砚 谨启）","seal":"四字印章内容（如：${npcMeta.seal || "亲笔私印"}）"}`;
-    const resp = await callAI(prompt, `飞鸽回信·${npcMeta.name}`);
-    const m = String(resp).match(/{[\s\S]*}/);
-    if (!m) throw new Error("回信解析失败");
-    return JSON.parse(m[0]);
-  }
-
-  targetDoc.getElementById("twSendLetterBtn")?.addEventListener("click", async () => {
-    const bodyInp = targetDoc.getElementById("twLetterWriteBody");
-    const userTxt = bodyInp?.value.trim() || "";
-    if (!userTxt) { showModuleSuccessToast("请先在信笺上写下内容"); return; }
-    const btn = targetDoc.getElementById("twSendLetterBtn");
-    const npcMeta = state.dmNpcOptions.find(x => x.id === state.letterActiveNpc) || BASE_DM_NPC_CATALOG[0];
-    if (btn) { btn.disabled = true; btn.textContent = "🕊️ 飞鸽传书中，正在等候对方提笔回信……"; }
-    try {
-      const p = await requestNpcLetterReply(npcMeta, userTxt, []);
-      const curTime = state.time !== "未同步" ? state.time : "延昭二年";
-      const firstRound = {
-        time: curTime,
-        userBody: userTxt,
-        replySalutation: cleanPureText(p.salutation || `${state.userName} 展信：`),
-        replyBody: cleanPureText(p.body || ""),
-        replySign: cleanPureText(p.sign || `${npcMeta.name} 手启`),
-        replySeal: cleanPureText(p.seal || npcMeta.seal || "亲笔私印").slice(0, 4)
-      };
-      const newLetter = {
-        id: Date.now(),
-        npcId: npcMeta.id,
-        npcName: npcMeta.name,
-        time: curTime,
-        ...firstRound,
-        rounds: [firstRound]
-      };
-      state.lettersList.unshift(newLetter);
-      state.activeLetterViewId = newLetter.id;
-      if (bodyInp) bodyInp.value = "";
-      addAppBadgeCount("letter", 1);
-      saveCurrentChatSessionData(false);
-      renderLetterSection();
-      showWechatNotification(`🕊️ ${npcMeta.name} 的回信`, firstRound.replyBody, { app: "letter" });
-    } catch (e) {}
-    finally {
-      if (btn) { btn.disabled = false; btn.textContent = "🕊️ 封缄用印 · 飞鸽投递并静候回音"; }
-    }
-  });
-
-  targetDoc.getElementById("tw-page-letter")?.addEventListener("click", async (e) => {
-    if (e.target.closest("#twLetterBackListBtn")) {
-      state.activeLetterViewId = null;
-      renderLetterSection();
-      return;
-    }
-    const followBtn = e.target.closest("#twSendFollowupLetterBtn");
-    if (followBtn) {
-      const letterId = Number(followBtn.dataset.letterId);
-      const item = state.lettersList.find(x => x.id === letterId);
-      const followInp = targetDoc.getElementById("twLetterFollowupInput");
-      const userTxt = followInp?.value.trim() || "";
-      if (!item || !userTxt) { showModuleSuccessToast("请先写下要回传的内容"); return; }
-      const npcMeta = state.dmNpcOptions.find(x => x.id === item.npcId || x.name === item.npcName) || BASE_DM_NPC_CATALOG[0];
-      followBtn.disabled = true;
-      followBtn.textContent = `🕊️ 信鸽已飞往 ${item.npcName} 处，正在等候回音……`;
-      try {
-        if (!Array.isArray(item.rounds) || !item.rounds.length) {
-          item.rounds = [{ time: item.time, userBody: item.userBody, replySalutation: item.replySalutation, replyBody: item.replyBody, replySign: item.replySign, replySeal: item.replySeal }];
-        }
-        const p = await requestNpcLetterReply(npcMeta, userTxt, item.rounds);
-        const curTime = state.time !== "未同步" ? state.time : "延昭二年";
-        const nextRound = {
-          time: curTime,
-          userBody: userTxt,
-          replySalutation: cleanPureText(p.salutation || `${state.userName} 再展：`),
-          replyBody: cleanPureText(p.body || ""),
-          replySign: cleanPureText(p.sign || `${npcMeta.name} 手启`),
-          replySeal: cleanPureText(p.seal || npcMeta.seal || "亲笔私印").slice(0, 4)
-        };
-        item.rounds.push(nextRound);
-        item.time = curTime;
-        item.replyBody = nextRound.replyBody;
-        addAppBadgeCount("letter", 1);
-        saveCurrentChatSessionData(false);
-        renderLetterSection();
-        showWechatNotification(`🕊️ ${item.npcName} 的新回信`, nextRound.replyBody, { app: "letter" });
-      } catch (err) {
-        followBtn.disabled = false;
-        followBtn.textContent = "🕊️ 再次封缄投递 · 等候TA下一封回信";
-      }
-      return;
-    }
-    const card = e.target.closest(".tw-letter-item-card");
-    if (card) {
-      state.activeLetterViewId = Number(card.dataset.letterId);
-      renderLetterSection();
-    }
-  });
-
-  targetDoc.getElementById("twLetterClearAllBtn")?.addEventListener("click", () => {
-    state.lettersList = [];
-    state.activeLetterViewId = null;
-    saveCurrentChatSessionData(false);
-    renderLetterSection();
-    showModuleSuccessToast("已清空往来书信锦匣");
-  });
-
-
-  /* ==================== 默契挑战 App（结合User人设与酒馆剧情 + 纯正古风白话） ==================== */
   function renderTacitSection() {
     rootEl.querySelectorAll("button[data-tacitmode]").forEach(b => b.classList.toggle("active", b.dataset.tacitmode === state.tacitMode));
     const titleEl = targetDoc.getElementById("twTacitModeTitle");
@@ -3416,6 +3971,8 @@
     saveCurrentChatSessionData(false);
     openAppPage("chat");
     state.activeChatTab = "dm";
+    config.lastActiveChatTab = "dm";
+    saveConfig();
     rootEl.querySelectorAll("button[data-chattab]").forEach(b => b.classList.toggle("active", b.dataset.chattab === "dm"));
     targetDoc.getElementById("tw-chat-pane-dm")?.classList.add("active");
     targetDoc.getElementById("tw-chat-pane-chatroom")?.classList.remove("active");
@@ -3423,7 +3980,6 @@
     showModuleSuccessToast("成绩单已转发至萧承稷私聊");
   });
 
-  /* ==================== 小剧场泥金画卷美化渲染 ==================== */
   function renderTheaterFancyView() {
     const outBox = targetDoc.getElementById("twTheaterResult");
     if (!outBox) return;
@@ -3496,7 +4052,7 @@
     gomokuBoard = Array.from({ length: BOARD_SIZE }, () => Array(BOARD_SIZE).fill(0));
     gomokuOver = false;
     targetDoc.getElementById("twGomokuQuote").textContent = XIAO_LINES.start;
-    targetDoc.getElementById("twGomokuStatus").textContent = `当前回合：轮到 ${getUserFullTag()} 落黑子`;
+    targetDoc.getElementById("twGomokuStatus").textContent = `当前回合：轮到 ${state.userName} 落黑子`;
     renderGomokuBoard();
   }
 
@@ -3553,17 +4109,24 @@
     }
     const pool = blocked ? XIAO_LINES.block : XIAO_LINES.mid;
     targetDoc.getElementById("twGomokuQuote").textContent = pool[Math.floor(Math.random() * pool.length)];
-    targetDoc.getElementById("twGomokuStatus").textContent = `当前回合：轮到 ${getUserFullTag()} 落黑子`;
+    targetDoc.getElementById("twGomokuStatus").textContent = `当前回合：轮到 ${state.userName} 落黑子`;
   }
 
-  function getGroupThemePromptBlock(hasRecentUserMsg = false) {
+  function getThemeDisplayNameByKey(themeKey, customTextOverride = "") {
+    const k = themeKey || "story_sync";
+    const preset = GROUP_CHAT_THEMES[k] || GROUP_CHAT_THEMES.story_sync;
+    const cTxt = (customTextOverride !== undefined && customTextOverride !== "" ? customTextOverride : (config.groupChatCustomThemeText || "")).trim();
+    return (k === "custom" && cTxt) ? `自定义：${cTxt.slice(0, 14)}` : preset.name;
+  }
+
+  function getGroupThemePromptBlock(hasRecentUserMsg = false, themeKeyOverride = "", customTxtOverride = "") {
     const uName = state.userName || detectCurrentUserName();
-    const key = config.groupChatTheme || "story_sync";
+    const key = themeKeyOverride || state.groupLockedTheme || config.groupChatTheme || "story_sync";
     const preset = GROUP_CHAT_THEMES[key] || GROUP_CHAT_THEMES.story_sync;
-    const customTxt = (config.groupChatCustomThemeText || "").trim();
+    const customTxt = (customTxtOverride !== "" ? customTxtOverride : (state.groupLockedCustomText || config.groupChatCustomThemeText || "")).trim();
     const desc = (key === "custom" && customTxt) ? `用户自定义群聊主题与世界观设定：【${customTxt}】` : preset.desc;
     const isUserCentric = Boolean(preset.userCentric) || (key === "custom" && /女皇|我是皇帝|围绕我|宠我|修罗场/.test(customTxt));
-    const isIfMode = isGroupThemeIfOrCustom();
+    const isIfMode = isGroupThemeIfOrCustom(key);
 
     const focusRule = isUserCentric
       ? `【群聊焦点规则】：全员围绕 ${uName} 展开互动、争风吃醋或邀宠！`
@@ -3571,11 +4134,11 @@
         ? `【群聊焦点规则】：因为 ${uName} 刚刚在群里说了话（或 @了某人），请被 @到的角色或群友自然接住 ${uName} 的话往下聊，同时其他群友之间也可以顺着话题互相 @对方 斗嘴插科打诨！`
         : `【群聊去中心化最高铁律】：严禁全员围着 ${uName} 聊天！群成员们必须严格围绕当前主题【${preset.name}】聊他们自己的日常、朝堂差事、后宫八卦、打球喝酒或互相抬杠互怼！`;
 
-    const fancyJoinRule = `【NPC花样进群提示铁律】：中途穿插的 1~2 条 {"type": "join", "text": "..."} 严禁只写干巴巴的“某某进入了聊天室”！必须结合该角色人设与当前动作写出活灵活现的花样进群提示！`;
+    const fancyJoinRule = `【NPC花样进群提示与群聊现场旁白铁律】：\n- 中途穿插 1 条 {"type": "join", "text": "..."} 花样进群提示（结合角色人设与特色动作，严禁只写干巴巴的某某进入了聊天室）；\n- 同时穿插 1~2 条 {"type": "narration", "text": "..."} 群聊现场趣味动作/环境/小插曲旁白（显示样式与进群提示相同，用于描写群成员此刻在屏幕外的动作神态、气氛或搞笑小插曲）。`;
 
     const consortFormatRule = `\n【群聊命名、@艾特与人设死命令】：\n1. 后宫妃嫔 sender 必须写为「真名（位分）」格式！萧承稷发言时（非女皇反串主题下）必自称“朕”或“我”，禁称“孤”！严禁AI代替 ${uName} 发言！\n2. 群成员之间互相接话或怼人时，可在 text 中自然使用「@某人 」。\n3. ${focusRule}\n4. ${fancyJoinRule}`;
 
-    return { name: preset.name, isIfMode, isUserCentric, block: `【当前太微群聊主题模式：${preset.name}】\n主题要求：${desc}\n${consortFormatRule}` };
+    return { key, name: getThemeDisplayNameByKey(key, customTxt), isIfMode, isUserCentric, block: `【当前太微群聊主题模式：${preset.name}】\n主题要求：${desc}\n${consortFormatRule}` };
   }
 
   function renderAtPickerBar() {
@@ -3642,13 +4205,47 @@
     renderAtPickerBar();
     const box = targetDoc.getElementById("twChatroomBox");
     if (!box) return;
-    targetDoc.getElementById("twChatroomRoleBadge").textContent = config.groupChatTheme === "user_empress_harem" ? `女皇陛下·${state.userName}` : getUserFullTag();
+
     const list = Array.isArray(state.groupMessages) ? state.groupMessages : [];
+    const hasChatHistory = list.length > 0;
+    const selectedKey = config.groupChatTheme || "story_sync";
+    const selectedCustomTxt = (config.groupChatCustomThemeText || "").trim();
+    const selectedDisplayName = getThemeDisplayNameByKey(selectedKey, selectedCustomTxt);
+
+    if (hasChatHistory && !state.groupLockedTheme) {
+      state.groupLockedTheme = selectedKey;
+      state.groupLockedCustomText = selectedCustomTxt;
+    }
+
+    const activeChatThemeKey = hasChatHistory ? (state.groupLockedTheme || selectedKey) : selectedKey;
+    const activeChatCustomTxt = hasChatHistory ? (state.groupLockedCustomText || selectedCustomTxt) : selectedCustomTxt;
+    const activeChatThemeName = getThemeDisplayNameByKey(activeChatThemeKey, activeChatCustomTxt);
+    const activePreset = GROUP_CHAT_THEMES[activeChatThemeKey] || GROUP_CHAT_THEMES.story_sync;
+    const roleStr = activeChatThemeKey === "user_empress_harem" ? `女皇陛下·${state.userName}` : getUserFullTag();
+
+    const badgeEl = targetDoc.getElementById("twChatroomRoleBadge");
+    if (badgeEl) {
+      badgeEl.innerHTML = `<b style="color:var(--accent);">【${activeChatThemeName}】</b> · ${roleStr}`;
+    }
+
+    const isPendingSwitch = hasChatHistory && (selectedKey !== activeChatThemeKey || (selectedKey === "custom" && selectedCustomTxt !== activeChatCustomTxt));
+    const pendingHintHtml = isPendingSwitch
+      ? `<span style="font-size:10px;color:#9e241e;font-weight:bold;">（已选【${selectedDisplayName}】，点刷新切换）</span>`
+      : `<span style="font-size:10px;color:var(--text-sub);">${activePreset.isIf ? "平行IF线" : "太微主线"}</span>`;
+
+    const stickyThemeBanner = `
+      <div class="tw-chat-theme-banner">
+        <span>🏮 <b>当前聊天主题为：${activeChatThemeName}</b></span>
+        ${pendingHintHtml}
+      </div>
+    `;
+
     if (!list.length && !state.chatroomTyping) {
-      box.innerHTML = `<div class="tw-empty-hint" style="margin:auto;">当前群聊默认空白。<br>点「发送」发出消息，点右侧按钮让群友回复，或点右上角「刷新群聊」！</div>`;
+      box.innerHTML = stickyThemeBanner + `<div class="tw-empty-hint" style="margin:auto;">当前聊天主题为<b>【${selectedDisplayName}】</b>。<br>点「发送」发出消息，点右侧 ✦ 按钮让群友回复，或点右上角「刷新群聊」！</div>`;
       updateChatQuoteBar();
       return;
     }
+
     const htmlItems = list.map((m, idx) => {
       if (m.type === "recall") {
         const isSelfRecall = Boolean(m.selfRecall || m.recallBy === state.userName);
@@ -3661,7 +4258,7 @@
           : "";
         return `<div class="tw-chat-sys-tip"><div class="tw-chat-sys-line"><span>— ${enforceAddressingRules(m.text)} —</span>${peekBtn}${delBtn}</div>${revealBox}</div>`;
       }
-      if (m.type === "join" || m.type === "system") {
+      if (m.type === "join" || m.type === "system" || m.type === "narration") {
         return `<div class="tw-chat-sys-tip"><div class="tw-chat-sys-line"><span>— ${enforceAddressingRules(m.text)} —</span></div></div>`;
       }
       const stdSender = formatConsortStandardName(m.sender);
@@ -3671,10 +4268,11 @@
         : `<button type="button" class="tw-chat-quote-btn" data-chat-quote-idx="${idx}">引用</button>`;
       return `<div class="tw-chat-msg ${m.self ? "self" : ""}"><div class="tw-chat-head-row"><span class="tw-chat-sender">${stdSender}</span>${actionBtns}</div><div class="tw-chat-bubble">${quoteHtml}<div>${highlightMentionsHtml(m.text)}</div></div></div>`;
     });
+
     if (state.chatroomTyping) {
       htmlItems.push(`<div class="tw-typing-row">💬 群友们正在输入中……</div>`);
     }
-    box.innerHTML = htmlItems.join("");
+    box.innerHTML = stickyThemeBanner + htmlItems.join("");
     box.scrollTop = box.scrollHeight;
     updateChatQuoteBar();
   }
@@ -3685,11 +4283,17 @@
     for (let i = 0; i < filteredList.length; i++) {
       const r = filteredList[i];
       if (!r) continue;
-      const isSys = r.type === "join" || r.type === "system" || r.sender === "系统" || r.sender === "system";
+      const isSys = r.type === "join" || r.type === "system" || r.type === "narration" || r.sender === "系统" || r.sender === "system" || r.sender === "旁白";
       await new Promise(res => setTimeout(res, i === 0 ? 300 : 500));
       if (isSys) {
-        const joinTxt = upgradePlainJoinTipToFancy(r.text || `${r.sender || "霍惊弦"} 进入了聊天室`);
-        if (joinTxt) { state.groupMessages.push({ type: "join", text: joinTxt }); saveCurrentChatSessionData(false); renderChatroom(); }
+        const sysTxt = (r.type === "narration" || r.sender === "旁白")
+          ? cleanPureText(r.text || "")
+          : upgradePlainJoinTipToFancy(r.text || `${r.sender || "霍惊弦"} 进入了聊天室`);
+        if (sysTxt) {
+          state.groupMessages.push({ type: r.type === "narration" ? "narration" : "join", text: sysTxt });
+          saveCurrentChatSessionData(false);
+          renderChatroom();
+        }
       } else if (r.sender && r.text) {
         lastSender = formatConsortStandardName(enforceAddressingRules(r.sender));
         lastText = cleanPureText(r.text);
@@ -3714,7 +4318,7 @@
       }
     }
     if (realMsgCount > 0) addAppBadgeCount("chat", realMsgCount);
-    if (lastSender && lastText) showWechatNotification(`太微群聊（+${realMsgCount}条）`, `${lastSender}：${lastText}`, { app: "chat", chatTab: "chatroom" });
+    if (lastSender && lastText) showWechatNotification(`🏮 太微群聊（+${realMsgCount}条）`, `${lastSender}：${lastText}`, { app: "chat", chatTab: "chatroom" });
   }
 
   function getEmptyHintText(modName) {
@@ -3726,13 +4330,25 @@
   function renderWorldLists() {
     const emptyWorldTxt = getEmptyHintText("world");
     const locHint = targetDoc.getElementById("twMapCurrentLocHint");
-    if (locHint) locHint.textContent = `📍 当前所在方位：${state.location !== "未同步" ? state.location : "太微宫 · 甘露殿"}`;
-    targetDoc.getElementById("twPalaceWorldList").innerHTML = state.palaceDynamics.length
-      ? state.palaceDynamics.map(x => `<div class="tw-row"><div><span class="tw-badge">${x.tag || "太微宫内"}</span><b>${enforceAddressingRules(x.npc)}</b></div><div>${enforceAddressingRules(x.event)}</div></div>`).join("")
-      : `<div class="tw-empty-hint">${emptyWorldTxt}</div>`;
-    targetDoc.getElementById("twOutsideWorldList").innerHTML = state.outsideDynamics.length
-      ? state.outsideDynamics.map(x => `<div class="tw-row"><div><span class="tw-badge">${x.tag || "宫墙之外"}</span><b>${enforceAddressingRules(x.npc)}</b></div><div>${enforceAddressingRules(x.event)}</div></div>`).join("")
-      : `<div class="tw-empty-hint">${emptyWorldTxt}</div>`;
+    if (locHint) locHint.textContent = `📍 当前所在场域：${state.location !== "未同步" ? state.location : "太微宫 · 甘露殿"}`;
+    const pBox = targetDoc.getElementById("twPalaceWorldList");
+    if (pBox) {
+      pBox.innerHTML = state.palaceDynamics.length
+        ? state.palaceDynamics.map(x => `<div class="tw-row"><div><span class="tw-badge">${x.tag || "太微宫内"}</span><b>${enforceAddressingRules(x.npc)}</b></div><div>${enforceAddressingRules(x.event)}</div></div>`).join("")
+        : `<div class="tw-empty-hint">${emptyWorldTxt}</div>`;
+    }
+    const oBox = targetDoc.getElementById("twOutsideWorldList");
+    if (oBox) {
+      oBox.innerHTML = state.outsideDynamics.length
+        ? state.outsideDynamics.map(x => `<div class="tw-row"><div><span class="tw-badge">${x.tag || "宫墙之外"}</span><b>${enforceAddressingRules(x.npc)}</b></div><div>${enforceAddressingRules(x.event)}</div></div>`).join("")
+        : `<div class="tw-empty-hint">${emptyWorldTxt}</div>`;
+    }
+    const nBox = targetDoc.getElementById("twNpcFocusWorldList");
+    if (nBox) {
+      nBox.innerHTML = (Array.isArray(state.npcFocusDynamics) && state.npcFocusDynamics.length)
+        ? state.npcFocusDynamics.map(x => `<div class="tw-row"><div><span class="tw-badge">${x.tag || "相关NPC"}</span><b>${enforceAddressingRules(x.npc)}</b></div><div>${enforceAddressingRules(x.event)}</div></div>`).join("")
+        : `<div class="tw-empty-hint">${emptyWorldTxt}</div>`;
+    }
   }
 
   function updateForumNicknameUI() {
@@ -3784,7 +4400,6 @@
     state.userName = detectCurrentUserName();
     const aff = Number(state.affection) || 0;
 
-    // 同步桌面顶部状态栏与首页唯一状态卡片
     const topShichen = targetDoc.getElementById("twPhoneTopShichen");
     if (topShichen) topShichen.textContent = state.time !== "未同步" ? state.time : "大景延昭 · 太微宫";
     const homeTime = targetDoc.getElementById("twHomeTimeTxt");
@@ -3794,7 +4409,8 @@
     const homeUser = targetDoc.getElementById("twHomeUserTxt");
     if (homeUser) homeUser.textContent = getUserFullTag();
     const homeAff = targetDoc.getElementById("twHomeAffTxt");
-    if (homeAff) homeAff.textContent = `${state.hasAffection ? state.affection : "--"} / 100（${state.stage !== "未同步" ? state.stage : "待同步"}）`;
+    if (homeAff) homeAff.textContent = `${state.hasAffection ? state.affection : "--"} / 100`;
+
     const affBar = targetDoc.getElementById("twAffBar");
     if (affBar) affBar.style.width = `${state.hasAffection ? Math.max(0, Math.min(100, aff)) : 0}%`;
     const moodBadge = targetDoc.getElementById("twHomeMoodBadge");
@@ -3802,7 +4418,7 @@
     const poseTxt = targetDoc.getElementById("twHomePoseTxt");
     if (poseTxt) poseTxt.textContent = (state.clothes !== "未同步" || state.pose !== "未同步") ? `（${state.clothes} · ${state.pose}）` : "";
     const thoughtTxt = targetDoc.getElementById("twHomeThoughtTxt");
-    if (thoughtTxt) thoughtTxt.textContent = state.innerThought ? `“${enforceAddressingRules(state.innerThought)}”` : "“暂未同步圣人心声，可点击右上角刷新状态。”";
+    if (thoughtTxt) thoughtTxt.textContent = state.innerThought ? `“${enforceAddressingRules(state.innerThought)}”` : "“……”";
 
     const plotBox = targetDoc.getElementById("twPlotSummaryList");
     if (plotBox) {
@@ -3819,13 +4435,13 @@
     renderPhoneHomeGrid();
     renderEmperorSpySection();
     renderWorldLists();
+    renderMailboxSection();
     renderTheaterFancyView();
     updateForumNicknameUI();
     renderForum(targetDoc.getElementById("twSearch").value);
     renderActions();
     renderDmSection();
     renderChatroom();
-    renderLetterSection();
     renderTacitSection();
     syncAutoSwitchSettingsUI();
     renderApiLogs();
@@ -3889,13 +4505,17 @@
     e.stopPropagation();
     targetDoc.getElementById("twClearConfirmModal")?.classList.remove("show");
     targetWin.__twIsManuallyCleared = true;
-    const vk = getActiveVaultKey(), v36k = vk.replace("v37", "v36"), v35k = vk.replace("v37", "v35");
+    const vk = getActiveVaultKey(), v38k = vk.replace("v39", "v38"), v37k = vk.replace("v39", "v37");
     explicitClearCurrentArchive();
     try {
+      const th = targetWin.TavernHelper || window.TavernHelper;
+      if (th && typeof th.insertOrAssignVariables === "function") {
+        th.insertOrAssignVariables({ [vk]: { __cleared: true } }, { type: "chat" });
+      }
       localStorage.removeItem(SOLO_ARCHIVE_PREFIX + vk);
       localStorage.removeItem(LOCAL_BACKUP_PREFIX + vk);
-      localStorage.removeItem("tw_palace_solo_archive_v36_" + v36k);
-      localStorage.removeItem("tw_palace_solo_archive_v35_" + v35k);
+      localStorage.removeItem("tw_palace_solo_archive_v38_" + v38k);
+      localStorage.removeItem("tw_palace_solo_archive_v37_" + v37k);
       localStorage.removeItem(vk);
     } catch (err) {}
     renderAll();
@@ -3923,11 +4543,22 @@
   targetDoc.getElementById("twGroupThemeChips")?.addEventListener("click", (e) => {
     const chip = e.target.closest(".tw-chip[data-gtheme]"); if (!chip) return;
     config.groupChatTheme = chip.dataset.gtheme || "story_sync";
+    if (!state.groupMessages || state.groupMessages.length === 0) {
+      state.groupLockedTheme = config.groupChatTheme;
+      state.groupLockedCustomText = config.groupChatCustomThemeText || "";
+    }
     saveConfig(); updateGroupThemeUI();
     chip.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
     renderChatroom();
   });
-  targetDoc.getElementById("twGroupCustomThemeInput")?.addEventListener("input", (e) => { config.groupChatCustomThemeText = e.target.value.trim(); saveConfig(); });
+  targetDoc.getElementById("twGroupCustomThemeInput")?.addEventListener("input", (e) => {
+    config.groupChatCustomThemeText = e.target.value.trim();
+    if (!state.groupMessages || state.groupMessages.length === 0) {
+      state.groupLockedCustomText = config.groupChatCustomThemeText;
+    }
+    saveConfig();
+    renderChatroom();
+  });
 
   targetDoc.getElementById("twAtPickerChips")?.addEventListener("click", (e) => {
     const chip = e.target.closest(".tw-chip[data-at-name]");
@@ -4183,7 +4814,7 @@
     const box = targetDoc.getElementById("twMemorialReaction"), m = PRESET_MEMORIALS[curMemorialIdx % PRESET_MEMORIALS.length];
     btn.disabled = true; btn.textContent = "批阅中…"; box.textContent = "圣人正在审阅你的朱批…";
     try {
-      const resp = await callAI(`甘露殿内，${getUserFullTag()} 在 ${m.author} 呈递的奏折 ${m.title} 上提笔写下朱批：“${val}”。请写一段 120 字左右萧承稷看到这行朱批后的反应、神态动作，以及他亲手在旁边添上的一句朱批与对 ${state.userName} 说的话（萧承稷必自称“朕”，严禁自称“孤”）。`, "奏折朱批点评");
+      const resp = await callAI(`甘露殿内，${state.userName} 在 ${m.author} 呈递的奏折 ${m.title} 上提笔写下朱批：“${val}”。请写一段 120 字左右萧承稷看到这行朱批后的反应、神态动作，以及他亲手在旁边添上的一句朱批与对 ${state.userName} 说的话（萧承稷必自称“朕”，严禁自称“孤”）。`, "奏折朱批点评");
       box.textContent = cleanPureText(resp);
       showModuleSuccessToast("圣人已批阅你的朱批");
     } catch (e) {
@@ -4204,7 +4835,7 @@
     if (checkGomokuWin(r, c, 1)) {
       gomokuOver = true;
       targetDoc.getElementById("twGomokuQuote").textContent = XIAO_LINES.lose;
-      targetDoc.getElementById("twGomokuStatus").textContent = `对局结束：${getUserFullTag()} 获胜！`;
+      targetDoc.getElementById("twGomokuStatus").textContent = `对局结束：${state.userName} 获胜！`;
       return;
     }
     setTimeout(xiaoMoveGomoku, 200);
@@ -4255,6 +4886,10 @@
   });
 
   function appendChatroomUserMessageOnly(userMsg) {
+    if (!state.groupMessages || state.groupMessages.length === 0) {
+      state.groupLockedTheme = config.groupChatTheme || "story_sync";
+      state.groupLockedCustomText = config.groupChatCustomThemeText || "";
+    }
     const sender = state.userName;
     const quotedObj = state.chatQuoteTarget ? { ...state.chatQuoteTarget } : null;
     state.chatQuoteTarget = null;
@@ -4275,6 +4910,10 @@
     if (inp && inp.value.trim()) {
       appendChatroomUserMessageOnly(inp.value.trim());
       inp.value = "";
+    }
+    if (!state.groupLockedTheme) {
+      state.groupLockedTheme = config.groupChatTheme || "story_sync";
+      state.groupLockedCustomText = config.groupChatCustomThemeText || "";
     }
     const waitBtn = targetDoc.getElementById("twChatroomWaitAiBtn");
     if (waitBtn) waitBtn.disabled = true;
@@ -4299,14 +4938,14 @@
 
       const hist = historySlice.map(m => {
         if (m.type === "recall") return `[系统提示：${m.text}（撤回内容为：“${m.originalText || ""}”，群成员均看到了撤回）]`;
-        if (m.type === "join" || m.type === "system") return `[系统提示：${m.text}]`;
+        if (m.type === "join" || m.type === "system" || m.type === "narration") return `[系统提示：${m.text}]`;
         const quotePrefix = (m.quote && m.quote.sender) ? `（引用回复 @${m.quote.sender}：“${m.quote.text}”）` : "";
         return `${m.sender}${quotePrefix}：${m.text}`;
       }).join("\n");
       const relCtx = getRelationshipAndFamiliarityContext();
-      const themeInfo = getGroupThemePromptBlock(hasRecentUserMsg);
+      const themeInfo = getGroupThemePromptBlock(hasRecentUserMsg, state.groupLockedTheme, state.groupLockedCustomText);
 
-      const prompt = `《太微宫茶话群聊》最近记忆上下文：\n${hist || "（暂无对话）"}\n\n${themeInfo.block}\n${themeInfo.isIfMode ? "" : relCtx}${targetDirective}\n请模拟真实鲜活的太微宫微信群聊，让 4~6 位不同性格的 NPC 紧接上面的对话与当前主题【${themeInfo.name}】热聊起来！\n- 若刚刚 ${state.userName} 引用或 @了某人，被引用/被 @的人必须正面回应 ${state.userName}，同时群友之间也会互相 @对方 接话抬杠；若 ${state.userName} 没说话且非女主中心主题，大家就聊自己的事！\n- 中途穿插 1 条符合角色性格与动作的花样进群提示（{"type": "join", "text": "某角色 + 特色动作神态 + 进入了聊天室"}）！\n- 如果某个NPC说了失言、害羞或嘴硬的话，可随机给其中 1 条消息设置 "recall": true。严禁代替 ${state.userName} 发言！\n输出 ${msgCount} 项 JSON 数组（普通发言格式为 {"sender": "姓名（后妃带位分）", "text": "简短口语化消息（可含@某人）", "quote": {"sender": "被引用人姓名（可选）", "text": "被引用原话（可选）"}, "recall": false}）：`;
+      const prompt = `《太微宫茶话群聊》最近记忆上下文：\n${hist || "（暂无对话）"}\n\n${themeInfo.block}\n${themeInfo.isIfMode ? "" : relCtx}${targetDirective}\n请模拟真实鲜活的太微宫微信群聊，让 4~6 位不同性格的 NPC 紧接上面的对话与当前主题【${themeInfo.name}】热聊起来！\n- 若刚刚 ${state.userName} 引用或 @了某人，被引用/被 @的人必须正面回应 ${state.userName}，同时群友之间也会互相 @对方 接话抬杠；若 ${state.userName} 没说话且非女主中心主题，大家就聊自己的事！\n- 中途穿插 1 条符合角色性格与动作的花样进群提示（{"type": "join", "text": "某角色 + 特色动作神态 + 进入了聊天室"}），以及 1 条 {"type": "narration", "text": "..."} 现场趣味动作神态旁白！\n- 如果某个NPC说了失言、害羞或嘴硬的话，可随机给其中 1 条消息设置 "recall": true。严禁代替 ${state.userName} 发言！\n输出 ${msgCount} 项 JSON 数组（普通发言格式为 {"sender": "姓名（后妃带位分）", "text": "简短口语化消息（可含@某人）", "quote": {"sender": "被引用人姓名（可选）", "text": "被引用原话（可选）"}, "recall": false}）：`;
       const resp = await callAI(prompt, "太微群聊回复");
       state.chatroomTyping = false;
       renderChatroom();
@@ -4320,11 +4959,15 @@
     }
   }
 
-  async function triggerAiNpcRandomTopic() {
+  async function executeGroupChatTopicRefresh() {
     const topicBtn = targetDoc.getElementById("twRandomChatTopicBtn");
-    topicBtn.disabled = true; topicBtn.textContent = "刷新中…";
-    const themeInfo = getGroupThemePromptBlock(false);
-    state.groupMessages = [{ type: "system", text: `当前群聊主题：【${themeInfo.name}】` }];
+    if (topicBtn) { topicBtn.disabled = true; topicBtn.textContent = "刷新中…"; }
+    const targetThemeKey = config.groupChatTheme || "story_sync";
+    const targetCustomTxt = (config.groupChatCustomThemeText || "").trim();
+    state.groupLockedTheme = targetThemeKey;
+    state.groupLockedCustomText = targetCustomTxt;
+    const themeInfo = getGroupThemePromptBlock(false, targetThemeKey, targetCustomTxt);
+    state.groupMessages = [{ type: "system", text: `当前聊天主题为：【${themeInfo.name}】` }];
     state.chatQuoteTarget = null;
     state.chatroomTyping = true;
     saveCurrentChatSessionData(false);
@@ -4333,7 +4976,7 @@
       const msgCount = 8;
       const relCtx = getRelationshipAndFamiliarityContext();
       const allRosterNames = state.dmNpcOptions.map(x => x.name).join("、");
-      const prompt = `这里是《太微宫茶话群聊》。\n${themeInfo.block}\n${themeInfo.isIfMode ? "" : relCtx}\n当前群成员池共有：${allRosterNames}。\n请根据当前主题【${themeInfo.name}】的氛围，从上述成员池中随机挑选 5~7 位最贴合该话题的不同人物，严格围绕当前主题开启新话题斗嘴、八卦或插科打诨！\n- 群友之间自然使用 @对方 互相吐槽或接话；\n- 中途穿插 1~2 条带角色特色动作神态的花样进群提示（{"type": "join", "text": "某角色 + 特色动作神态 + 进入了聊天室"}）；\n- 可随机给某 1 条失言或嘴硬的消息设置 "recall": true。严禁代替 ${state.userName} 发言！\n总共生成 ${msgCount} 项 JSON 数组（普通发言格式：{"sender": "姓名（后妃带位分）", "text": "简短口语化消息6至26字", "recall": false}）：`;
+      const prompt = `这里是《太微宫茶话群聊》。\n${themeInfo.block}\n${themeInfo.isIfMode ? "" : relCtx}\n当前群成员池共有：${allRosterNames}。\n请根据当前主题【${themeInfo.name}】的氛围，从上述成员池中随机挑选 5~7 位最贴合该话题的不同人物，严格围绕当前主题开启新话题斗嘴、八卦或插科打诨！\n- 群友之间自然使用 @对方 互相吐槽或接话；\n- 中途穿插 1 条带角色特色动作神态的花样进群提示（{"type": "join", "text": "某角色 + 特色动作神态 + 进入了聊天室"}），以及 1~2 条 {"type": "narration", "text": "..."} 现场动作或环境小旁白；\n- 可随机给某 1 条失言或嘴硬的消息设置 "recall": true。严禁代替 ${state.userName} 发言！\n总共生成 ${msgCount} 项 JSON 数组（普通发言格式：{"sender": "姓名（后妃带位分）", "text": "简短口语化消息6至26字", "recall": false}）：`;
       const resp = await callAI(prompt, `太微群聊·${themeInfo.name}`);
       state.chatroomTyping = false;
       renderChatroom();
@@ -4343,9 +4986,50 @@
     finally {
       state.chatroomTyping = false;
       renderChatroom();
-      topicBtn.disabled = false; topicBtn.textContent = "刷新群聊";
+      if (topicBtn) { topicBtn.disabled = false; topicBtn.textContent = "刷新群聊"; }
     }
   }
+
+  async function triggerAiNpcRandomTopic() {
+    const hasMessages = Array.isArray(state.groupMessages) && state.groupMessages.length > 0;
+    const lockedKey = state.groupLockedTheme || config.groupChatTheme || "story_sync";
+    const lockedCustom = (state.groupLockedCustomText || "").trim();
+    const nextKey = config.groupChatTheme || "story_sync";
+    const nextCustom = (config.groupChatCustomThemeText || "").trim();
+    const isThemeChanged = lockedKey !== nextKey || (nextKey === "custom" && lockedCustom !== nextCustom);
+
+    if (hasMessages && isThemeChanged) {
+      const oldName = getThemeDisplayNameByKey(lockedKey, lockedCustom);
+      const newName = getThemeDisplayNameByKey(nextKey, nextCustom);
+      const descEl = targetDoc.getElementById("twThemeSwitchConfirmDesc");
+      if (descEl) {
+        descEl.textContent = `当前主题为【${oldName}】，是否改为【${newName}】？确认后聊天记录将重置。`;
+      }
+      targetDoc.getElementById("twThemeSwitchConfirmModal")?.classList.add("show");
+      return;
+    }
+    await executeGroupChatTopicRefresh();
+  }
+
+  targetDoc.getElementById("twCancelThemeSwitchBtn")?.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    targetDoc.getElementById("twThemeSwitchConfirmModal")?.classList.remove("show");
+    if (state.groupLockedTheme) {
+      config.groupChatTheme = state.groupLockedTheme;
+      config.groupChatCustomThemeText = state.groupLockedCustomText || "";
+      saveConfig();
+      updateGroupThemeUI();
+      renderChatroom();
+    }
+  });
+
+  targetDoc.getElementById("twConfirmThemeSwitchBtn")?.addEventListener("click", async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    targetDoc.getElementById("twThemeSwitchConfirmModal")?.classList.remove("show");
+    await executeGroupChatTopicRefresh();
+  });
 
   targetDoc.getElementById("twChatroomSendBtn").addEventListener("click", () => {
     const inp = targetDoc.getElementById("twChatroomInput"), v = inp.value.trim(); if (!v) return;
@@ -4356,7 +5040,10 @@
     if (e.key === "Enter") { e.preventDefault(); targetDoc.getElementById("twChatroomSendBtn").click(); }
   });
   targetDoc.getElementById("twClearChatroomBtn").addEventListener("click", () => {
-    state.groupMessages = []; state.chatQuoteTarget = null;
+    state.groupMessages = [];
+    state.groupLockedTheme = config.groupChatTheme || "story_sync";
+    state.groupLockedCustomText = config.groupChatCustomThemeText || "";
+    state.chatQuoteTarget = null;
     saveCurrentChatSessionData(false); renderChatroom();
     showModuleSuccessToast("已清空群聊记录");
   });
@@ -4438,7 +5125,7 @@
     try {
       const { lastSceneEnding } = getFullStoryContext();
       const userPersona = getUserPersonaContext();
-      const resp = await callAI(`为大景皇帝萧承稷与 ${getUserFullTag()} 写一篇 500 字左右、分 3~4 个自然段的古风番外小剧场。\n当前好感度：${state.affection}，阶段：${state.stage}。\n${state.userName}人设参考：${userPersona || "结合近期剧情"}\n当前剧情背景：${lastSceneEnding || "太微宫日常"}。\n主题：${st || "紧接当前剧情的私下互动与护短"}。\n要求：第一行可写一个简短四至八字古风剧场名（用《》包裹），随后分段写正文；直接自然称呼 ${state.userName}，萧承稷必自称“朕”或“我”（严禁自称“孤”）。`, "番外小剧场生成");
+      const resp = await callAI(`为大景皇帝萧承稷与 ${state.userName} 写一篇 500 字左右、分 3~4 个自然段的古风番外小剧场。\n当前好感度：${state.affection}，阶段：${state.stage}。\n${state.userName}人设参考：${userPersona || "结合近期剧情"}\n当前剧情背景：${lastSceneEnding || "太微宫日常"}。\n主题：${st || "紧接当前剧情的私下互动与护短"}。\n要求：第一行可写一个简短四至八字古风剧场名（用《》包裹），随后分段写正文；直接自然称呼 ${state.userName}，萧承稷必自称“朕”或“我”（严禁自称“孤”）。`, "番外小剧场生成");
       let cleaned = cleanPureText(resp);
       let extractedTitle = st || "太微宫 · 浮生秘戏";
       const titleMatch = cleaned.match(/^《([^》]{2,18})》\s*\n+/);
@@ -4474,16 +5161,38 @@
     if (typeof evOn === "function" && tEvents) {
       if (tEvents.MESSAGE_RECEIVED) evOn(tEvents.MESSAGE_RECEIVED, () => setTimeout(() => syncFromWorldbookAndChat(true), 900));
       if (tEvents.CHAT_CHANGED) evOn(tEvents.CHAT_CHANGED, () => setTimeout(() => {
-        state.boundChatId = getCurrentChatFileId();
-        loadChatSessionData(true);
-        syncFromWorldbookAndChat(false);
+        const curCid = getCurrentChatFileId();
+        if (curCid !== "default_chat" && curCid !== state.boundChatId) {
+          state.boundChatId = curCid;
+          loadChatSessionData(true);
+          syncFromWorldbookAndChat(false);
+        }
       }, 350));
+      if (tEvents.MESSAGE_DELETED) evOn(tEvents.MESSAGE_DELETED, () => setTimeout(() => {
+        pruneDeletedRoundsAndRestoreSnapshot();
+        syncFromWorldbookAndChat(false);
+      }, 250));
+      if (tEvents.MESSAGE_EDITED) evOn(tEvents.MESSAGE_EDITED, () => setTimeout(() => {
+        syncFromWorldbookAndChat(false);
+      }, 250));
+      if (tEvents.MESSAGE_SWIPED) evOn(tEvents.MESSAGE_SWIPED, () => setTimeout(() => {
+        pruneDeletedRoundsAndRestoreSnapshot();
+        syncFromWorldbookAndChat(true);
+      }, 500));
     }
   } catch (e) {}
 
+  const initSavedApp = config.lastOpenApp || "home";
+  const initSavedTab = config.lastActiveChatTab || "dm";
   loadChatSessionData(false);
   syncFromWorldbookAndChat(false);
-  openAppPage("home");
+  openAppPage(initSavedApp);
+  if (initSavedApp === "chat") {
+    state.activeChatTab = initSavedTab;
+    rootEl.querySelectorAll("button[data-chattab]").forEach(b => b.classList.toggle("active", b.dataset.chattab === initSavedTab));
+    targetDoc.getElementById("tw-chat-pane-dm")?.classList.toggle("active", initSavedTab === "dm");
+    targetDoc.getElementById("tw-chat-pane-chatroom")?.classList.toggle("active", initSavedTab === "chatroom");
+  }
   syncFabVisibilityWithModal();
   setTimeout(() => {
     if (!hasSubstantialData(state)) {
