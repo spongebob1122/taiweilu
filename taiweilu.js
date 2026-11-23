@@ -208,40 +208,58 @@
     wallpaperTextColorMode: "auto", detectedWpIsLight: true
   };
 
-    function getSavedWallpaperDataUrl() {
-    // 1. 优先读取顶层窗口内存中的最新壁纸（切窗口0延迟且不受5MB限制）
-    if (typeof targetWin.__twRuntimeWallpaper === "string") {
-      return targetWin.__twRuntimeWallpaper === "__NONE__" ? "" : targetWin.__twRuntimeWallpaper;
+      function getSavedWallpaperDataUrl() {
+    // 1. 优先检查顶层运行时内存
+    const memWp = targetWin.__twRuntimeWallpaper;
+    if (typeof memWp === "string" && memWp.length > 0) {
+      if (memWp === "__NONE__") return "";
+      if (memWp.startsWith("data:image") || memWp.startsWith("http") || memWp.startsWith("blob:")) {
+        return memWp;
+      }
     }
-    // 2. 其次读取独立壁纸存储键
+    // 2. 读取独立壁纸存储键 WALLPAPER_STORAGE_KEY
     try {
       const stored = targetWin.localStorage?.getItem(WALLPAPER_STORAGE_KEY) || localStorage.getItem(WALLPAPER_STORAGE_KEY);
       if (stored === "__NONE__") return "";
-      if (stored) {
+      if (stored && (stored.startsWith("data:image") || stored.startsWith("http") || stored.startsWith("blob:"))) {
         targetWin.__twRuntimeWallpaper = stored;
         return stored;
       }
     } catch (e) {}
-    // 3. 最后读取 config 配置里的链接
+    // 3. 读取 config 配置；若为空、无效或处于未上传状态，100% 兜底返回默认古风宫廷壁纸！
     if (config.customWallpaperUrl === "__NONE__") return "";
-    return config.customWallpaperUrl || DEFAULT_THEME_WALLPAPER_URL;
+    if (
+      config.customWallpaperUrl &&
+      config.customWallpaperUrl !== "__LOCAL_DATA__" &&
+      (config.customWallpaperUrl.startsWith("http") || config.customWallpaperUrl.startsWith("data:image"))
+    ) {
+      return config.customWallpaperUrl;
+    }
+    return DEFAULT_THEME_WALLPAPER_URL;
   }
 
   function saveWallpaperDataUrl(dataUrl) {
-    const cleanUrl = dataUrl || "__NONE__";
-    // 1. 立即锁入顶层窗口内存，保证当前会话与切屏绝对生效
+    const cleanUrl = (dataUrl && String(dataUrl).trim()) ? String(dataUrl).trim() : DEFAULT_THEME_WALLPAPER_URL;
     targetWin.__twRuntimeWallpaper = cleanUrl;
-    // 2. 如果是网络链接或纯色标记，同步记入 config；如果是本地Base64图片，记特殊标记 "__LOCAL_DATA__" 防止被默认壁纸覆盖！
-    config.customWallpaperUrl = cleanUrl.startsWith("data:") ? "__LOCAL_DATA__" : cleanUrl;
+    if (cleanUrl === "__NONE__") {
+      config.customWallpaperUrl = "__NONE__";
+    } else if (cleanUrl.startsWith("data:")) {
+      config.customWallpaperUrl = "__LOCAL_DATA__";
+    } else {
+      config.customWallpaperUrl = cleanUrl;
+    }
     try {
-      try { targetWin.localStorage?.setItem(WALLPAPER_STORAGE_KEY, cleanUrl); } catch (e) {
-        freeUpStorageQuota();
+      try {
         targetWin.localStorage?.setItem(WALLPAPER_STORAGE_KEY, cleanUrl);
+      } catch (e) {
+        freeUpStorageQuota();
+        try { targetWin.localStorage?.setItem(WALLPAPER_STORAGE_KEY, cleanUrl); } catch (e2) {}
       }
       try { localStorage.setItem(WALLPAPER_STORAGE_KEY, cleanUrl); } catch (e) {}
     } catch (e) {}
     saveConfig();
   }
+
 
     function loadGlobalConfig() {
     let bestCfg = null;
@@ -327,7 +345,10 @@
     if (config.theme === "palaceglass") config.theme = "palace";
     if (typeof config.wallpaperMaskOpacity !== "number" || isNaN(config.wallpaperMaskOpacity)) config.wallpaperMaskOpacity = 0.16;
     if (!["auto", "dark", "light"].includes(config.wallpaperTextColorMode)) config.wallpaperTextColorMode = "auto";
-    if (!config.customWallpaperUrl) config.customWallpaperUrl = DEFAULT_THEME_WALLPAPER_URL;
+    if (!config.customWallpaperUrl || (config.customWallpaperUrl === "__LOCAL_DATA__" && !getSavedWallpaperDataUrl())) {
+      config.customWallpaperUrl = DEFAULT_THEME_WALLPAPER_URL;
+    }
+
   }
 
   const saveConfig = () => {
@@ -1460,38 +1481,16 @@
             </div>
           </div>
 
-                    <div class="tw-tab-page" id="tw-page-mailbox">
+                                        <div class="tw-tab-page" id="tw-page-mailbox">
             <div class="tw-box">
               <div class="tw-sec-head">
                 <span>🕊️ 鱼雁信匣 · 宫廷书信往来</span>
                 <div style="display:flex;gap:5px;">
-                  <button type="button" class="tw-reply-npc-btn" id="twToggleMailFreqBarBtn" style="font-size:10.5px;">⚙️ 频率：<span id="twMailFreqBadgeTxt">隔2轮·35%</span></button>
-                  <button type="button" class="tw-reply-npc-btn" id="twOpenComposeMailBtn" style="border-color:var(--accent);font-weight:bold;">✍️ 写信</button>
+                  <button type="button" class="tw-reply-npc-btn" id="twOpenComposeMailBtn" style="border-color:var(--accent);font-weight:bold;">✍️ 执笔写信</button>
                   <button type="button" class="tw-refresh-forum-btn tw-manual-refresh-btn" id="twRefreshMailboxBtn" style="padding:3px 9px;font-size:11px;">查收新信</button>
                 </div>
               </div>
-
-              <!-- 新增：页面内嵌收信频率调节面板（点击上方“⚙️ 频率”按钮展开/收起） -->
-              <div id="twMailFreqConfigBar" style="display:none;background:var(--bg-sub);border:1px dashed var(--border-outer);border-radius:8px;padding:8px 10px;margin-bottom:8px;">
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
-                  <b style="font-size:11.5px;color:var(--accent-strong);">⏱️ 自动收信频率调节（手动点“查收新信”不受限）</b>
-                </div>
-                <div class="tw-chip-row" id="twMailFreqPresetChips" style="margin-bottom:6px;">
-                  <span class="tw-chip" data-mcd="0" data-mprob="80">🔥 高频(每轮80%)</span>
-                  <span class="tw-chip" data-mcd="2" data-mprob="35">🕊️ 适中(隔2轮·35%)</span>
-                  <span class="tw-chip" data-mcd="4" data-mprob="20">🌙 稀有(隔4轮·20%)</span>
-                  <span class="tw-chip" data-mcd="99" data-mprob="0">🔕 纯手动(关闭自动)</span>
-                </div>
-                <div style="display:flex;align-items:center;gap:8px;font-size:11px;">
-                  <span class="tw-label" style="white-space:nowrap;">冷却间隔：至少隔</span>
-                  <input type="number" id="twMailCooldownInput" min="0" max="20" value="2" class="tw-input" style="width:52px;margin-bottom:0;padding:2px 5px;text-align:center;">
-                  <span class="tw-label" style="white-space:nowrap;">轮 | 触发概率：</span>
-                  <input type="range" id="twMailProbRange" min="0" max="100" step="5" value="35" style="flex:1;">
-                  <b id="twMailProbValTxt" style="min-width:32px;text-align:right;color:var(--accent);">35%</b>
-                </div>
-              </div>
-
-              <div class="tw-label" style="margin-bottom:7px;">随剧情推进，相关人物会按你设定的频率寄来书信或口谕。信件内容与【灵犀传音·私聊】共享记忆，亦可一键拆信入戏填入酒馆正剧。</div>
+              <div class="tw-label" style="margin-bottom:7px;">信使随剧情流转传递信件。信件与【灵犀传音·私聊】互通记忆，亦可一键拆信入戏。</div>
               <div id="twMailComposeBox" style="display:none;background:var(--bg-sub);border:1.5px solid var(--border-outer);border-radius:8px;padding:9px 10px;margin-bottom:9px;">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
                   <b style="color:var(--accent-strong);">✉️ 撰写新信笺</b>
@@ -1510,7 +1509,8 @@
             </div>
           </div>
 
-<div class="tw-tab-page" id="tw-page-world">
+          <div class="tw-tab-page" id="tw-page-world">
+
             <div class="tw-box" style="padding:9px 11px;">
               <div class="tw-sec-head">
                 <span>🌐 太微宫闱与长安百坊实时动态</span>
@@ -1872,7 +1872,7 @@
     img.src = imgSrc;
   }
 
-  function applyCustomWallpaperToUI() {
+    function applyCustomWallpaperToUI() {
     const wpEl = targetDoc.getElementById("twPhoneWallpaper");
     const maskEl = targetDoc.getElementById("twPhoneWallpaperMask");
     const panelEl = targetDoc.getElementById("twMainPanel");
@@ -1887,7 +1887,7 @@
     if (valTxt) valTxt.textContent = `${Math.round(maskOp * 100)}%`;
     if (maskEl) maskEl.style.background = `rgba(18, 12, 8, ${maskOp})`;
     if (urlInp && targetDoc.activeElement !== urlInp) {
-      urlInp.value = dataUrl.startsWith("http") ? dataUrl : "";
+      urlInp.value = (dataUrl && dataUrl.startsWith("http") && dataUrl !== DEFAULT_THEME_WALLPAPER_URL) ? dataUrl : "";
     }
 
     rootEl.querySelectorAll("#twWpTextColorModeGroup button").forEach(b => {
@@ -1898,8 +1898,11 @@
 
     if (dataUrl) {
       if (wpEl) {
-        wpEl.style.backgroundImage = "none";
-        wpEl.innerHTML = `<img src="${dataUrl}" style="width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;">`;
+        // 双保险：同时设置 CSS background-image 与 <img>，若图片链接失效自动回退到 DEFAULT_THEME_WALLPAPER_URL
+        wpEl.style.backgroundImage = `url("${dataUrl}")`;
+        wpEl.style.backgroundSize = "cover";
+        wpEl.style.backgroundPosition = "center";
+        wpEl.innerHTML = `<img src="${dataUrl}" onerror="this.onerror=null;this.src='${DEFAULT_THEME_WALLPAPER_URL}';" style="width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;">`;
       }
       if (panelEl) {
         panelEl.classList.add("has-custom-wp");
@@ -1915,8 +1918,9 @@
         panelEl.classList.toggle("wp-text-light", !useDarkText);
       }
       if (previewEl) {
-        previewEl.style.backgroundImage = "none";
-        previewEl.innerHTML = `<img src="${dataUrl}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;"><span style="position:relative;z-index:1;background:rgba(0,0,0,0.62);color:#fff8eb;padding:3px 9px;border-radius:12px;font-size:10.5px;">已启用壁纸</span>`;
+        const isDef = dataUrl === DEFAULT_THEME_WALLPAPER_URL;
+        previewEl.style.backgroundImage = `url("${dataUrl}")`;
+        previewEl.innerHTML = `<img src="${dataUrl}" onerror="this.onerror=null;this.src='${DEFAULT_THEME_WALLPAPER_URL}';" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;"><span style="position:relative;z-index:1;background:rgba(0,0,0,0.62);color:#fff8eb;padding:3px 9px;border-radius:12px;font-size:10.5px;">${isDef ? "已启用默认古风宫廷壁纸" : "已启用自定义壁纸"}</span>`;
       }
     } else {
       if (wpEl) {
@@ -1928,7 +1932,7 @@
       }
       if (previewEl) {
         previewEl.style.backgroundImage = "none";
-        previewEl.textContent = "当前使用纯色古风宣纸底纹";
+        previewEl.innerHTML = `<span style="font-size:11px;color:var(--text-sub);">当前使用纯色古风宣纸底纹</span>`;
       }
     }
   }
@@ -1945,9 +1949,8 @@
       img.onload = function () {
         try {
           const canvas = targetDoc.createElement("canvas");
-          // 适度压缩尺寸（400x720），确保清晰同时体积控制在 80KB~150KB 内，100% 存进 localStorage 不爆容量
-          const maxW = 400, maxH = 720;
-          let w = img.width || 400, h = img.height || 720;
+          const maxW = 420, maxH = 760;
+          let w = img.width || 420, h = img.height || 760;
           if (w > maxW || h > maxH) {
             const ratio = Math.min(maxW / w, maxH / h);
             w = Math.round(w * ratio);
@@ -1957,8 +1960,8 @@
           canvas.height = h;
           const ctx = canvas.getContext("2d");
           ctx.drawImage(img, 0, 0, w, h);
-          let outUrl = canvas.toDataURL("image/jpeg", 0.55);
-          if (outUrl.length > 350000) outUrl = canvas.toDataURL("image/jpeg", 0.38);
+          let outUrl = canvas.toDataURL("image/jpeg", 0.56);
+          if (outUrl.length > 350000) outUrl = canvas.toDataURL("image/jpeg", 0.40);
           saveWallpaperDataUrl(outUrl);
           applyCustomWallpaperToUI();
           detectImageLuminance(outUrl, (isLight) => {
@@ -1970,35 +1973,56 @@
         } catch (err) {
           saveWallpaperDataUrl(rawDataUrl);
           applyCustomWallpaperToUI();
-          showModuleSuccessToast("壁纸已成功应用");
+          showModuleSuccessToast("壁纸已应用");
         }
       };
       img.onerror = function () {
         saveWallpaperDataUrl(rawDataUrl);
         applyCustomWallpaperToUI();
-        showModuleSuccessToast("壁纸已成功应用");
+        showModuleSuccessToast("壁纸已应用");
       };
       img.src = rawDataUrl;
     };
     reader.readAsDataURL(file);
   }
 
-  // 显式绑定上传按钮点击与文件选择，解决跨 iframe 下 label 点击失效问题
-  const wpFileInput = targetDoc.getElementById("twDirectWpFileInput");
-  const wpUploadLabel = targetDoc.getElementById("twUploadWpLabel");
-  if (wpUploadLabel && wpFileInput) {
-    wpUploadLabel.addEventListener("click", (ev) => {
-      if (ev.target !== wpFileInput) {
-        ev.preventDefault();
-        wpFileInput.click();
-      }
+  // 采用根容器事件委托 + 直接绑定双保险，彻底杜绝壁纸设置按钮失灵
+  targetDoc.getElementById("twDirectWpFileInput")?.addEventListener("change", (ev) => {
+    const f = ev.target.files?.[0];
+    if (f) compressAndSaveImageFile(f);
+    ev.target.value = "";
+  });
+
+  targetDoc.getElementById("twApplyWpUrlBtn")?.addEventListener("click", () => {
+    const u = targetDoc.getElementById("twWpUrlInput")?.value.trim() || "";
+    if (!u) { showModuleSuccessToast("请先粘贴图片网络链接"); return; }
+    saveWallpaperDataUrl(u);
+    applyCustomWallpaperToUI();
+    detectImageLuminance(u, (isLight) => {
+      config.detectedWpIsLight = isLight;
+      saveConfig();
+      applyCustomWallpaperToUI();
     });
-    wpFileInput.addEventListener("change", (ev) => {
-      const f = ev.target.files?.[0];
-      if (f) compressAndSaveImageFile(f);
-      ev.target.value = "";
+    showModuleSuccessToast("网络壁纸应用成功");
+  });
+
+  targetDoc.getElementById("twResetDefaultWpBtn")?.addEventListener("click", () => {
+    targetWin.__twRuntimeWallpaper = DEFAULT_THEME_WALLPAPER_URL;
+    saveWallpaperDataUrl(DEFAULT_THEME_WALLPAPER_URL);
+    applyCustomWallpaperToUI();
+    detectImageLuminance(DEFAULT_THEME_WALLPAPER_URL, (isLight) => {
+      config.detectedWpIsLight = isLight;
+      saveConfig();
+      applyCustomWallpaperToUI();
     });
-  }
+    showModuleSuccessToast("已恢复默认古风宫廷壁纸");
+  });
+
+  targetDoc.getElementById("twClearWpBtn")?.addEventListener("click", () => {
+    saveWallpaperDataUrl("__NONE__");
+    applyCustomWallpaperToUI();
+    showModuleSuccessToast("已切换为纯色宣纸底纹");
+  });
 
   targetDoc.getElementById("twWpMaskRange")?.addEventListener("input", (e) => {
     const v = Number(e.target.value) || 0;
@@ -2006,6 +2030,15 @@
     saveConfig();
     applyCustomWallpaperToUI();
   });
+
+  targetDoc.getElementById("twWpTextColorModeGroup")?.addEventListener("click", (e) => {
+    const btn = e.target.closest("button[data-wp-tmode]");
+    if (!btn) return;
+    config.wallpaperTextColorMode = btn.dataset.wpTmode || "auto";
+    saveConfig();
+    applyCustomWallpaperToUI();
+  });
+
   targetDoc.getElementById("twWpTextColorModeGroup")?.addEventListener("click", (e) => {
     const btn = e.target.closest("button[data-wp-tmode]");
     if (!btn) return;
@@ -2235,17 +2268,28 @@
       return;
     }
     rootEl.classList.remove("tw-chat-inactive");
-    const curCid = getCurrentChatFileId();
+       const curCid = getCurrentChatFileId();
     if ((config.customSaveSlot || "chat_bind") === "chat_bind" && curCid !== "default_chat" && curCid !== state.boundChatId) {
       const nextKey = `${CHAT_BIND_VAR_KEY}_${curCid}`;
       const nextData = readFromTavernBackend(nextKey);
       state.boundChatId = curCid;
+      state.currentSessionKey = nextKey;
       if (nextData && hasSubstantialData(nextData)) {
+        explicitClearCurrentArchive();
         applyParsedPayloadToState(nextData);
         renderAll();
+      } else {
+        // 关键修复：当切换到一个没有存档的新对话（或刚开局只有开场白的对话）时，立即清空旧档残留！
+        const rawMsgs = getRawChatList(0);
+        if (!targetDoc.hidden && rawMsgs.length <= 2) {
+          explicitClearCurrentArchive();
+          syncFromWorldbookAndChat(false);
+          renderAll();
+        }
       }
       return;
     }
+
     if (!hasSubstantialData(state)) {
       if (loadChatSessionData(false)) renderAll();
     }
@@ -2852,20 +2896,30 @@
     syncMailFreqUI();
   });
 
-  async function checkAndReceivePlotMail(e, isAutoFromPlot = false) {
+    async function checkAndReceivePlotMail(e, isAutoFromPlot = false) {
     if (e) { e.preventDefault(); e.stopPropagation(); }
 
-    // 读取页面上设定的冷却轮数与触发概率
-    if (isAutoFromPlot) {
-      const cdLimit = typeof config.mailCooldownRounds === "number" ? config.mailCooldownRounds : 2;
-      const probPct = typeof config.mailTriggerProb === "number" ? config.mailTriggerProb : 35;
-      if (probPct <= 0) return; // 纯手动模式，直接跳过
+    const { lastFullTurn, lastSceneEnding, latestRoundId, totalAiRounds } = getFullStoryContext();
 
-      state.mailRoundsSinceLast = (Number(state.mailRoundsSinceLast) || 0) + 1;
-      // 还在冷却轮数内，直接跳过（0 Token消耗）
-      if (state.mailRoundsSinceLast <= cdLimit) return;
-      // 概率掷骰未命中，直接跳过（0 Token消耗）
-      if (Math.random() * 100 > probPct) return;
+    // ====== 智能剧情契机 + 动态保底算法（无需手动调参） ======
+    let forcePityTrigger = false;
+    if (isAutoFromPlot) {
+      // 1. 通过当前存活的时间轴与信匣最后一封信所属轮次，精准计算已经隔了多少轮没收信（切窗口也不丢）
+      const lastMailRoundNum = Number(state.mailboxList?.[0]?.receivedAtAiRound) || 0;
+      const roundsGap = totalAiRounds - lastMailRoundNum;
+
+      // 刚收过信后的紧接着下一轮（roundsGap <= 1）：墨迹未干，必不连发，杜绝每轮刷屏
+      if (lastMailRoundNum > 0 && roundsGap <= 1) {
+        return;
+      }
+      // 距离上次收信为 2~3 轮：有 55% 概率进入“黄金剧情契机审定”，45% 概率静默沉淀
+      if (lastMailRoundNum > 0 && roundsGap <= 3 && Math.random() > 0.55) {
+        return;
+      }
+      // 距离上次收信已达 4 轮及以上（或开局满3轮一封信都没收到过）：触发【暗涌保底】，本轮必由场外或相关NPC寄来一封惊喜信笺！
+      if (roundsGap >= 4 || (!state.mailboxList?.length && totalAiRounds >= 3)) {
+        forcePityTrigger = true;
+      }
     }
 
     const btn = targetDoc.getElementById("twRefreshMailboxBtn");
@@ -2873,25 +2927,28 @@
     if (!isAutoFromPlot) setModuleRefreshing("mailbox", true, "正在查收宫内外飞鸽传书与内侍密函…");
     try {
       await syncFromWorldbookAndChat(false);
-      const { lastFullTurn, lastSceneEnding, latestRoundId } = getFullStoryContext();
       const relCtx = getRelationshipAndFamiliarityContext();
-      const recentMailSenders = (state.mailboxList || []).slice(0, 4).map(m => `${m.sender}《${m.title}》`).join("、");
-      const modeRule = isAutoFromPlot
-        ? `请判断在当前最新一轮剧情结束后，是否有与本轮剧情相关的 NPC（含萧承稷、沈砚、陆敬、谢无咎、霍惊弦、温言酌、裴玄度、卫凛或六宫妃嫔）适合在此时派内侍/飞鸽给 ${state.userName} 送来一封书信、密报、口谕手札或邀约？\n注意：若当前场景正在与某人当面交谈，严禁让该在场之人同时寄信！若无合适寄信契机请设 "shouldSend": false。`
-        : `用户主动点击了「查收新信」，请结合当前最新剧情与人物关系，挑选 1 位最贴合当前局势的 NPC 给 ${state.userName} 寄来一封书信或手札（务必设 "shouldSend": true）！`;
+      const recentMailSenders = (state.mailboxList || []).slice(0, 3).map(m => `${m.sender}《${m.title}》`).join("、");
 
-      const prompt = `你是《太微宫闻录》鱼雁信匣总管。\n${modeRule}\n近期已收信件：${recentMailSenders || "暂无"}\n最新剧情：\n${lastFullTurn}\n${lastSceneEnding}\n${relCtx}\n如果寄信，请让寄信人记住此前的剧情与书信往来，写出符合其古风人设的信件正文（约90~140字，萧承稷必自称朕，禁称孤），并可附带一件贴合剧情的随信小物或约见提示。\n请输出纯 JSON 对象：\n{"shouldSend":true,"sender":"寄信人标准姓名（如萧承稷、沈砚、霍惊弦、苏枕月（丽嫔）等）","title":"古风信笺标题8字内","seal":"四字印鉴（如御笔亲敕、清臣私印）","body":"信件古风正文90至140字","gift":"随信附赠之物或约见信物（无则填“无”）"}`;
-      const resp = await callAI(prompt, "鱼雁信匣收信判定");
+      let modeRule = "";
+      if (!isAutoFromPlot || forcePityTrigger) {
+        modeRule = `【必达指令】：请结合当前最新剧情与人物羁绊，挑选 1 位最能带来惊喜感或剧情张力的 NPC（注意：若当前场景正在与某人面对面说话，请挑选另一位【此时不在当面】但听闻了风声、或刚与 ${state.userName} 分别、或在暗中挂念/试探她的 NPC，如萧承稷、沈砚、陆敬、谢无咎、霍惊弦、温言酌、卫凛、苏枕月、秦昭华等），给 ${state.userName} 寄来一封极具人设特色的书信或手札（务必设 "shouldSend": true，且尽量不要与最近刚寄过信的人重复）！`;
+      } else {
+        modeRule = `【剧情契机审定】：请仔细阅读下方最新一轮剧情，判断此刻是否存在自然的【寄信契机】：\n- 契机A：${state.userName} 刚与某位人物分别，对方意犹未尽或有私密叮嘱/赏赐随后送到；\n- 契机B：宫内或前朝刚发生某桩风波，场外知情NPC（如沈砚、赵怀安、温言酌、霍惊弦、谢无咎或交好妃嫔）暗中修书提醒、送药或吃瓜问候；\n- 契机C：萧承稷在批阅奏章时想起白日之事，遣小禄子送来御笔字条或小物件（注意：若此刻萧承稷正与 ${state.userName} 同处一室面对面说话，则绝不可让萧承稷寄信，可改由其他不在场NPC寄信）。\n若符合上述任一契机，请设 "shouldSend": true 并写出极具惊喜感的信件；若当前场景紧张连贯、毫无插信余地，则设 "shouldSend": false。`;
+      }
+
+      const prompt = `你是《太微宫闻录》鱼雁信匣总管。\n${modeRule}\n近期已收信件：${recentMailSenders || "暂无"}\n最新剧情：\n${lastFullTurn}\n${lastSceneEnding}\n${relCtx}\n请写出符合寄信人古风人设的信件正文（约90~140字，萧承稷必自称朕，禁称孤），并可附带一件贴合情境的随信小物或约见信物。\n请直接输出纯 JSON 对象：\n{"shouldSend":true,"sender":"寄信人标准姓名（如萧承稷、沈砚、霍惊弦、苏枕月（丽嫔）等）","title":"古风信笺标题8字内","seal":"四字印鉴（如御笔亲敕、清臣私印）","body":"信件古风正文90至140字","gift":"随信附赠之物或约见信物（无则填“无”）"}`;
+      const resp = await callAI(prompt, "鱼雁信匣智能来信");
       const m = String(resp).match(/{[\s\S]*}/);
       if (m) {
         const p = JSON.parse(m[0]);
         if (p.shouldSend && p.sender && p.body) {
           const senderStd = formatConsortStandardName(enforceAddressingRules(p.sender));
           if (!isNpcMatchingUser(senderStd)) {
-            state.mailRoundsSinceLast = 0; // 收信成功，重置冷却计数
             const giftClean = (p.gift && p.gift !== "无" && p.gift !== "none") ? enforceAddressingRules(p.gift) : "";
             const newMail = {
               id: Date.now(),
+              receivedAtAiRound: totalAiRounds, // 永久记录收到此信时的AI轮次，切窗口也绝不丢失！
               direction: "in",
               unread: true,
               sender: senderStd,
@@ -2924,6 +2981,7 @@
       if (!isAutoFromPlot) setModuleRefreshing("mailbox", false);
     }
   }
+
 
 
   async function sendOrReplyMail(existingMailId = null) {
@@ -5160,14 +5218,21 @@
     const tEvents = targetWin.tavern_events || window.tavern_events;
     if (typeof evOn === "function" && tEvents) {
       if (tEvents.MESSAGE_RECEIVED) evOn(tEvents.MESSAGE_RECEIVED, () => setTimeout(() => syncFromWorldbookAndChat(true), 900));
-      if (tEvents.CHAT_CHANGED) evOn(tEvents.CHAT_CHANGED, () => setTimeout(() => {
+           if (tEvents.CHAT_CHANGED) evOn(tEvents.CHAT_CHANGED, () => setTimeout(() => {
         const curCid = getCurrentChatFileId();
-        if (curCid !== "default_chat" && curCid !== state.boundChatId) {
+        if (curCid !== "default_chat") {
           state.boundChatId = curCid;
-          loadChatSessionData(true);
+          const nextKey = getActiveVaultKey();
+          const nextData = readFromTavernBackend(nextKey);
+          explicitClearCurrentArchive(); // 切换聊天文件时先彻底洗净上一档内存
+          if (nextData && hasSubstantialData(nextData)) {
+            applyParsedPayloadToState(nextData);
+          }
           syncFromWorldbookAndChat(false);
+          renderAll();
         }
-      }, 350));
+      }, 300));
+
       if (tEvents.MESSAGE_DELETED) evOn(tEvents.MESSAGE_DELETED, () => setTimeout(() => {
         pruneDeletedRoundsAndRestoreSnapshot();
         syncFromWorldbookAndChat(false);
