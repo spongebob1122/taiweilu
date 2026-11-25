@@ -60,13 +60,13 @@
 
   const GROUP_CHAT_THEMES = {
     story_sync: { name: "同步当前剧情", userCentric: false, isIf: false, desc: "紧扣当前酒馆最新时间节点的太微宫日常、前朝政事与六宫动向展开群聊。大家各自聊手头的差事、宫内见闻或互相斗嘴，像真实微信群一样自然鲜活，不要全员围着女主转。" },
-    user_empress_harem: { name: "我是皇帝", userCentric: true, isIf: true, desc: "【女皇独尊后宫IF线·女主中心】女主是至高无上的大景女皇陛下！萧承稷、沈砚、陆敬、谢无咎、霍惊弦、温言酌、裴玄度、卫凛及后宫诸妃全都是女皇陛下的后宫成员，全员围绕女皇陛下争风吃醋、邀宠修罗场拉满！" },
+    user_empress_harem: { name: "我是女帝", userCentric: true, isIf: true, desc: "【女皇独尊后宫IF线·女主中心】女主是至高无上的大景女皇陛下！萧承稷、沈砚、陆敬、谢无咎、霍惊弦、温言酌、裴玄度、卫凛及后宫诸妃全都是女皇陛下的后宫成员，全员围绕女皇陛下争风吃醋、邀宠修罗场拉满！萧承稷在此IF线自称为“我”，禁止自称为“朕”" },
     palace_gossip: { name: "深宫八卦吃瓜", userCentric: false, isIf: false, desc: "围绕东西六宫争宠笑话、尚食局抢菜、内务府克扣、哪家宫人闹乌龙等深宫八卦热烈吃瓜吐槽。大家聊各自的宫中见闻与死对头八卦，不要全员围着女主转。" },
     street_fun: { name: "长安市井趣闻", userCentric: false, isIf: false, desc: "围绕长安东西两市奇珍、醉仙楼新酒、平康坊名曲、西市胡商宝马与民间奇闻畅聊。大家聊吃喝玩乐、跑马听曲与坊市新鲜事，不要全员围着女主转。" },
-    if_modern: { name: "IF线：现代豪门集团", userCentric: false, isIf: true, desc: "【现代职场豪门AU】太微集团总裁萧承稷、首席特助沈砚、安保总监陆敬、投资大鳄谢无咎、富二代小少爷霍惊弦与各位高管女明星在公司大群的爆笑日常。" },
-    if_campus: { name: "IF线：皇家重点高中", userCentric: false, isIf: true, desc: "【现代校园AU】太微一中学生会长萧承稷、学神沈砚、校霸陆敬、逃课打球的霍惊弦、小卖部老板谢无咎、校医温言酌在校园群的热闹斗嘴。" },
-    if_scifi: { name: "IF线：星际帝国舰队", userCentric: false, isIf: true, desc: "【星际科幻AU】最高统帅萧承稷、首席参谋官沈砚、机甲司令陆敬、星际走私商谢无咎、首席医官温言酌在星舰公共频道的跨星系吐槽。" },
-    if_genderbend: { name: "IF线：全员性转女尊", userCentric: false, isIf: true, desc: "【全员性转女尊大景AU】冷艳女帝萧承稷与后宫男宠贤夫们（端庄崔清漪公子、桀骜将门郎秦昭华、散漫江南富少苏枕月、女相沈砚、女将军陆敬）的反转群聊。" },
+    if_modern: { name: "现代豪门集团", userCentric: false, isIf: true, desc: "【现代职场豪门AU】太微集团总裁萧承稷、首席特助沈砚、安保总监陆敬、投资大鳄谢无咎、富二代小少爷霍惊弦与各位高管女明星在公司大群的爆笑日常。" },
+    if_campus: { name: "皇家重点高中", userCentric: false, isIf: true, desc: "【现代校园AU】太微一中学生会长萧承稷、学神沈砚、校霸陆敬、逃课打球的霍惊弦、小卖部老板谢无咎、校医温言酌在校园群的热闹斗嘴。" },
+    if_scifi: { name: "星际帝国舰队", userCentric: false, isIf: true, desc: "【星际科幻AU】最高统帅萧承稷、首席参谋官沈砚、机甲司令陆敬、星际走私商谢无咎、首席医官温言酌在星舰公共频道的跨星系吐槽。" },
+    if_genderbend: { name: "全员性转女尊", userCentric: false, isIf: true, desc: "【全员性转女尊大景AU】冷艳女帝萧承稷与后宫男宠贤夫们（端庄崔清漪公子、桀骜将门郎秦昭华、散漫江南富少苏枕月、女相沈砚、女将军陆敬）的反转群聊。" },
     custom: { name: "自定义群聊主题", userCentric: false, isIf: true, desc: "" }
   };
 
@@ -432,7 +432,9 @@
       (Array.isArray(obj.outsideDynamics) && obj.outsideDynamics.length > 0) ||
       (Array.isArray(obj.npcFocusDynamics) && obj.npcFocusDynamics.length > 0) ||
       (Array.isArray(obj.storyPlans) && obj.storyPlans.length > 0) ||
-      (Array.isArray(obj.groupMessages) && obj.groupMessages.length > 0) ||
+            (Array.isArray(obj.groupMessages) && obj.groupMessages.length > 0) ||
+      (obj.groupHistories && Object.values(obj.groupHistories).some(arr => Array.isArray(arr) && arr.length > 0)) ||
+
       (obj.dmHistories && Object.keys(obj.dmHistories).some(k => Array.isArray(obj.dmHistories[k]) && obj.dmHistories[k].length > 0)) ||
       obj.emperorSpyData || obj.theaterText || obj.innerThought || obj.diary || obj.tacitData
     );
@@ -451,7 +453,7 @@
     roundSnapshots: {},
     posts: [], storyPlans: [],palaceSchedules: [], theaterText: "", theaterTitle: "", replyTargets: {},
     chatQuoteTarget: null, dmQuoteTarget: null, showAtPicker: false, atFilterKeyword: "",
-    groupMessages: [], groupLockedTheme: "", groupLockedCustomText: "", pendingGroupThemeSwitch: null,
+    groupMessages: [], groupHistories: {},groupLockedTheme: "", groupLockedCustomText: "", pendingGroupThemeSwitch: null,
     dmNpcOptions: [...BASE_DM_NPC_CATALOG],
     dmActiveNpc: "萧承稷", dmHistories: {}, dmTyping: false, chatroomTyping: false,
     tacitMode: "guess_xiao", tacitTopic: "日常小习惯与怪癖", tacitData: null, tacitUserChoices: {},
@@ -493,7 +495,9 @@
     state.roundSnapshots = {};
     state.posts = []; state.storyPlans = []; state.theaterText = ""; state.theaterTitle = ""; state.replyTargets = {};
     state.chatQuoteTarget = null; state.dmQuoteTarget = null; state.showAtPicker = false; state.atFilterKeyword = "";
-    state.groupMessages = []; state.groupLockedTheme = ""; state.groupLockedCustomText = ""; state.pendingGroupThemeSwitch = null;
+        state.groupMessages = []; state.groupHistories = {};
+    state.groupLockedTheme = ""; state.groupLockedCustomText = ""; state.pendingGroupThemeSwitch = null;
+
     state.dmActiveNpc = "萧承稷"; state.dmHistories = {};
     state.tacitData = null; state.tacitUserChoices = {};
     state.dmTyping = false; state.chatroomTyping = false;
@@ -501,6 +505,15 @@
     state.emperorCardClickCount = 0; state.emperorPeekAccumulatedSec = 0;
     state.emperorNextCatchThreshold = Math.floor(Math.random() * 3) + 3;
     state.emperorNextTimeThresholdSec = Math.floor(Math.random() * 16) + 22;
+    // ✅ 强制清空【剧情选择】的所有数据、输入框与DOM列表
+    state.storyPlans = [];
+    if (Array.isArray(state.actionOptions)) state.actionOptions = [];
+    const ideaInp = targetDoc.getElementById("twStoryCustomIdea");
+    if (ideaInp) ideaInp.value = "";
+    const planListEl = targetDoc.getElementById("twStoryPlanList");
+    if (planListEl) planListEl.innerHTML = `<div class="tw-empty-hint">目前空白，请点击手动刷新。</div>`;
+    rootEl?.querySelectorAll("#twStoryPlanChips .tw-chip").forEach(c => c.classList.remove("active"));
+
   }
 
   function applyParsedPayloadToState(parsed) {
@@ -536,7 +549,14 @@
 
     if (parsed.theaterText !== undefined) state.theaterText = parsed.theaterText;
     if (parsed.theaterTitle !== undefined) state.theaterTitle = parsed.theaterTitle;
-    if (Array.isArray(parsed.groupMessages)) state.groupMessages = parsed.groupMessages;
+    if (parsed.groupHistories && typeof parsed.groupHistories === "object") {
+      state.groupHistories = parsed.groupHistories;
+    } else if (Array.isArray(state.groupMessages) && state.groupMessages.length) {
+      // 兼容旧档：把旧档的群聊自动归入当时的主题房间
+      const initKey = parsed.groupLockedTheme || config.groupChatTheme || "story_sync";
+      state.groupHistories = { [initKey]: state.groupMessages };
+    }
+
     if (parsed.groupLockedTheme !== undefined) state.groupLockedTheme = parsed.groupLockedTheme;
     if (parsed.groupLockedCustomText !== undefined) state.groupLockedCustomText = parsed.groupLockedCustomText;
     if (!state.groupLockedTheme && Array.isArray(state.groupMessages) && state.groupMessages.length > 0) {
@@ -665,7 +685,8 @@
       mailboxList: state.mailboxList, roundSnapshots: state.roundSnapshots,
       posts: state.posts, storyPlans: state.storyPlans,palaceSchedules: state.palaceSchedules,
       theaterText: state.theaterText, theaterTitle: state.theaterTitle,
-      groupMessages: state.groupMessages, groupLockedTheme: state.groupLockedTheme, groupLockedCustomText: state.groupLockedCustomText,
+      groupMessages: state.groupMessages,      groupMessages: state.groupMessages, groupHistories: state.groupHistories, groupLockedTheme: state.groupLockedTheme,
+ groupLockedTheme: state.groupLockedTheme, groupLockedCustomText: state.groupLockedCustomText,
       tacitData: state.tacitData, tacitUserChoices: state.tacitUserChoices,
       dmActiveNpc: state.dmActiveNpc, dmHistories: state.dmHistories,
       dmCustomNpcs: state.dmNpcOptions.filter(x => x.isDynamic),
@@ -740,6 +761,150 @@
     if (/^(玩家|女主|user)$/i.test(s)) return true;
     return false;
   }
+  // ====== 新增：注入群聊古风头衔牌 CSS 样式 ======
+  try {
+    const titleCss = `
+      .tw-group-title-badge {
+        display: inline-block;
+        padding: 0.5px 5px;
+        margin-right: 4px;
+        font-size: 9.5px;
+        font-weight: bold;
+        line-height: 1.35;
+        color: #fff8eb;
+        background: linear-gradient(135deg, #852922 0%, #b88a3e 100%);
+        border: 1px solid #e8c987;
+        border-radius: 3px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.18);
+        letter-spacing: 0.5px;
+        vertical-align: middle;
+      }
+      .tw-group-title-badge.emperor {
+        background: linear-gradient(135deg, #591611 0%, #d4a857 100%);
+        color: #fffdf5;
+        border-color: #ffe8a3;
+      }
+      .tw-group-title-badge.consort {
+        background: linear-gradient(135deg, #913948 0%, #cfa0a8 100%);
+      }
+      .tw-group-title-badge.court {
+        background: linear-gradient(135deg, #2c594e 0%, #6e8f85 100%);
+      }
+    `;
+    const st = targetDoc.getElementById("tw-floating-style");
+    if (st && !st.textContent.includes("tw-group-title-badge")) {
+      st.textContent += titleCss;
+    }
+  } catch (e) {}
+
+  // ====== 全员纯姓名与极简职位映射表（与你的 getWorldAddressRules 100% 同步） ======
+  const NPC_ROLE_LOOKUP = {
+    "萧承稷": "圣上", "萧承泽": "端王", "萧承瑞": "恭亲王", "萧承礼": "废庶人",
+    "崔清漪": "淑妃", "秦昭华": "德妃", "卢婉兮": "修仪", "苏枕月": "丽嫔",
+    "柳如絮": "婕妤", "郑芷兰": "美人", "周妙音": "才人", "韩怜儿": "宝林", "沈青禾": "选侍",
+    "沈砚": "中书侍郎", "陆敬": "镇国大将军", "温言酌": "太医署院判", "霍惊弦": "定远侯世子",
+    "谢无咎": "皇商", "裴玄度": "大理寺卿", "卫凛": "羽林中郎将", "崔玄礼": "门下侍中",
+    "卢承宗": "吏部尚书", "赵度": "户部尚书", "柳宗元": "刑部尚书", "温庭筠": "翰林学士",
+    "魏征": "御史大夫", "秦武": "左金吾卫大将军", "顾长风": "朔方节度使", "侯君集": "幽州节度使",
+    "赵怀安": "内侍总管", "小禄子": "御前内侍", "小顺子": "传事太监", "福全": "掌灯太监",
+    "岁寒": "掌事宫女", "惊蛰": "奉茶宫女", "宋姑姑": "掌书女官", "苏云娘": "尚食女官",
+    "沈碧螺": "司衣女官", "林清河": "御前太医", "魏长顺": "造办管事", "冯保": "守库太监",
+    "韩烈": "御马监副使", "莫姑姑": "掌罚女官", "锦书": "掌事宫女", "钱三禄": "首领太监",
+    "翡翠": "贴身宫女", "素心": "贴身宫女", "红袖": "贴身宫女", "丹橘": "掌事宫女",
+    "王大宝": "首领太监", "迎春": "贴身宫女", "听雪": "贴身宫女", "杏儿": "粗使宫女",
+    "小桂子": "洒扫太监", "书筠": "掌事宫女", "阿禾": "贴身宫女", "顾清商": "听雨楼花魁",
+    "洛青衣": "酒肆老板娘", "白芷": "坐堂女医", "柳三娘": "商行掌柜", "崔明远": "校书郎",
+    "沈星河": "太学生", "燕十三": "漕帮总舵主", "钟离弦": "第一琴师", "秦老四": "黑市头目",
+    "阿古拉": "铁勒质子", "穆罕": "波斯胡商", "慧觉大师": "佛寺主持"
+  };
+
+  // 解析任意带有多重括号或前缀的名字，返回 { pureName: "纯姓名", role: "极简职位", dropdownLabel: "纯姓名（极简职位）" }
+  function parsePureNameAndRole(rawNameStr, fallbackTitle = "") {
+    let s = String(rawNameStr || "").replace(/\[.*?\]/g, "").trim();
+    if (!s) return { pureName: "宫人", role: "内廷", dropdownLabel: "宫人（内廷）" };
+
+    // 提取第一个括号里的内容作为候选职位，并剥离所有括号得到纯姓名
+    const roleMatch = s.match(/[（(]([^）)]+)[）)]/);
+    let extractedRole = roleMatch ? roleMatch[1].trim() : "";
+    let pureName = s.replace(/[（(][^）)]*[）)]/g, "").replace(/[·•\-—_]/g, "").trim();
+
+    if (!pureName) pureName = s;
+
+    // 优先使用标准映射表里的极简职位，避免出现“甘露殿 · 皇帝”这种带殿名的长头衔
+    let finalRole = NPC_ROLE_LOOKUP[pureName] || extractedRole || fallbackTitle || "";
+    if (finalRole.includes("·")) {
+      const parts = finalRole.split("·").map(p => p.trim()).filter(Boolean);
+      finalRole = parts[parts.length - 1] || finalRole;
+    }
+    // 去掉职位里多余的品级前缀（如“正二品丽嫔”精简为“丽嫔”）
+    finalRole = finalRole.replace(/^(?:正|从)[一二三四五六七八九]品\s*/, "").replace(/\[.*?\]/g, "").trim();
+    if (finalRole === pureName) finalRole = NPC_ROLE_LOOKUP[pureName] || "";
+
+    const dropdownLabel = finalRole ? `${pureName}（${finalRole}）` : pureName;
+    return { pureName, role: finalRole, dropdownLabel };
+  }
+
+  // 自动清洗并合并 state.dmNpcOptions 中重复的人物（如两个萧承稷合并为一个）
+  function deduplicateDmNpcOptions() {
+    if (!Array.isArray(state.dmNpcOptions)) return;
+    const seenPureNames = new Set();
+    const cleaned = [];
+    for (const item of state.dmNpcOptions) {
+      if (!item) continue;
+      const { pureName, role, dropdownLabel } = parsePureNameAndRole(item.name || item.id, item.title);
+      if (!pureName || isNpcMatchingUser(pureName)) continue;
+      if (seenPureNames.has(pureName)) {
+        // 如果已存在该纯姓名，仅合并 inCurrentPlot 状态，绝不重复塞入第二个人！
+        const exist = cleaned.find(x => parsePureNameAndRole(x.name || x.id).pureName === pureName);
+        if (exist && item.inCurrentPlot) exist.inCurrentPlot = true;
+        continue;
+      }
+      seenPureNames.add(pureName);
+      item.name = pureName;
+      item.title = role || item.title || "宫廷人物";
+      item.display = dropdownLabel;
+      cleaned.push(item);
+    }
+    state.dmNpcOptions = cleaned;
+  }
+
+  // 生成群聊专用的【古风头衔牌 + 纯姓名】HTML
+    // 生成群聊专用的【古风泥金头衔牌 + 纯姓名】HTML（自带内联样式，100% 显示精致宫牌！）
+  function buildGroupSenderWithTitleHtml(rawSender, isSelf = false) {
+    const uName = state.userName || detectCurrentUserName();
+
+    // 基础宫牌样式（圆角、金边、阴影、垂直居中）
+    const baseStyle = "display:inline-block;padding:1px 6px;margin-right:5px;font-size:9.5px;font-weight:bold;line-height:1.35;border-radius:4px;box-shadow:0 1px 3px rgba(0,0,0,0.22);letter-spacing:0.5px;vertical-align:middle;";
+
+    // 四大阵营专属古风配色（帝王黑金、后妃胭脂、朝臣官袍青、内廷泥金）
+    const styleMap = {
+      emperor: baseStyle + "background:linear-gradient(135deg,#4a120e 0%,#b88a3e 100%);color:#fffdf5;border:1px solid #ffe8a3;",
+      consort: baseStyle + "background:linear-gradient(135deg,#8f3342 0%,#c97a86 100%);color:#fff8eb;border:1px solid #f2d1d5;",
+      court:   baseStyle + "background:linear-gradient(135deg,#2c594e 0%,#5b8c80 100%);color:#fff8eb;border:1px solid #b8d8d0;",
+      default: baseStyle + "background:linear-gradient(135deg,#852922 0%,#b88a3e 100%);color:#fff8eb;border:1px solid #e8c987;"
+    };
+
+    if (isSelf || rawSender === uName) {
+      const uRole = (state.userIdentity && state.userIdentity !== "未同步") ? state.userIdentity : "御前宫女";
+      return `<span style="${styleMap.consort}">${enforceAddressingRules(uRole)}</span><span style="vertical-align:middle;">${uName}</span>`;
+    }
+
+    const { pureName, role } = parsePureNameAndRole(rawSender);
+    let themeKey = "default";
+    if (pureName === "萧承稷" || role === "皇帝" || role === "天子") {
+      themeKey = "emperor";
+    } else if (/(妃|嫔|昭仪|修仪|婕妤|美人|才人|宝林|选侍)/.test(role)) {
+      themeKey = "consort";
+    } else if (/(侍郎|将军|尚书|侍中|太医|院判|大理寺|世子|中郎将|御史|节度使|学士|校书郎|太学生)/.test(role)) {
+      themeKey = "court";
+    }
+
+    const badgeHtml = role
+      ? `<span style="${styleMap[themeKey]}">${enforceAddressingRules(role)}</span>`
+      : "";
+    return `${badgeHtml}<span style="vertical-align:middle;">${enforceAddressingRules(pureName)}</span>`;
+  }
+
 
   function formatConsortStandardName(rawName) {
     let s = String(rawName || "").trim();
@@ -772,31 +937,53 @@
     return txt;
   }
 
+   // 剥离文本中人物名字后紧跟的职位括号，如将“@崔清漪（淑妃）”或“苏枕月（丽嫔）嗑着瓜子”净化为“@崔清漪”、“苏枕月嗑着瓜子”
+  function stripInlineRoleBrackets(text) {
+    if (!text) return "";
+    let s = enforceAddressingRules(text);
+    // 匹配已知角色或 @提及 后面的（职位）括号并剥离
+    s = s.replace(/(@[\u4e00-\u9fa5]{2,4})[（(][^）)\s]{1,8}[）)]/g, "$1");
+    Object.keys(NPC_ROLE_LOOKUP || {}).forEach(pureName => {
+      s = s.replace(new RegExp(`${pureName}[（(][^）)]{1,10}[）)]`, "g"), pureName);
+    });
+    return s;
+  }
+
   function highlightMentionsHtml(rawText) {
-    const safe = enforceAddressingRules(rawText || "");
-    return safe.replace(/(@[\u4e00-\u9fa5A-Za-z0-9_·（）：:]+)/g, '<b class="tw-at-highlight">$1</b>');
+    const safe = stripInlineRoleBrackets(rawText || "");
+    return safe.replace(/(@[\u4e00-\u9fa5A-Za-z0-9_·]+)/g, '<b class="tw-at-highlight">$1</b>');
+  }
+
+
+    function stripRoleFromForumNick(str) {
+    // 将“趣味网名（真名·职位）”或“趣味网名（真名（职位））”统一净化为“趣味网名（纯真名）”
+    return String(str || "")
+      .replace(/\(([^)]+)\)/g, "（$1）")
+      .replace(/（([^）·\s]+)[·\s][^）]*）/g, "（$1）")
+      .replace(/（([^）]+?)（[^）]*）[^）]*）/g, "（$1）");
   }
 
   function normalizeForumNickWithRealName(rawNick, fallbackIdx = 0) {
     let s = String(rawNick || "").trim();
-    if (!s) return FALLBACK_FORUM_NICKS[fallbackIdx % FALLBACK_FORUM_NICKS.length];
+    if (!s) return stripRoleFromForumNick(FALLBACK_FORUM_NICKS[fallbackIdx % FALLBACK_FORUM_NICKS.length]);
     const uName = state.userName || detectCurrentUserName();
     const customAlias = (config.forumNickname || "").trim();
     if (customAlias && (s === customAlias || s === `【${customAlias}】`)) return customAlias;
     if (s === uName) return customAlias ? customAlias : uName;
-    s = enforceAddressingRules(s, true).replace(/\(([^)]+)\)/g, "（$1）");
+    s = stripRoleFromForumNick(enforceAddressingRules(s, true));
     if (s.includes("（") && s.includes("）")) return s;
     for (const item of NPC_ALIAS_MAP) {
       for (const kw of item.match) {
-        if (s === kw) return item.full;
+        if (s === kw) return stripRoleFromForumNick(item.full);
         if (s.includes(kw)) {
           const pureNick = s.replace(kw, "").replace(/[·\-—_：:\s]/g, "").trim();
-          return pureNick ? `${pureNick}（${item.match[0]}）` : item.full;
+          return pureNick ? `${pureNick}（${item.match[0]}）` : stripRoleFromForumNick(item.full);
         }
       }
     }
-    return s;
+    return stripRoleFromForumNick(s);
   }
+
 
   function pickForumNick(obj, fallbackIdx = 0) {
     if (!obj || typeof obj !== "object") return FALLBACK_FORUM_NICKS[fallbackIdx % FALLBACK_FORUM_NICKS.length];
@@ -927,10 +1114,24 @@
     const uName = state.userName || detectCurrentUserName();
     const customAlias = (config.forumNickname || "").trim();
     const userSection = hideTrueUserIdentity && customAlias
-      ? `一、论坛匿名马甲盲猜铁律：\n1. 当前发帖/回帖人使用了匿名马甲「${customAlias}」，宫内外所有人【绝对不知道】TA 的真实姓名与位分！\n2. 严禁在回复中写出「${uName}」！NPC 只能称呼「@${customAlias}」或“楼主/层主”，并只能盲猜身份！`
-      : `一、姓名自然书写规则：\n1. 当前人物叫：${uName}。\n2. 提及时直接写出 ${uName}，严禁在名字外加【】方括号！`;
-    return `\n【大景王朝世界观、人设、称呼与禁用词最高铁律】：\n${userSection}\n二、萧承稷只自称“朕”（私下对挚友偶称“我”），【绝对禁止自称“孤”或“本王”】！\n三、后宫妃嫔统一用「真名（位分）」格式：崔清漪（淑妃）、秦昭华（德妃）、卢婉兮（修仪）、苏枕月（丽嫔）、柳如絮（婕妤）、郑芷兰（美人）、周妙音（才人）、韩怜儿（宝林）、沈青禾（选侍）。尊称皇帝为“陛下”、“圣人”，后妃自称“妾”、“妾身”，宫人自称“奴婢”。\n四、严禁AI代替（${uName}${customAlias ? ` 或 ${customAlias}` : ""}）说话或发评！`;
+      ? `一、论坛匿名马甲盲猜铁律：当前发言人使用匿名马甲「${customAlias}」，所有人不知其真名与位分，严禁写出「${uName}」！`
+      : `一、当前女主叫：${uName}（直接写名字，严禁加【】方括号）。`;
+
+    const allNpcRoster = `
+【五、全员NPC名录与显示格式最高铁律】：
+⚠️ 显示格式死命令：在私聊、群聊、信匣、动态、中显示人物时，【只能输出“姓名（极简职位）”】（例如：沈砚（中书侍郎）、崔清漪（淑妃）、岁寒（掌事宫女）、苏云娘（尚食女官））。方括号 [...] 内的性别与居所仅供你在后台牢记，【绝对禁止】把性别（男/女）或居所（如甘露殿/淑景殿）写进显示的职位括号里！严禁张冠李戴或捏造假人名！论坛保持匿名。
+1. 【帝王皇室】：萧承稷（圣上）[男·居甘露殿]、萧承泽（端王）[男·七弟]、萧承瑞（恭亲王）[男·长兄]、萧承礼（废庶人）[男·囚宗正寺]。
+2. 【后宫妃嫔（自称妾/妾身）】：崔清漪（淑妃）[女·居淑景殿]、秦昭华（德妃）[女·居承香殿]、卢婉兮（修仪）[女·居凝华殿]、苏枕月（丽嫔）[女·居玉照宫]、柳如絮（婕妤）[女·居听竹轩]、郑芷兰（美人）[女·居流霞阁]、周妙音（才人）[女·居揽月阁]、韩怜儿（宝林）[女·居秋水居]、沈青禾（选侍）[女·居翠微居]。
+3. 【前朝重臣（均为男）】：沈砚（中书侍郎）、陆敬（镇国大将军）、温言酌（太医署院判）、霍惊弦（定远侯世子）、谢无咎（皇商）、裴玄度（大理寺卿）、卫凛（羽林中郎将）、崔玄礼（门下侍中）、卢承宗（吏部尚书）、赵度（户部尚书）、柳宗元（刑部尚书）、温庭筠（翰林学士）、魏征（御史大夫）、秦武（左金吾卫大将军）、顾长风（朔方节度使）、侯君集（幽州节度使）。
+4. 【内廷宫人（均自称奴婢，后台牢记男女，严禁混淆）】：
+   - 御前与六尚：赵怀安（内侍总管）[男·太监]、小禄子（御前内侍）[男·太监]、小顺子（传事太监）[男]、福全（掌灯太监）[男]、岁寒（掌事宫女）[女·甘露殿]、惊蛰（奉茶宫女）[女·甘露殿]、宋姑姑（掌书女官）[女·秘阁]、苏云娘（尚食女官）[女·尚食局]、沈碧螺（司衣女官）[女·尚衣局]、林清河（御前太医）[男·尚药局]、魏长顺（造办管事）[男·太监]、冯保（守库太监）[男·大盈库]、韩烈（御马监副使）[男·飞龙厩]、莫姑姑（掌罚女官）[女·暴室]。
+   - 各宫宫人：锦书（掌事宫女）[女·伺候淑妃]、钱三禄（首领太监）[男·伺候淑妃]、翡翠（贴身宫女）[女·伺候卢修仪]、素心（贴身宫女）[女·伺候郑美人]、红袖（贴身宫女）[女·伺候周才人]、丹橘（掌事宫女）[女·伺候秦德妃]、王大宝（首领太监）[男·伺候秦德妃]、迎春（贴身宫女）[女·伺候苏丽嫔]、听雪（贴身宫女）[女·伺候柳婕妤]、杏儿（粗使宫女）[女·伺候沈选侍]、小桂子（洒扫太监）[男·伺候韩宝林]。
+   - 女主专属宫人（⚠️仅当${uName}身份为后妃时才可出现，若${uName}当前为宫女身份则严禁出场！）：书筠（掌事宫女）[女]、阿禾（贴身宫女）[女]。
+5. 【宫外长安】：顾清商（听雨楼花魁）[女·暗探]、洛青衣（酒肆老板娘）[女·西市]、白芷（坐堂女医）[女·济世堂]、柳三娘（商行掌柜）[女·东市]、崔明远（校书郎）[男·淑妃兄]、沈星河（太学生）[男·沈砚堂弟]、燕十三（漕帮总舵主）[男]、钟离弦（第一琴师）[男]、秦老四（黑市头目）[男]、阿古拉（铁勒质子）[男]、穆罕（波斯胡商）[男]、慧觉大师（佛寺主持）[男]。`;
+
+    return `\n【大景王朝世界观与人设最高铁律】：\n${userSection}\n二、萧承稷必自称“朕”（私下偶称“我”），严禁自称“孤”或“本王”！\n三、尊称皇帝为“陛下/圣人”，后妃称“娘娘/某娘子”自称“妾/妾身”，宫人自称“奴婢”，年长女官称“姑姑”。\n四、严禁AI代替（${uName}${customAlias ? ` 或 ${customAlias}` : ""}）说话！${allNpcRoster}`;
   }
+
 
   function enforceAddressingRules(text, preserveForumAlias = false) {
     if (!text) return "";
@@ -1386,7 +1587,7 @@
             </div>
           </div>
 
-                    <div class="tw-tab-page" id="tw-page-actions">
+                           <div class="tw-tab-page" id="tw-page-actions">
             <div class="tw-game-tabs" style="margin-bottom:8px;">
               <button type="button" class="tw-game-tab-btn active" data-acttab="plans">✨ 六大剧情走向</button>
             </div>
@@ -1394,22 +1595,28 @@
             <!-- 原有的：六大剧情走向分栏 -->
             <div class="tw-subgame-pane active" id="tw-act-pane-plans">
               <div class="tw-box">
-                <div class="tw-sec-head"><span>自定义剧情走向与灵感</span><button type="button" class="tw-refresh-forum-btn tw-manual-refresh-btn" id="twRefreshActionsBtn" style="padding:4px 10px;font-size:11px;">手动刷新</button></div>
-                              <div class="tw-chip-row" id="twStoryPlanChips">
-                <span class="tw-chip" data-idea="未来三至五日的宫廷当差、伴驾起居与前朝后宫日程安排">📅 几日日程安排</span>
-                <span class="tw-chip" data-idea="临近宫廷节庆大典、游宴家宴、北苑骑射或出宫活动筹备安排">🏮 临近活动安排</span>
-                <span class="tw-chip" data-idea="暗生情愫与单独相处">感情升温</span>
-                <span class="tw-chip" data-idea="嫉妒吃醋与强势试探">帝王吃醋</span>
-                <span class="tw-chip" data-idea="六宫刁难或朝堂交锋">突发冲突</span>
-                <span class="tw-chip" data-idea="旧部密信或外邦异动">暗流伏笔</span>
-                <span class="tw-chip" data-idea="北苑游宴或微服出宫">游宴散心</span>
-                <span class="tw-chip" data-idea="深夜急召或意外撞破">意外变故</span>
-              </div>
+                                <div class="tw-sec-head">
+                  <span>自定义剧情走向与灵感</span>
+                  <button type="button" class="tw-refresh-forum-btn" id="twRefreshActionsBtn" style="padding:4px 10px;font-size:11px;cursor:pointer !important;">手动刷新</button>
+                </div>
+                <div class="tw-chip-row" id="twStoryPlanChips">
+                  <span class="tw-chip" data-idea="未来三至五日的宫廷当差、伴驾起居与前朝后宫日程安排">📅 几日日程安排</span>
+                  <span class="tw-chip" data-idea="临近宫廷节庆大典、游宴家宴、北苑骑射或出宫活动筹备安排">🏮 临近活动安排</span>
+                  <span class="tw-chip" data-idea="暗生情愫与单独相处">感情升温</span>
+                  <span class="tw-chip" data-idea="嫉妒吃醋与强势试探">帝王吃醋</span>
+                  <span class="tw-chip" data-idea="六宫刁难或朝堂交锋">突发冲突</span>
+                  <span class="tw-chip" data-idea="旧部密信或外邦异动">暗流伏笔</span>
+                  <span class="tw-chip" data-idea="北苑游宴或微服出宫">游宴散心</span>
+                  <span class="tw-chip" data-idea="深夜急召或意外撞破">意外变故</span>
+                  <span class="tw-chip" data-idea="">✍️ 自定义（留空为随当前剧情生成）</span>
+                </div>
+                <input class="tw-input" id="twStoryCustomIdea" style="display:block !important;margin-bottom:0;margin-top:4px;" placeholder="点选上方标签，或点「✍️自定义」直接输入你想生成的剧情走向……">
 
-                <input class="tw-input" id="twStoryCustomIdea" style="margin-bottom:0;" placeholder="输入你想生成的剧情走向，留空则结合当前剧情直接生成六个事件……">
+
               </div>
               <div class="tw-box"><div class="tw-sec-head"><span>六大剧情发展建议</span><span class="tw-badge">第三人称 · 点击导入</span></div><div id="twStoryPlanList"></div></div>
             </div>
+
 
             <!-- 新增的：宫廷日程与大事件分栏 -->
             <div class="tw-subgame-pane" id="tw-act-pane-schedule">
@@ -1476,18 +1683,18 @@
             </div>
             <div class="tw-subgame-pane" id="tw-chat-pane-chatroom">
               <div class="tw-box" style="padding:8px 10px;margin-bottom:0;">
-                <div class="tw-sec-head" style="margin-bottom:4px;padding-bottom:3px;">
-                  <span style="font-size:11.5px;">太微群聊 · <span id="twChatroomRoleBadge">未同步</span></span>
+                                <div class="tw-sec-head" style="margin-bottom:4px;padding-bottom:3px;">
+                  <span style="font-size:11.5px;">太微群聊 · <span id="twChatroomRoleBadge">同步当前剧情</span></span>
                   <div style="display:flex;gap:4px;flex-wrap:wrap;">
-                    <button type="button" class="tw-reply-npc-btn" id="twRandomChatTopicBtn" style="background:var(--accent);color:#fff;">刷新群聊</button>
                     <button type="button" class="tw-reply-npc-btn" id="twGroupExportOfflineBtn" style="border-color:var(--accent);font-weight:bold;">转线下填入酒馆</button>
                     <button type="button" class="tw-reply-npc-btn" id="twClearChatroomBtn">清空</button>
                   </div>
                 </div>
+
                 <div style="margin-bottom:5px;padding-bottom:4px;border-bottom:1px dashed var(--border-soft);">
-                  <div class="tw-label" style="margin-bottom:3px;font-size:10px;">⇄ 左右滑动切换主题（IF线/自定义转酒馆时会自动附带平行背景说明）：</div>
+                  <div class="tw-label" style="margin-bottom:3px;font-size:10px;">⇄ 左右滑动切换主题，每个主题独立聊天，点清空后当前所在群聊记录将清空（IF线/自定义转酒馆类似番外形式）</div>
                   <div class="tw-chip-row tw-nowrap-scroll" id="twGroupThemeChips">
-                    <span class="tw-chip" data-gtheme="story_sync">📍 同步当前剧情</span><span class="tw-chip" data-gtheme="user_empress_harem">👑 我是皇帝</span><span class="tw-chip" data-gtheme="palace_gossip">🍉 深宫八卦</span>
+                    <span class="tw-chip" data-gtheme="story_sync">📍 同步当前剧情</span><span class="tw-chip" data-gtheme="user_empress_harem">👑 我是女帝</span><span class="tw-chip" data-gtheme="palace_gossip">🍉 深宫八卦</span>
                     <span class="tw-chip" data-gtheme="street_fun">🏮 市井趣闻</span><span class="tw-chip" data-gtheme="if_modern">💼 IF现代豪门</span><span class="tw-chip" data-gtheme="if_campus">🏫 IF皇家高中</span>
                     <span class="tw-chip" data-gtheme="if_scifi">🚀 IF星际舰队</span><span class="tw-chip" data-gtheme="if_genderbend">🌸 IF全员性转</span><span class="tw-chip" data-gtheme="custom">✍️ 自定义主题</span>
                   </div>
@@ -1639,14 +1846,16 @@
                 <span id="twTacitModeTitle">选择挑战主题（结合人设与剧情抽5题）</span>
                 <button type="button" class="tw-refresh-forum-btn" id="twGenTacitQuizBtn">🎲 抽取5道新题</button>
               </div>
-              <div class="tw-chip-row" id="twTacitTopicChips">
-                <span class="tw-chip active" data-ttopic="日常小习惯与起居怪癖">🍵 小习惯</span>
-                <span class="tw-chip" data-ttopic="恋爱心意、占有欲与吃醋反应">💞 恋爱吃醋</span>
-                <span class="tw-chip" data-ttopic="红绡帐暖与闺房私密癖好（NSFW尺度）">🔥 闺房私密(NSFW)</span>
-                <span class="tw-chip" data-ttopic="朝堂帝王心术与逆鳞底线">🗡️ 帝王逆鳞</span>
-                <span class="tw-chip" data-ttopic="微服出宫吃喝玩乐偏好">🏮 微服喜好</span>
+                                         <div class="tw-chip-row" id="twTacitTopicChips">
+                <span class="tw-chip active" data-ttopic="日常小习惯与起居怪癖" onclick="var i=document.getElementById('twTacitCustomTopic');if(i)i.value=this.getAttribute('data-ttopic');this.parentNode.querySelectorAll('.tw-chip').forEach(c=>c.classList.remove('active'));this.classList.add('active');">🍵 小习惯</span>
+                <span class="tw-chip" data-ttopic="恋爱心意、占有欲与吃醋反应" onclick="var i=document.getElementById('twTacitCustomTopic');if(i)i.value=this.getAttribute('data-ttopic');this.parentNode.querySelectorAll('.tw-chip').forEach(c=>c.classList.remove('active'));this.classList.add('active');">💞 恋爱吃醋</span>
+                <span class="tw-chip" data-ttopic="红绡帐暖与闺房私密癖好（NSFW尺度）" onclick="var i=document.getElementById('twTacitCustomTopic');if(i)i.value=this.getAttribute('data-ttopic');this.parentNode.querySelectorAll('.tw-chip').forEach(c=>c.classList.remove('active'));this.classList.add('active');">🔥 闺房私密(NSFW)</span>
+                <span class="tw-chip" data-ttopic="朝堂帝王心术与逆鳞底线" onclick="var i=document.getElementById('twTacitCustomTopic');if(i)i.value=this.getAttribute('data-ttopic');this.parentNode.querySelectorAll('.tw-chip').forEach(c=>c.classList.remove('active'));this.classList.add('active');">🗡️ 帝王逆鳞</span>
+                <span class="tw-chip" data-ttopic="微服出宫吃喝玩乐偏好" onclick="var i=document.getElementById('twTacitCustomTopic');if(i)i.value=this.getAttribute('data-ttopic');this.parentNode.querySelectorAll('.tw-chip').forEach(c=>c.classList.remove('active'));this.classList.add('active');">🏮 微服喜好</span>
+                <span class="tw-chip" data-ttopic="" onclick="var i=document.getElementById('twTacitCustomTopic');if(i){i.value='';i.focus();}this.parentNode.querySelectorAll('.tw-chip').forEach(c=>c.classList.remove('active'));this.classList.add('active');">✍️ 自定义主题（留空为纯盲盒）</span>
               </div>
-              <input class="tw-input" id="twTacitCustomTopic" style="margin-bottom:0;" placeholder="也可自由输入你想测试的主题（如：吵架谁先服软、生病喂药等）……">
+              <input class="tw-input" id="twTacitCustomTopic" style="display:block !important;margin-bottom:0;margin-top:4px;" value="日常小习惯与起居怪癖" placeholder="点选上方标签，或点「✍️自定义主题」自由输入想考他的题目方向……">
+
             </div>
             <div class="tw-box">
               <div class="tw-sec-head">
@@ -3750,6 +3959,10 @@ ${threadContext}
       setModuleRefreshing("emperor", false);
     }
   }
+  // ✅ 加在 async function generateStoryPlansOnly() 的正上方：
+  window.__twRunStoryPlans = targetWin.__twRunStoryPlans = function () {
+    generateStoryPlansOnly();
+  };
 
   async function generateStoryPlansOnly() {
   async function generatePalaceScheduleOnly() {
@@ -3899,7 +4112,8 @@ ${threadContext}
   }
 
 
-  const FORUM_NPC_ROSTER = `每一个主帖 author 和评论 nick 必须采用「趣味网名（真名·位分或身份）」格式（如“今日有戏听吗（苏枕月·丽嫔）”、“百步穿杨将门女（秦昭华·德妃）”、“飞龙厩第一快马（霍惊弦）”、“御膳房掌勺（苏云娘）”、“西市胡姬酒最烈（洛青衣）”）。严禁使用玩家名字或马甲！`;
+  const FORUM_NPC_ROSTER = `每一个主帖 author 和评论 nick 必须采用「趣味网名（纯姓名）」格式（如“今日有戏听吗（苏枕月）”、“百步穿杨将门女（秦昭华）”、“飞龙厩第一快马（霍惊弦）”、“御膳房掌勺（苏云娘）”、“西市胡姬酒最烈（洛青衣）”）。括号内只写纯姓名，严禁在括号里写职位或位分！严禁使用玩家名字或马甲！`;
+
 
   async function refreshForumOnly(e, fromGlobalTask = false) {
     if (e) { e.preventDefault(); e.stopPropagation(); }
@@ -4036,51 +4250,73 @@ ${threadContext}
     } catch (e) {}
   }
 
-  async function refreshDmRosterFromPlotAndWorldbook() {
+    async function refreshDmRosterFromPlotAndWorldbook() {
     const btn = targetDoc.getElementById("twDmRefreshRosterBtn");
     if (btn) { btn.disabled = true; btn.textContent = "扫描中…"; }
     try {
+      deduplicateDmNpcOptions();
       scanChatForActiveDmNpcs();
       const { lastFullTurn, historyText } = getFullStoryContext();
-      const prompt = `扫描当前剧情，列出最适合与 ${state.userName} 联系的 4~6 位登场人物（后妃写为「真名（位分）」）。\n${historyText.slice(-800)}\n${lastFullTurn}\n输出纯 JSON 数组：\n[{"id":"人物名称","title":"身份","personality":"性格与说话口吻"}]`;
+      const prompt = `扫描当前剧情，列出最适合与 ${state.userName} 联系的 4~6 位登场人物。\n${historyText.slice(-800)}\n${lastFullTurn}\n输出纯 JSON 数组：\n[{"id":"纯姓名（极简职位）","title":"极简职位","personality":"性格与说话口吻"}]`;
       const resp = await callAI(prompt, "扫描剧情可选人物");
       const m = String(resp).match(/\[[\s\S]*\]/);
       if (m) {
         JSON.parse(m[0]).forEach(item => {
           if (!item || !item.id) return;
-          const stdId = formatConsortStandardName(enforceAddressingRules(item.id));
-          if (stdId === state.userName) return;
-          const existing = state.dmNpcOptions.find(x => x.id === stdId || x.name === stdId);
-          if (existing) existing.inCurrentPlot = true;
-          else state.dmNpcOptions.splice(1, 0, { id: stdId, name: stdId, display: `${stdId}（${enforceAddressingRules(item.title || "剧情人物")}）`, title: enforceAddressingRules(item.title || "剧情登场人物"), seal: `${stdId.slice(0, 2)}私印`, personality: enforceAddressingRules(item.personality || "贴合当前剧情人设"), inCurrentPlot: true, isDynamic: true });
+          const { pureName, role, dropdownLabel } = parsePureNameAndRole(enforceAddressingRules(item.id), enforceAddressingRules(item.title || ""));
+          if (!pureName || pureName === state.userName || isNpcMatchingUser(pureName)) return;
+
+          // 按纯姓名查找是否已存在（彻底杜绝出现两个萧承稷或两个沈砚！）
+          const existing = state.dmNpcOptions.find(x => parsePureNameAndRole(x.id || x.name).pureName === pureName);
+          if (existing) {
+            existing.inCurrentPlot = true;
+            existing.display = dropdownLabel;
+          } else {
+            state.dmNpcOptions.splice(1, 0, {
+              id: pureName,
+              name: pureName,
+              display: dropdownLabel,
+              title: role || "剧情人物",
+              seal: `${pureName.slice(0, 2)}私印`,
+              personality: enforceAddressingRules(item.personality || "贴合当前剧情人设"),
+              inCurrentPlot: true,
+              isDynamic: true
+            });
+          }
         });
+        deduplicateDmNpcOptions();
         saveCurrentChatSessionData(false);
         renderDmSection();
-        renderMailTargetSelect();
+        if (typeof renderMailTargetSelect === "function") renderMailTargetSelect();
         renderAtPickerBar();
         showModuleSuccessToast("已更新可选人物名单");
       }
-    } catch (e) { scanChatForActiveDmNpcs(); renderDmSection(); }
+    } catch (e) { deduplicateDmNpcOptions(); scanChatForActiveDmNpcs(); renderDmSection(); }
     finally { if (btn) { btn.disabled = false; btn.textContent = "🔄 刷新人物"; } }
   }
 
   function renderDmNpcDropdown() {
+    deduplicateDmNpcOptions();
     const sel = targetDoc.getElementById("twDmNpcSelect");
     if (!sel) return;
-    sel.innerHTML = state.dmNpcOptions.map(n => `<option value="${n.id}" ${n.id === state.dmActiveNpc ? "selected" : ""}>${n.inCurrentPlot ? "【剧情登场】" : ""}${n.display || `${n.name}（${n.title}）`}</option>`).join("");
+    sel.innerHTML = state.dmNpcOptions.map(n => {
+      const { dropdownLabel } = parsePureNameAndRole(n.name || n.id, n.title);
+      return `<option value="${n.id}" ${n.id === state.dmActiveNpc ? "selected" : ""}>${n.inCurrentPlot ? "【剧情登场】" : ""}${dropdownLabel}</option>`;
+    }).join("");
   }
 
   function updateDmQuoteBar() {
     const bar = targetDoc.getElementById("twDmQuoteBar"), txt = targetDoc.getElementById("twDmQuoteText"), inp = targetDoc.getElementById("twDmInput");
-    const npcName = state.dmActiveNpc || "萧承稷";
+    const { pureName } = parsePureNameAndRole(state.dmActiveNpc || "萧承稷");
     if (!bar || !txt) return;
     if (state.dmQuoteTarget) {
+      const qPure = parsePureNameAndRole(state.dmQuoteTarget.sender).pureName;
       bar.classList.add("active");
-      txt.innerHTML = `正在引用 <b>${state.dmQuoteTarget.sender}</b>：“${state.dmQuoteTarget.text}”`;
-      if (inp) inp.placeholder = `引用回复 ${npcName}（点发送仅发消息，点右侧按钮让对方回复）……`;
+      txt.innerHTML = `正在引用 <b>${qPure}</b>：“${state.dmQuoteTarget.text}”`;
+      if (inp) inp.placeholder = `引用回复 ${pureName}（点发送仅发消息，点右侧按钮让对方回复）……`;
     } else {
       bar.classList.remove("active"); txt.innerHTML = "";
-      if (inp) inp.placeholder = `给 ${npcName} 发消息（点「发送」仅发消息，点右侧按钮让对方回复）……`;
+      if (inp) inp.placeholder = `给 ${pureName} 发消息（点「发送」仅发消息，点右侧按钮让对方回复）……`;
     }
   }
 
@@ -4089,9 +4325,13 @@ ${threadContext}
     const box = targetDoc.getElementById("twDmBox");
     if (!box) return;
     const npcId = state.dmActiveNpc || "萧承稷";
-    const list = Array.isArray(state.dmHistories[npcId]) ? state.dmHistories[npcId] : [];
+    const { pureName: activePureName, dropdownLabel: activeFullLabel } = parsePureNameAndRole(npcId);
+    // 兼容合并旧存档里带括号 key 的历史记录
+    let list = Array.isArray(state.dmHistories[npcId]) ? state.dmHistories[npcId] : [];
+    if (!list.length && state.dmHistories[activePureName]) list = state.dmHistories[activePureName];
+
     if (!list.length && !state.dmTyping) {
-      box.innerHTML = `<div class="tw-empty-hint" style="margin:auto;">当前与【${npcId}】的传音记录为空白。<br>点「发送」可先发出消息，点右侧按钮让对方回复。</div>`;
+      box.innerHTML = `<div class="tw-empty-hint" style="margin:auto;">当前与【${activeFullLabel}】的传音记录为空白。<br>点「发送」可先发出消息，点右侧按钮让对方回复。</div>`;
       updateDmQuoteBar();
       return;
     }
@@ -4110,23 +4350,23 @@ ${threadContext}
       if (m.type === "system" || m.type === "join") {
         return `<div class="tw-chat-sys-tip"><div class="tw-chat-sys-line"><span>— ${enforceAddressingRules(m.text)} —</span></div></div>`;
       }
-      const quoteHtml = m.quote ? `<div class="tw-chat-quoted-block">「${m.quote.sender}：${m.quote.text}」</div>` : "";
+      // ✅ 核心修改：私聊聊天框内只显示纯姓名，不带括号职位！
+      const senderPure = m.self ? state.userName : parsePureNameAndRole(m.sender).pureName;
+      const quoteHtml = m.quote ? `<div class="tw-chat-quoted-block">「${parsePureNameAndRole(m.quote.sender).pureName}：${m.quote.text}」</div>` : "";
       const actionBtns = m.self
         ? `<button type="button" class="tw-chat-quote-btn" data-dm-recall-idx="${idx}">撤回</button><button type="button" class="tw-del-btn" data-dm-del-idx="${idx}">删除</button>`
         : `<button type="button" class="tw-chat-quote-btn" data-dm-quote-idx="${idx}">引用</button>`;
-      return `<div class="tw-chat-msg ${m.self ? "self" : ""}"><div class="tw-chat-head-row"><span class="tw-chat-sender">${m.sender}</span>${actionBtns}</div><div class="tw-chat-bubble">${quoteHtml}<div>${highlightMentionsHtml(m.text)}</div></div></div>`;
+      return `<div class="tw-chat-msg ${m.self ? "self" : ""}"><div class="tw-chat-head-row"><span class="tw-chat-sender">${senderPure}</span>${actionBtns}</div><div class="tw-chat-bubble">${quoteHtml}<div>${highlightMentionsHtml(m.text)}</div></div></div>`;
     });
     if (state.dmTyping) {
-      htmlItems.push(`<div class="tw-typing-row">💬 对方正在输入中……</div>`);
+      htmlItems.push(`<div class="tw-typing-row">💬 ${activePureName} 正在输入中……</div>`);
     }
     box.innerHTML = htmlItems.join("");
     box.scrollTop = box.scrollHeight;
     updateDmQuoteBar();
-    box.innerHTML = htmlItems.join("");
-    box.scrollTop = box.scrollHeight;
-    updateDmQuoteBar();
-    syncAncientWorldToTavernPrompt(); // <-- 加上这一行！每次私聊发消息、收到回复、撤回或清空时，后台注入都会自动同步更新！
+    if (typeof syncAncientWorldToTavernPrompt === "function") syncAncientWorldToTavernPrompt();
   }
+
 
 
   function appendDmUserMessageOnly(userMsg) {
@@ -4413,7 +4653,7 @@ ${threadContext}
       const relCtx = getRelationshipAndFamiliarityContext();
       const userPersona = getUserPersonaContext();
       const { lastFullTurn } = getFullStoryContext();
-      const styleRule = `【语言风格与剧情结合死命令】：\n1. 全程题目、四个选项与点评必须采用**纯正古风白话**（唐代宫廷日常口语与古韵白话结合，自然生动，严禁出现现代网络词、手机、约会、男神等现代出戏词汇）！\n2. 必须紧密结合当前酒馆已发生的剧情事件、萧承稷人设以及 ${state.userName} 的人设（${userPersona || "参考最新酒馆剧情表现"}）来量身定制题目！`;
+      const styleRule = `【语言风格与剧情结合死命令】：\n1. 全程题目、四个选项与点评必须采用**白话**（唐代宫廷日常口语与白话结合，自然生动，严禁出现现代网络词、手机、约会、男神等现代出戏词汇，也不要太文言文）！\n2. 必须紧密结合当前酒馆已发生的剧情事件、萧承稷人设以及 ${state.userName} 的人设（${userPersona || "参考最新酒馆剧情表现"}）来量身定制题目！`;
 
       if (state.tacitMode === "guess_xiao") {
         const prompt = `请围绕主题【${activeTopic}】，结合大景天子萧承稷的人设与当前与 ${state.userName} 的最新剧情互动，现场随机出 5 道《测试 ${state.userName} 有多了解萧承稷》的四选一古风白话默契题！\n${styleRule}\n${relCtx}\n最新剧情参考：\n${lastFullTurn.slice(-600)}\n每道题包含 question、options（4个古风白话选项数组）、xiaoAnswerIndex（0~3，萧承稷按其性格与当前好感阶段真实会选的索引）、xiaoComment（萧承稷看到 ${state.userName} 选对或选错时的简短古风白话点评，自称朕）。\n直接输出纯 JSON 对象：\n{"topic":"${activeTopic}","questions":[{"question":"古风白话题目内容","options":["选项甲","选项乙","选项丙","选项丁"],"xiaoAnswerIndex":0,"xiaoComment":"萧承稷的一句话古风点评"}]}`;
@@ -4687,7 +4927,7 @@ ${threadContext}
     const preset = GROUP_CHAT_THEMES[key] || GROUP_CHAT_THEMES.story_sync;
     const customTxt = (customTxtOverride !== "" ? customTxtOverride : (state.groupLockedCustomText || config.groupChatCustomThemeText || "")).trim();
     const desc = (key === "custom" && customTxt) ? `用户自定义群聊主题与世界观设定：【${customTxt}】` : preset.desc;
-    const isUserCentric = Boolean(preset.userCentric) || (key === "custom" && /女皇|我是皇帝|围绕我|宠我|修罗场/.test(customTxt));
+    const isUserCentric = Boolean(preset.userCentric) || (key === "custom" && /女皇|我是女帝|围绕我|宠我|修罗场/.test(customTxt));
     const isIfMode = isGroupThemeIfOrCustom(key);
 
     const focusRule = isUserCentric
@@ -4711,7 +4951,8 @@ ${threadContext}
       return;
     }
     const kw = (state.atFilterKeyword || "").trim().toLowerCase();
-    const allCandidates = ["全体成员", ...state.dmNpcOptions.map(x => x.name)];
+        const allCandidates = ["全体成员", ...state.dmNpcOptions.map(x => parsePureNameAndRole(x.name || x.id).pureName)];
+
     const filtered = kw ? allCandidates.filter(n => n.toLowerCase().includes(kw)) : allCandidates;
     if (!filtered.length) {
       bar.classList.remove("active");
@@ -4741,6 +4982,21 @@ ${threadContext}
     renderAtPickerBar();
     inp.focus();
   }
+  // ====== 新增：每个群聊主题独立保存一个对话框（切换主题时自动加载对应房间记录） ======
+  function syncGroupRoomMessages(targetThemeKey = "") {
+    if (!state.groupHistories || typeof state.groupHistories !== "object") {
+      state.groupHistories = {};
+    }
+    const curKey = targetThemeKey || config.groupChatTheme || "story_sync";
+    if (!Array.isArray(state.groupHistories[curKey])) {
+      state.groupHistories[curKey] = [];
+    }
+    // 让 state.groupMessages 永远指向当前主题房间的数组引用！
+    state.groupMessages = state.groupHistories[curKey];
+    state.groupLockedTheme = curKey;
+    state.groupLockedCustomText = config.groupChatCustomThemeText || "";
+    return state.groupMessages;
+  }
 
   function updateGroupThemeUI() {
     rootEl.querySelectorAll("#twGroupThemeChips .tw-chip").forEach(chip => chip.classList.toggle("active", chip.dataset.gtheme === (config.groupChatTheme || "story_sync")));
@@ -4763,6 +5019,7 @@ ${threadContext}
   }
 
   function renderChatroom() {
+syncGroupRoomMessages();
     updateGroupThemeUI();
     renderAtPickerBar();
     const box = targetDoc.getElementById("twChatroomBox");
@@ -4785,10 +5042,11 @@ ${threadContext}
     const activePreset = GROUP_CHAT_THEMES[activeChatThemeKey] || GROUP_CHAT_THEMES.story_sync;
     const roleStr = activeChatThemeKey === "user_empress_harem" ? `女皇陛下·${state.userName}` : getUserFullTag();
 
-    const badgeEl = targetDoc.getElementById("twChatroomRoleBadge");
+        const badgeEl = targetDoc.getElementById("twChatroomRoleBadge");
     if (badgeEl) {
-      badgeEl.innerHTML = `<b style="color:var(--accent);">【${activeChatThemeName}】</b> · ${roleStr}`;
+      badgeEl.innerHTML = `<b style="color:var(--accent);">【${activeChatThemeName}】</b>`;
     }
+
 
     const isPendingSwitch = hasChatHistory && (selectedKey !== activeChatThemeKey || (selectedKey === "custom" && selectedCustomTxt !== activeChatCustomTxt));
     const pendingHintHtml = isPendingSwitch
@@ -4803,7 +5061,7 @@ ${threadContext}
     `;
 
     if (!list.length && !state.chatroomTyping) {
-      box.innerHTML = stickyThemeBanner + `<div class="tw-empty-hint" style="margin:auto;">当前聊天主题为<b>【${selectedDisplayName}】</b>。<br>点「发送」发出消息，点右侧 ✦ 按钮让群友回复，或点右上角「刷新群聊」！</div>`;
+      box.innerHTML = stickyThemeBanner + `<div class="tw-empty-hint" style="margin:auto;">当前聊天主题为<b>【${selectedDisplayName}】</b>。<br>点「发送」发出消息后点右侧 ✦ 按钮让群友回复，或者直接按✦让群友先回复</div>`;
       updateChatQuoteBar();
       return;
     }
@@ -4816,19 +5074,24 @@ ${threadContext}
           ? `<button type="button" class="tw-peek-recall-btn" data-chat-peek-idx="${idx}">${m.showRecalled ? "收起" : "点击查看撤回内容"}</button>`
           : "";
         const revealBox = (!isSelfRecall && m.originalText && m.showRecalled)
-          ? `<div class="tw-recalled-reveal-box">${enforceAddressingRules(m.originalText)}</div>`
+          ? `<div class="tw-recalled-reveal-box">${stripInlineRoleBrackets(m.originalText)}</div>`
           : "";
-        return `<div class="tw-chat-sys-tip"><div class="tw-chat-sys-line"><span>— ${enforceAddressingRules(m.text)} —</span>${peekBtn}${delBtn}</div>${revealBox}</div>`;
+        return `<div class="tw-chat-sys-tip"><div class="tw-chat-sys-line"><span>— ${stripInlineRoleBrackets(m.text)} —</span>${peekBtn}${delBtn}</div>${revealBox}</div>`;
       }
       if (m.type === "join" || m.type === "system" || m.type === "narration") {
-        return `<div class="tw-chat-sys-tip"><div class="tw-chat-sys-line"><span>— ${enforceAddressingRules(m.text)} —</span></div></div>`;
+        return `<div class="tw-chat-sys-tip"><div class="tw-chat-sys-line"><span>— ${stripInlineRoleBrackets(m.text)} —</span></div></div>`;
       }
-      const stdSender = formatConsortStandardName(m.sender);
-      const quoteHtml = m.quote ? `<div class="tw-chat-quoted-block">「${formatConsortStandardName(m.quote.sender)}：${m.quote.text}」</div>` : "";
+
+                  // ✅ 群聊头部：左侧显示古风泥金职位头衔牌 + 右侧显示纯姓名（如：[圣上] 萧承稷、[淑妃] 崔清漪、[中书侍郎] 沈砚）
+      const senderWithTitleHtml = buildGroupSenderWithTitleHtml(m.sender, m.self);
+      const quotePureSender = m.quote ? parsePureNameAndRole(m.quote.sender).pureName : "";
+      const quoteHtml = m.quote ? `<div class="tw-chat-quoted-block">「${quotePureSender}：${m.quote.text}」</div>` : "";
       const actionBtns = m.self
         ? `<button type="button" class="tw-chat-quote-btn" data-chat-recall-idx="${idx}">撤回</button><button type="button" class="tw-del-btn" data-chat-del-idx="${idx}">删除</button>`
         : `<button type="button" class="tw-chat-quote-btn" data-chat-quote-idx="${idx}">引用</button>`;
-      return `<div class="tw-chat-msg ${m.self ? "self" : ""}"><div class="tw-chat-head-row"><span class="tw-chat-sender">${stdSender}</span>${actionBtns}</div><div class="tw-chat-bubble">${quoteHtml}<div>${highlightMentionsHtml(m.text)}</div></div></div>`;
+      return `<div class="tw-chat-msg ${m.self ? "self" : ""}"><div class="tw-chat-head-row"><span class="tw-chat-sender" style="display:inline-flex;align-items:center;">${senderWithTitleHtml}</span>${actionBtns}</div><div class="tw-chat-bubble">${quoteHtml}<div>${highlightMentionsHtml(m.text)}</div></div></div>`;
+
+
     });
 
     if (state.chatroomTyping) {
@@ -5298,17 +5561,19 @@ syncAncientWorldToTavernPrompt();
   });
   targetDoc.getElementById("twForumCustomStyleInput").addEventListener("input", (e) => { config.forumCustomStyleText = e.target.value.trim(); saveConfig(); });
 
-  targetDoc.getElementById("twGroupThemeChips")?.addEventListener("click", (e) => {
-    const chip = e.target.closest(".tw-chip[data-gtheme]"); if (!chip) return;
+    targetDoc.getElementById("twGroupThemeChips")?.addEventListener("click", (e) => {
+    const chip = e.target.closest(".tw-chip[data-gtheme]");
+    if (!chip) return;
     config.groupChatTheme = chip.dataset.gtheme || "story_sync";
-    if (!state.groupMessages || state.groupMessages.length === 0) {
-      state.groupLockedTheme = config.groupChatTheme;
-      state.groupLockedCustomText = config.groupChatCustomThemeText || "";
-    }
-    saveConfig(); updateGroupThemeUI();
+    state.chatQuoteTarget = null;
+    syncGroupRoomMessages(config.groupChatTheme); // 切换到该主题专属的聊天记录数组
+    saveConfig();
+    saveCurrentChatSessionData(false);
+    updateGroupThemeUI();
     chip.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
     renderChatroom();
   });
+
   targetDoc.getElementById("twGroupCustomThemeInput")?.addEventListener("input", (e) => {
     config.groupChatCustomThemeText = e.target.value.trim();
     if (!state.groupMessages || state.groupMessages.length === 0) {
@@ -5543,11 +5808,38 @@ syncAncientWorldToTavernPrompt();
   targetDoc.getElementById("twRefreshWorldBtn").addEventListener("click", (e) => refreshWorldOnly(e, false));
   targetDoc.getElementById("twRefreshForumBtn").addEventListener("click", (e) => refreshForumOnly(e, false));
 
-   rootEl.querySelectorAll("#twStoryPlanChips .tw-chip").forEach(c => c.addEventListener("click", () => {
-    rootEl.querySelectorAll("#twStoryPlanChips .tw-chip").forEach(x => x.classList.remove("active"));
-    c.classList.add("active");
-    targetDoc.getElementById("twStoryCustomIdea").value = c.dataset.idea || "";
-  }));
+     // 1. 绑定剧情选择芯片点击（点预设填词，点“✍️ 自定义”清空输入框并聚焦光标，绝不出现 __CUSTOM__）
+  rootEl.querySelectorAll("#twStoryPlanChips .tw-chip").forEach(c => {
+    c.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      rootEl.querySelectorAll("#twStoryPlanChips .tw-chip").forEach(ch => ch.classList.remove("active"));
+      c.classList.add("active");
+      const inp = targetDoc.getElementById("twStoryCustomIdea");
+      if (!inp) return;
+      const val = c.getAttribute("data-idea") || "";
+      if (!val || val === "__CUSTOM__") {
+        inp.value = "";
+        inp.focus();
+      } else {
+        inp.value = val;
+      }
+    });
+  });
+
+  // 2. 绑定剧情选择右上角「手动刷新」按钮
+  targetDoc.getElementById("twRefreshActionsBtn")?.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const btn = e.currentTarget;
+    if (btn) {
+      btn.disabled = false;
+      btn.classList.remove("disabled-gray");
+    }
+    if (state.refreshingModules) state.refreshingModules.actions = false;
+    generateStoryPlansOnly();
+  });
+
 
 
   renderCurrentMemorial();
@@ -5728,7 +6020,9 @@ syncAncientWorldToTavernPrompt();
     state.groupLockedTheme = targetThemeKey;
     state.groupLockedCustomText = targetCustomTxt;
     const themeInfo = getGroupThemePromptBlock(false, targetThemeKey, targetCustomTxt);
-    state.groupMessages = [{ type: "system", text: `当前聊天主题为：【${themeInfo.name}】` }];
+    if (!state.groupHistories || typeof state.groupHistories !== "object") state.groupHistories = {};
+    state.groupHistories[targetThemeKey] = [{ type: "system", text: `当前聊天主题为：【${themeInfo.name}】` }];
+    state.groupMessages = state.groupHistories[targetThemeKey];
     state.chatQuoteTarget = null;
     state.chatroomTyping = true;
     saveCurrentChatSessionData(false);
@@ -5751,26 +6045,11 @@ syncAncientWorldToTavernPrompt();
     }
   }
 
-  async function triggerAiNpcRandomTopic() {
-    const hasMessages = Array.isArray(state.groupMessages) && state.groupMessages.length > 0;
-    const lockedKey = state.groupLockedTheme || config.groupChatTheme || "story_sync";
-    const lockedCustom = (state.groupLockedCustomText || "").trim();
-    const nextKey = config.groupChatTheme || "story_sync";
-    const nextCustom = (config.groupChatCustomThemeText || "").trim();
-    const isThemeChanged = lockedKey !== nextKey || (nextKey === "custom" && lockedCustom !== nextCustom);
-
-    if (hasMessages && isThemeChanged) {
-      const oldName = getThemeDisplayNameByKey(lockedKey, lockedCustom);
-      const newName = getThemeDisplayNameByKey(nextKey, nextCustom);
-      const descEl = targetDoc.getElementById("twThemeSwitchConfirmDesc");
-      if (descEl) {
-        descEl.textContent = `当前主题为【${oldName}】，是否改为【${newName}】？确认后聊天记录将重置。`;
-      }
-      targetDoc.getElementById("twThemeSwitchConfirmModal")?.classList.add("show");
-      return;
-    }
+    async function triggerAiNpcRandomTopic() {
+    syncGroupRoomMessages();
     await executeGroupChatTopicRefresh();
   }
+
 
   targetDoc.getElementById("twCancelThemeSwitchBtn")?.addEventListener("click", (e) => {
     e.preventDefault();
@@ -5800,15 +6079,19 @@ syncAncientWorldToTavernPrompt();
   targetDoc.getElementById("twChatroomInput").addEventListener("keydown", (e) => {
     if (e.key === "Enter") { e.preventDefault(); targetDoc.getElementById("twChatroomSendBtn").click(); }
   });
-  targetDoc.getElementById("twClearChatroomBtn").addEventListener("click", () => {
-    state.groupMessages = [];
-    state.groupLockedTheme = config.groupChatTheme || "story_sync";
-    state.groupLockedCustomText = config.groupChatCustomThemeText || "";
+    targetDoc.getElementById("twClearChatroomBtn").addEventListener("click", () => {
+    const curKey = config.groupChatTheme || "story_sync";
+    const curThemeName = getThemeDisplayNameByKey(curKey, config.groupChatCustomThemeText);
+    if (!state.groupHistories || typeof state.groupHistories !== "object") state.groupHistories = {};
+    // ✅ 只清空当前所在主题房间的消息！其他主题房间的聊天记录完好保留！
+    state.groupHistories[curKey] = [];
+    state.groupMessages = state.groupHistories[curKey];
     state.chatQuoteTarget = null;
-    saveCurrentChatSessionData(false); renderChatroom();
-    showModuleSuccessToast("已清空群聊记录");
+    saveCurrentChatSessionData(false);
+    renderChatroom();
+    showModuleSuccessToast(`已清空【${curThemeName}】对话框消息`);
   });
-  targetDoc.getElementById("twRandomChatTopicBtn").addEventListener("click", triggerAiNpcRandomTopic);
+
 
   targetDoc.getElementById("twForumList").addEventListener("click", (e) => {
     const btn = e.target.closest("button[data-act]"); if (!btn) return;
@@ -5932,6 +6215,72 @@ syncAncientWorldToTavernPrompt();
             applyParsedPayloadToState(nextData);
           }
           syncFromWorldbookAndChat(false);
+  // ✅ 终极全局委托：同时接管【剧情选择·手动刷新按钮】、【剧情选择芯片】与【默契挑战芯片】
+  rootEl.addEventListener("click", (e) => {
+    // 0. 点击剧情选择右上角的「手动刷新」按钮（强制解锁并立即触发生成！）
+    const refreshActBtn = e.target.closest("#twRefreshActionsBtn");
+    if (refreshActBtn) {
+      e.preventDefault();
+      e.stopPropagation();
+      refreshActBtn.disabled = false;
+      refreshActBtn.classList.remove("disabled-gray");
+      if (state.refreshingModules) state.refreshingModules.actions = false;
+      generateStoryPlansOnly();
+      return;
+    }
+
+    // 1. 剧情选择页面的主题芯片点击（输入框常驻显示，点预设自动填词，点“✍️ 自定义”清空并聚焦光标）
+    const planChip = e.target.closest("#twStoryPlanChips .tw-chip");
+    if (planChip) {
+      e.preventDefault();
+      e.stopPropagation();
+      rootEl.querySelectorAll("#twStoryPlanChips .tw-chip").forEach(c => c.classList.remove("active"));
+      planChip.classList.add("active");
+      const inp = targetDoc.getElementById("twStoryCustomIdea");
+      if (inp) {
+        inp.style.display = "block"; // 永远保持显示，绝不消失！
+        const ideaVal = planChip.getAttribute("data-idea") || "";
+        if (ideaVal === "__CUSTOM__") {
+          inp.value = "";
+          inp.placeholder = "请在此输入你自定义的剧情走向，随后点右上角「手动刷新」……";
+          inp.focus();
+        } else {
+          inp.value = ideaVal;
+        }
+      }
+      return;
+    }
+
+    // 2. 默契挑战页面的主题芯片点击
+    const tacitChip = e.target.closest("#twTacitTopicChips .tw-chip");
+    if (tacitChip) {
+      e.preventDefault();
+      e.stopPropagation();
+      rootEl.querySelectorAll("#twTacitTopicChips .tw-chip").forEach(c => c.classList.remove("active"));
+      tacitChip.classList.add("active");
+      const wrap = targetDoc.getElementById("twTacitCustomTopicWrap");
+      const inp = targetDoc.getElementById("twTacitCustomTopic");
+      const topicVal = tacitChip.getAttribute("data-ttopic") || "";
+      if (topicVal === "__CUSTOM__") {
+        if (wrap) wrap.style.display = "block";
+        if (inp) {
+          inp.style.display = "block";
+          inp.value = "";
+          inp.focus();
+        }
+      } else {
+        state.tacitTopic = topicVal || "日常小习惯与起居怪癖";
+        if (wrap) wrap.style.display = "none";
+        if (inp) {
+          inp.style.display = "none";
+          inp.value = "";
+        }
+      }
+      return;
+    }
+  });
+
+
           renderAll();
         }
       }, 300));
@@ -5974,3 +6323,4 @@ syncAncientWorldToTavernPrompt();
   }, 1200);
 })();
 
+ 
